@@ -85,10 +85,11 @@ def validate_identity(identity: dict[str, Any]) -> tuple[x25519.X25519PublicKey,
         raise ValueError("identity ed25519 key invalid")
 
     sig_text = identity.get("signature_b64")
-    if sig_text:
-        signed = dict(identity)
-        signed.pop("signature_b64", None)
-        epub.verify(b64d(sig_text), canon(signed))
+    if not isinstance(sig_text, str) or not sig_text:
+        raise ValueError("identity signature missing")
+    signed = dict(identity)
+    signed.pop("signature_b64", None)
+    epub.verify(b64d(sig_text), canon(signed))
     return xpub, epub
 
 
