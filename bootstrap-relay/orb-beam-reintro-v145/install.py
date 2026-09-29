@@ -37,14 +37,49 @@ def atomic_write(path, data):
         except FileNotFoundError: pass
 
 def find_exact(name, want):
-    roots = [HIST_ROOT, BACKUPS]
+    # Search only bounded historical UI locations. The previous revision incorrectly
+    # assumed the accepted v1.4.5 bytes would be either in the pre-v1.4.5 backup or
+    # the later PWA-repair backup tree. Direct-host orb iterations used their own
+    # sibling orb-backups-* directories under the OpenWebUI package.
+    roots = [HIST_ROOT]
+    roots += sorted(PKG.glob('orb-backups-*'), reverse=True)
+    roots += sorted(PKG.glob('frontend.pre-*'), reverse=True)
+    roots += sorted(BASE.glob('frontend.pre-*'), reverse=True)
+    roots += [BACKUPS]
+
+    seen = set()
+    candidates = []
     for root in roots:
         if not root.exists():
             continue
-        for p in root.rglob(name):
-            if p.is_file() and sha(p) == want:
+        try:
+            files = [root] if root.is_file() else root.rglob(name)
+        except Exception:
+            continue
+        for p in files:
+            if not p.is_file():
+                continue
+            try:
+                rp = p.resolve()
+            except Exception:
+                rp = p
+            if rp in seen:
+                continue
+            seen.add(rp)
+            try:
+                got = sha(p)
+            except Exception:
+                continue
+            candidates.append((str(p), got))
+            if got == want:
+                print(f'EXACT_HISTORICAL_SOURCE_{name}={p}')
                 return p
-    raise SystemExit(f'ERROR exact historical asset missing: {name} sha256={want}')
+
+    print(f'EXACT_HISTORICAL_SOURCE_{name}=NOT_FOUND')
+    print(f'CANDIDATE_COUNT_{name}={len(candidates)}')
+    for path, got in candidates[:80]:
+        print(f'CANDIDATE_{name}={got} {path}')
+    raise SystemExit(f'ERROR exact historical asset missing after bounded orb-history scan: {name} sha256={want}')
 
 def backup_file(path, rel):
     if path.exists():
