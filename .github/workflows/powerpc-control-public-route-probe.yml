@@ -1,0 +1,28 @@
+name: PowerPC public route probe
+on:
+  push:
+    branches: [main]
+    paths:
+      - bootstrap-relay/permanent-control/queue.json
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          set -e
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 15 https://www.powerpc-darwin.org/powerpc-control-v1/identity.json -o /tmp/identity.json; then
+              echo IDENTITY_OK
+              cat /tmp/identity.json
+              if curl -fsS --max-time 15 https://www.powerpc-darwin.org/powerpc-control-v1/results/ppc-public-route-symlink-20260929T2306Z.json -o /tmp/result.json; then
+                echo RESULT_OK
+                cat /tmp/result.json
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          exit 1
