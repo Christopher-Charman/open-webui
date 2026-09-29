@@ -1,0 +1,10 @@
+(()=>{'use strict';
+const K='owui-lcars-theme',r=document.documentElement,STATES=['idle','listening','processing','generating','speaking','tool','warning','error'];let current='idle';
+const emit=(name,detail={})=>window.dispatchEvent(new CustomEvent(name,{detail}));
+const render=s=>{current=STATES.includes(s)?s:'idle';for(const x of STATES)r.classList.toggle('lcars-'+x,x===current);r.dataset.lcarsState=current;emit('lcars:state',{state:current})};
+const apply=o=>{r.classList.toggle('lcars',!!o);localStorage.setItem(K,o?'1':'0');render(o?current:'idle');emit('owui:theme',{theme:o?'lcars':'default'})};
+const api={version:'0.4.0',states:Object.freeze([...STATES]),enabled:()=>r.classList.contains('lcars'),enable:()=>apply(true),disable:()=>apply(false),toggle:()=>apply(!r.classList.contains('lcars')),state:s=>{render(s);return current},status:()=>({enabled:api.enabled(),state:current,version:api.version})};
+window.addEventListener('owui:client-voice',e=>{const d=e.detail||{};if(d.speaking===true||d.state==='speaking')render('speaking');else if(current==='speaking'&&(d.speaking===false||d.state==='idle'||d.state==='ready'))render('idle')});
+window.addEventListener('continuity-shell:runtime-state',e=>render(e.detail?.state));
+if(localStorage.getItem(K)==='1')r.classList.add('lcars');render('idle');window.OWUILCARS=Object.freeze(api);emit('lcars:ready',api.status());
+})();
