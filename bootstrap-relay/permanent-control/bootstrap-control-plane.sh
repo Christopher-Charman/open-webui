@@ -69,10 +69,42 @@ if ! run_captured owned_receiver_install "$ppc_script"; then
   exit 11
 fi
 rm -f "$ppc_script"
-if ! run_captured owned_receiver_status "$PPC_SERVICE" status; then
-  emit "OWNED_RECEIVER_HOST=FAIL status"
+
+# Force the freshly installed daemon/service code into the live process. A
+# pre-existing receiver process must not allow source installation to masquerade
+# as live acceptance of the new lifecycle or public-receipt implementation.
+if ! run_captured owned_receiver_restart "$PPC_SERVICE" restart; then
+  emit "OWNED_RECEIVER_HOST=FAIL restart"
   exit 12
 fi
+sleep 3
+if ! run_captured owned_receiver_status "$PPC_SERVICE" status; then
+  emit "OWNED_RECEIVER_HOST=FAIL status"
+  exit 13
+fi
+
+MIRROR="$WEBAPP/envs/openwebui/lib/python3.11/site-packages/open_webui/static/powerpc-control-v1"
+if [ ! -s "$MIRROR/identity.json" ] || [ ! -s "$MIRROR/status.json" ]; then
+  emit "OWNED_RECEIVER_HOST=FAIL public_mirror_missing"
+  exit 14
+fi
+if ! grep -q '"runtime_id":"fasthost.powerpc"' "$MIRROR/identity.json" || \
+   ! grep -q '"state":"ready"' "$MIRROR/status.json"; then
+  emit "OWNED_RECEIVER_HOST=FAIL public_mirror_invalid"
+  exit 15
+fi
+emit "OWNED_RECEIVER_STATIC_MIRROR=PASS"
+
+public_tmp="$STATE/public-identity.$"
+public_url="https://powerpc-darwin.org/static/powerpc-control-v1/identity.json?t=$(date +%s)"
+if curl -fsSL --max-time 15 "$public_url" -o "$public_tmp" 2>>"$DETAIL" && \
+   grep -q '"runtime_id":"fasthost.powerpc"' "$public_tmp"; then
+  emit "OWNED_RECEIVER_PUBLIC_IDENTITY=PASS"
+else
+  emit "OWNED_RECEIVER_PUBLIC_IDENTITY=PENDING_EXTERNAL_ACCEPTANCE"
+fi
+rm -f "$public_tmp"
+
 emit "OWNED_RECEIVER_HOST=PASS"
 
 # Phase 2 hardens the independent OpenAI-family ingress. It reuses the existing
