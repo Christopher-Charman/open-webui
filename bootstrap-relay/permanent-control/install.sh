@@ -9,7 +9,7 @@ STATE="$ACCOUNT/.powerpc-control-v1"
 WORKER_STATE="$ACCOUNT/.powerpc-control-workers"
 BIN="$WEBAPP/bin/powerpc-control"
 WORKER_BIN="$WEBAPP/bin/powerpc-control-workers"
-PIN="784090634eaf9ebcd4c417793952a1477f0dd80d"
+PIN="6b452a268c03e603a6bb8c4c386d5c62930f0677"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
