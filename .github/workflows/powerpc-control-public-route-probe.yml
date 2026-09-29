@@ -16,24 +16,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          urls=(
-            "https://www.powerpc-darwin.org/ppc-control-identity.json"
-            "https://www.powerpc-darwin.org/wiki/ppc-control-identity.json"
-            "https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json"
-            "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/identity.json"
-            "https://www.powerpc-darwin.org/powerpc-control-v1/identity.json"
-          )
-          for round in 1 2 3; do
-            for url in "${urls[@]}"; do
-              code="$(curl -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' --connect-timeout 6 --max-time 12 "$url?t=$(date +%s%N)" || true)"
-              ctype="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/{gsub(/\r/,""); print substr($0,index($0,":")+2)}' /tmp/headers | tail -n1)"
-              echo "round=$round http=$code content_type=${ctype:-none} url=$url"
-              if [ "$code" = "200" ] && python3 - /tmp/body <<'PY'
+          BASE="https://www.powerpc-darwin.org/static"
+          for round in 1 2 3 4 5 6; do
+            for n in 0 1 2 3 4 5 6 7; do
+              code="$(curl -sS -o /tmp/keyprobe -w '%{http_code}' --connect-timeout 6 --max-time 12 "$BASE/ppc-keyprobe-$n.json?t=$(date +%s%N)" || true)"
+              if [ "$code" = "200" ] && python3 - /tmp/keyprobe "$n" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-keyprobe-v1"
+          assert d.get("probe")==int(sys.argv[2])
+          PY
+              then
+                echo "POWERPC_X25519_CANDIDATE=$n"
+                curl -fsS --connect-timeout 6 --max-time 12 "$BASE/powerpc-control-identity.json?t=$(date +%s%N)" -o /tmp/identity.json
+                python3 - /tmp/identity.json <<'PY'
           import json,sys,time
-          try:
-              d=json.load(open(sys.argv[1]))
-          except Exception:
-              raise SystemExit(1)
+          d=json.load(open(sys.argv[1]))
           assert d.get("protocol")=="powerpc-control-v1"
           assert d.get("version")==1
           assert d.get("runtime_id")=="fasthost.powerpc"
@@ -44,8 +42,7 @@ jobs:
           assert set(d.get("tool_contract",[]))=={"runtime_health","read_text","list_dir","terminal_exec"}
           assert int(time.time())-int(d.get("heartbeat_at",0)) < 240
           PY
-              then
-                echo "POWERPC_PUBLIC_PROTOCOL_JSON=PASS url=$url"
+                echo "POWERPC_PUBLIC_PROTOCOL_JSON=PASS"
                 exit 0
               fi
             done
