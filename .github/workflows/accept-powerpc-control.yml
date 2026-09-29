@@ -1,0 +1,40 @@
+name: Accept PowerPC Permanent Control
+
+on:
+  push:
+    paths:
+      - ".github/powerpc-control-acceptance-trigger"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: powerpc-permanent-control-acceptance
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout control source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Validate acceptance tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n bootstrap-relay/permanent-control/actions-accept-live.sh
+          python3 -m py_compile bootstrap-relay/permanent-control/origin-client.py
+          python3 -m pip install --disable-pip-version-check --quiet cryptography
+
+      - name: Run end-to-end acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod 700 bootstrap-relay/permanent-control/actions-accept-live.sh
+          bootstrap-relay/permanent-control/actions-accept-live.sh
