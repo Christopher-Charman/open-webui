@@ -123,28 +123,16 @@ KEY_FILE="$STATE/control_plane_api_key"
 META_FILE="$STATE/tunnel-meta.json"
 STATUS_FILE="$STATE/runtime-status.json"
 
+if [ "${RESET_RUNTIME_KEY:-0}" = "1" ]; then
+  rm -f "$KEY_FILE"
+  echo "runtime_key_reset=YES"
+fi
+
 # Remove the documentation example if it was accidentally entered as though real.
 if [ -s "$TUNNEL_FILE" ] && [ "$(cat "$TUNNEL_FILE")" = "$EXAMPLE_TUNNEL_ID" ]; then
   echo "example_tunnel_id_detected=YES"
   rm -f "$TUNNEL_FILE"
 fi
-
-if [ ! -s "$KEY_FILE" ]; then
-  printf 'Runtime API key with Tunnels Read+Use (input hidden): ' >/dev/tty
-  IFS= read -r -s key </dev/tty
-  printf '\n' >/dev/tty
-  [ -n "$key" ] || {
-    echo "SECURE_MCP=CLIENT_READY"
-    echo "NEXT_HUMAN_BOUNDARY=runtime_api_key_missing"
-    echo "Open: https://platform.openai.com/settings/organization/api-keys"
-    exit 0
-  }
-  printf '%s\n' "$key" >"$KEY_FILE"
-  chmod 600 "$KEY_FILE"
-  unset key
-fi
-
-export CONTROL_PLANE_API_KEY="$(cat "$KEY_FILE")"
 
 create_tunnel_with_admin_key() {
   local admin out tid
@@ -217,6 +205,23 @@ PY
 fi
 
 TUNNEL_ID="$(cat "$TUNNEL_FILE")"
+
+if [ ! -s "$KEY_FILE" ]; then
+  printf 'Runtime API key with Tunnels Read+Use (input hidden): ' >/dev/tty
+  IFS= read -r -s key </dev/tty
+  printf '\n' >/dev/tty
+  [ -n "$key" ] || {
+    echo "SECURE_MCP=CLIENT_READY"
+    echo "NEXT_HUMAN_BOUNDARY=runtime_api_key_missing"
+    echo "Open: https://platform.openai.com/settings/organization/api-keys"
+    exit 0
+  }
+  printf '%s\n' "$key" >"$KEY_FILE"
+  chmod 600 "$KEY_FILE"
+  unset key
+fi
+
+export CONTROL_PLANE_API_KEY="$(cat "$KEY_FILE")"
 
 echo "== verify remote tunnel with runtime key =="
 if ! "$BIN" admin --json tunnels get "$TUNNEL_ID" >"$META_FILE"; then
