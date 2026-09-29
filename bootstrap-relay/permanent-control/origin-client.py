@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import sys
@@ -72,13 +73,18 @@ def load_json(path: str) -> dict[str, Any]:
     return obj
 
 
-def validate_identity(identity: dict[str, Any]) -> tuple[x25519.X25519PublicKey, ed25519.Ed25519PublicKey]:
+def validate_identity(
+    identity: dict[str, Any],
+    expected_fingerprint: str | None = None,
+) -> tuple[x25519.X25519PublicKey, ed25519.Ed25519PublicKey, str]:
     if identity.get("protocol") != PROTOCOL or identity.get("version") != VERSION:
         raise ValueError("identity protocol/version mismatch")
     if identity.get("runtime_id") != RUNTIME_ID:
         raise ValueError("identity runtime mismatch")
-    xpub = serialization.load_der_public_key(b64d(identity["x25519_spki_b64"]))
-    epub = serialization.load_der_public_key(b64d(identity["ed25519_spki_b64"]))
+    xder = b64d(identity["x25519_spki_b64"])
+    eder = b64d(identity["ed25519_spki_b64"])
+    xpub = serialization.load_der_public_key(xder)
+    epub = serialization.load_der_public_key(eder)
     if not isinstance(xpub, x25519.X25519PublicKey):
         raise ValueError("identity x25519 key invalid")
     if not isinstance(epub, ed25519.Ed25519PublicKey):
@@ -90,28 +96,39 @@ def validate_identity(identity: dict[str, Any]) -> tuple[x25519.X25519PublicKey,
     signed = dict(identity)
     signed.pop("signature_b64", None)
     epub.verify(b64d(sig_text), canon(signed))
-    return xpub, epub
+
+    fingerprint = "SHA256:" + base64.b64encode(
+        hashlib.sha256(xder + eder).digest()
+    ).decode("ascii").rstrip("=")
+    if identity.get("identity_fingerprint") != fingerprint:
+        raise ValueError("identity fingerprint mismatch")
+    if expected_fingerprint and fingerprint != expected_fingerprint:
+        raise ValueError("identity fingerprint pin mismatch")
+    return xpub, epub, fingerprint
 
 
 def prepare(args: argparse.Namespace) -> int:
     identity = load_json(args.identity)
-    xpub, epub = validate_identity(identity)
+    xpub, epub, fingerprint = validate_identity(identity, args.expected_fingerprint)
 
     tool = args.tool
-    if tool not in ALLOWED_TOOLS:
-        raise ValueError("tool is outside the PowerPC bounded contract")
-    if args.authority == "read_only" and tool == "terminal_exec":
-        raise ValueError("read_only authority cannot request terminal_exec")
+    if not args.negative_contract_test:
+        if tool not in ALLOWED_TOOLS:
+            raise ValueError("tool is outside the PowerPC bounded contract")
+        if args.authority == "read_only" and tool == "terminal_exec":
+            raise ValueError("read_only authority cannot request terminal_exec")
 
     arguments = json.loads(args.arguments)
     if not isinstance(arguments, dict):
         raise ValueError("--arguments must decode to an object")
 
     task_id = args.task_id or ("ppc-" + uuid.uuid4().hex)
-    now = int(time.time())
+    wall_now = int(time.time())
+    created_at = int(args.created_at) if args.created_at is not None else wall_now
     ttl = int(args.ttl)
     if ttl < 1 or ttl > 3600:
         raise ValueError("ttl must be 1..3600 seconds")
+    expires_at = int(args.expires_at) if args.expires_at is not None else created_at + ttl
 
     origin_priv = x25519.X25519PrivateKey.generate()
     origin_pub_der = origin_priv.public_key().public_bytes(
@@ -125,18 +142,19 @@ def prepare(args: argparse.Namespace) -> int:
         "version": VERSION,
         "task_id": task_id,
         "target_runtime_id": RUNTIME_ID,
-        "created_at": now,
-        "expires_at": now + ttl,
+        "created_at": created_at,
+        "expires_at": expires_at,
         "origin_ephemeral_x25519_spki_b64": b64e(origin_pub_der),
     }
     aad = canon(task)
+    allowed = [tool] if args.allowed is None else [x for x in args.allowed.split(",") if x]
     payload = {
         "task_id": task_id,
         "target_runtime_id": RUNTIME_ID,
         "tool": tool,
         "arguments": arguments,
         "authority_ceiling": args.authority,
-        "allowed_capability_profile": [tool],
+        "allowed_capability_profile": allowed,
         "expected_result_schema": "assistant-delegation-receipt-v1",
     }
     nonce = os.urandom(12)
@@ -156,8 +174,8 @@ def prepare(args: argparse.Namespace) -> int:
                 serialization.PublicFormat.SubjectPublicKeyInfo,
             )
         ),
-        "created_at": now,
-        "expires_at": now + ttl,
+        "created_at": created_at,
+        "expires_at": expires_at,
     }
 
     out = Path(args.output)
@@ -168,6 +186,7 @@ def prepare(args: argparse.Namespace) -> int:
     print(f"TASK_PREPARED={task_id}")
     print(f"TASK_JSON={out}")
     print(f"CONTEXT_PRIVATE={ctx}")
+    print(f"IDENTITY_FINGERPRINT={fingerprint}")
     return 0
 
 
@@ -229,10 +248,15 @@ def main() -> int:
 
     a = sub.add_parser("prepare")
     a.add_argument("--identity", required=True, help="runtime identity.json")
-    a.add_argument("--tool", required=True, choices=sorted(ALLOWED_TOOLS))
+    a.add_argument("--tool", required=True)
     a.add_argument("--arguments", default="{}")
     a.add_argument("--authority", choices=["read_only", "bounded_operator"], default="read_only")
+    a.add_argument("--allowed", help="comma-separated capability profile; defaults to requested tool")
     a.add_argument("--ttl", type=int, default=600)
+    a.add_argument("--created-at", type=int)
+    a.add_argument("--expires-at", type=int)
+    a.add_argument("--expected-fingerprint")
+    a.add_argument("--negative-contract-test", action="store_true")
     a.add_argument("--task-id")
     a.add_argument("--output", required=True)
     a.add_argument("--context", required=True)
