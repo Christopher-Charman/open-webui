@@ -1,0 +1,240 @@
+#!/bin/sh
+set -eu
+umask 077
+
+ACCOUNT="${PPC_ACCOUNT:-/home/storage/781/4477781/user}"
+WEBAPP="${PPC_WEBAPP:-$ACCOUNT/webapp}"
+STATE="${SECURE_MCP_KEEPALIVE_STATE:-$WEBAPP/.secure-mcp-keepalive}"
+PROFILE_DIR="${TUNNEL_CLIENT_PROFILE_DIR:-$WEBAPP/.config/tunnel-client}"
+ALIAS="${SECURE_MCP_ALIAS:-powerpc-local-mcp}"
+LOCAL_MCP="${SECURE_MCP_COMMAND:-$WEBAPP/bin/local-mcp}"
+BIN_HINT="$STATE/tunnel-client-bin"
+SECRET_FILE="${SECURE_MCP_RUNTIME_KEY_FILE:-$STATE/runtime-api-key}"
+DISABLED="$STATE/disabled"
+LOCK="$STATE/ensure.lock"
+LOG="$STATE/keepalive.log"
+STATUS_CACHE="$STATE/status.json"
+MAX_LOG_BYTES=1048576
+
+mkdir -p "$STATE"
+chmod 700 "$STATE"
+
+ts() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
+
+trim_log() {
+  [ -f "$LOG" ] || return 0
+  size="$(wc -c <"$LOG" 2>/dev/null || echo 0)"
+  case "$size" in *[!0-9]*) size=0 ;; esac
+  if [ "$size" -gt "$MAX_LOG_BYTES" ]; then
+    tail -n 1200 "$LOG" >"$LOG.tmp" 2>/dev/null || :
+    mv -f "$LOG.tmp" "$LOG" 2>/dev/null || :
+    chmod 600 "$LOG" 2>/dev/null || :
+  fi
+}
+
+log() {
+  trim_log
+  printf '%s %s\n' "$(ts)" "$*" >>"$LOG"
+  chmod 600 "$LOG" 2>/dev/null || :
+}
+
+resolve_bin() {
+  if [ -n "${TUNNEL_CLIENT_BIN:-}" ] && [ -x "${TUNNEL_CLIENT_BIN}" ]; then
+    printf '%s\n' "$TUNNEL_CLIENT_BIN"
+    return 0
+  fi
+  if [ -s "$BIN_HINT" ]; then
+    b="$(cat "$BIN_HINT" 2>/dev/null || true)"
+    if [ -n "$b" ] && [ -x "$b" ]; then printf '%s\n' "$b"; return 0; fi
+  fi
+  for b in \
+    "$WEBAPP/bin/tunnel-client" \
+    "$WEBAPP/.local/bin/tunnel-client" \
+    "$ACCOUNT/.local/bin/tunnel-client"
+  do
+    if [ -x "$b" ]; then printf '%s\n' "$b"; return 0; fi
+  done
+  if command -v tunnel-client >/dev/null 2>&1; then
+    command -v tunnel-client
+    return 0
+  fi
+  return 1
+}
+
+status_json() {
+  tc="$1"
+  tmp="$STATE/status.$$.json"
+  if "$tc" runtimes status "$ALIAS" --json >"$tmp" 2>>"$LOG" 9>&-; then
+    mv -f "$tmp" "$STATUS_CACHE"
+    chmod 600 "$STATUS_CACHE"
+    cat "$STATUS_CACHE"
+    return 0
+  fi
+  rm -f "$tmp"
+  return 1
+}
+
+field_from_file() {
+  field="$1"
+  [ -s "$STATUS_CACHE" ] || return 1
+  python_bin="${PYTHON:-}"
+  if [ -z "$python_bin" ]; then
+    for p in "$WEBAPP/miniconda/bin/python3.12" "$WEBAPP/miniconda/bin/python3" "$WEBAPP/envs/open-terminal/bin/python" /usr/bin/python3; do
+      if [ -x "$p" ]; then python_bin="$p"; break; fi
+    done
+  fi
+  [ -n "$python_bin" ] || return 1
+  "$python_bin" - "$field" "$STATUS_CACHE" <<'PY'
+import json,sys
+field,path=sys.argv[1:]
+try: obj=json.load(open(path))
+except Exception: sys.exit(2)
+def walk(o,key):
+    if isinstance(o,dict):
+        if key in o: return o[key]
+        for v in o.values():
+            got=walk(v,key)
+            if got is not None: return got
+    elif isinstance(o,list):
+        for v in o:
+            got=walk(v,key)
+            if got is not None: return got
+    return None
+v=walk(obj,field)
+if v is None: sys.exit(3)
+if isinstance(v,bool): print('true' if v else 'false')
+elif isinstance(v,(str,int,float)): print(v)
+else: print(json.dumps(v,separators=(',',':')))
+PY
+}
+
+probe_url() {
+  base="$1"
+  path="$2"
+  [ -n "$base" ] || return 1
+  case "$base" in
+    http://127.0.0.1:*|http://localhost:*|https://127.0.0.1:*|https://localhost:*) ;;
+    *) return 1 ;;
+  esac
+  base="${base%/ui}"
+  base="${base%/}"
+  curl -fsS --max-time 4 "$base$path" >/dev/null 2>&1
+}
+
+healthy_now() {
+  tc="$1"
+  status_json "$tc" >/dev/null || return 1
+  running="$(field_from_file process_running 2>/dev/null || true)"
+  healthy="$(field_from_file healthy 2>/dev/null || true)"
+  ready="$(field_from_file ready 2>/dev/null || true)"
+  stale="$(field_from_file stale 2>/dev/null || true)"
+  ui="$(field_from_file ui_url 2>/dev/null || true)"
+
+  # Current tunnel-client reports process/health/readiness directly. For an
+  # older status schema, use its loopback health surfaces. Never accept a bare
+  # legacy runtime_state=ready value as proof of durable process health.
+  if [ "$running" = "true" ] && [ "$healthy" = "true" ] && [ "$ready" = "true" ] && [ "$stale" != "true" ]; then
+    return 0
+  fi
+  if [ -n "$ui" ] && probe_url "$ui" /healthz && probe_url "$ui" /readyz && [ "$stale" != "true" ]; then
+    return 0
+  fi
+  return 1
+}
+
+reconnect() {
+  tc="$1"
+  [ -x "$LOCAL_MCP" ] || { log "reconnect_refused local_mcp_missing"; return 2; }
+  [ -s "$SECRET_FILE" ] || { log "reconnect_refused runtime_key_file_missing"; return 3; }
+  chmod 600 "$SECRET_FILE" 2>/dev/null || :
+
+  # Status retains the local alias/tunnel metadata even when the managed
+  # process has died. Reuse that exact tunnel; never create a replacement.
+  status_json "$tc" >/dev/null 2>&1 || true
+  tunnel_id="$(field_from_file tunnel_id 2>/dev/null || true)"
+  [ -n "$tunnel_id" ] || { log "reconnect_refused tunnel_id_unresolved"; return 4; }
+
+  log "reconnect_begin alias=$ALIAS"
+  if TUNNEL_CLIENT_PROFILE_DIR="$PROFILE_DIR" \
+     "$tc" runtimes connect \
+       --alias "$ALIAS" \
+       --tunnel-id "$tunnel_id" \
+       --runtime-api-key "file:$SECRET_FILE" \
+       --profile "$ALIAS" \
+       --profile-dir "$PROFILE_DIR" \
+       --mcp-command "$LOCAL_MCP" \
+       --json >>"$LOG" 2>&1 9>&-; then
+    sleep 2
+    if healthy_now "$tc"; then
+      log "reconnect_pass alias=$ALIAS"
+      return 0
+    fi
+    log "reconnect_failed post_connect_health"
+    return 5
+  fi
+  log "reconnect_failed connect_command"
+  return 6
+}
+
+with_lock() {
+  command -v flock >/dev/null 2>&1 || { echo "flock unavailable" >&2; return 2; }
+  exec 9>"$LOCK"
+  flock -n 9 || return 75
+  "$@"
+}
+
+cmd_ensure() {
+  [ ! -e "$DISABLED" ] || { log "ensure_skipped disabled"; return 0; }
+  tc="$(resolve_bin)" || { log "ensure_failed tunnel_client_missing"; return 2; }
+  if healthy_now "$tc"; then
+    log "ensure_pass already_healthy"
+    return 0
+  fi
+  reconnect "$tc"
+}
+
+cmd_status() {
+  if [ -e "$DISABLED" ]; then
+    echo "SECURE_MCP_KEEPALIVE=DISABLED"
+    return 0
+  fi
+  tc="$(resolve_bin)" || { echo "SECURE_MCP_KEEPALIVE=FAILED reason=tunnel_client_missing"; return 2; }
+  if healthy_now "$tc"; then
+    echo "SECURE_MCP_KEEPALIVE=HEALTHY alias=$ALIAS"
+    return 0
+  fi
+  echo "SECURE_MCP_KEEPALIVE=DEGRADED alias=$ALIAS"
+  return 1
+}
+
+cmd_enable() {
+  rm -f "$DISABLED"
+  cmd_ensure
+}
+
+cmd_stop() {
+  mkdir -p "$STATE"
+  : >"$DISABLED"
+  chmod 600 "$DISABLED"
+  tc="$(resolve_bin 2>/dev/null || true)"
+  if [ -n "$tc" ]; then
+    "$tc" runtimes stop "$ALIAS" --json >>"$LOG" 2>&1 9>&- || true
+  fi
+  log "operator_stop disabled=1"
+}
+
+cmd_restart() {
+  rm -f "$DISABLED"
+  tc="$(resolve_bin)" || { log "restart_failed tunnel_client_missing"; return 2; }
+  "$tc" runtimes stop "$ALIAS" --json >>"$LOG" 2>&1 9>&- || true
+  reconnect "$tc"
+}
+
+case "${1:-ensure}" in
+  ensure) with_lock cmd_ensure ;;
+  status) with_lock cmd_status ;;
+  enable|start) with_lock cmd_enable ;;
+  stop|disable) with_lock cmd_stop ;;
+  restart) with_lock cmd_restart ;;
+  *) echo "usage: $0 [ensure|status|enable|start|stop|disable|restart]" >&2; exit 2 ;;
+esac
