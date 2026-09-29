@@ -9,6 +9,8 @@ BIN="$BASE/bin/tunnel-client"
 LOCAL_MCP="$BASE/bin/local-mcp"
 ALIAS="powerpc-local-mcp"
 PROFILE="powerpc-local-mcp"
+ORG_ID="org-8kCZgBLHOGW9Efv95xjeoXya"
+EXAMPLE_TUNNEL_ID="tunnel_0123456789abcdef0123456789abcdef"
 
 [ "$(id -u)" = "2257347" ] || {
   echo "SECURE_MCP=REFUSED uid=$(id -u) expected=2257347"
@@ -115,26 +117,16 @@ else
 fi
 
 "$BIN" --version || true
-"$BIN" help quickstart | sed -n '1,80p' || true
 
 TUNNEL_FILE="$STATE/tunnel_id"
 KEY_FILE="$STATE/control_plane_api_key"
+META_FILE="$STATE/tunnel-meta.json"
+STATUS_FILE="$STATE/runtime-status.json"
 
-if [ ! -s "$TUNNEL_FILE" ]; then
-  printf 'OpenAI tunnel ID (tunnel_<32 hex>; not secret): ' >/dev/tty
-  IFS= read -r tunnel_id </dev/tty
-  case "$tunnel_id" in
-    tunnel_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
-      printf '%s\n' "$tunnel_id" >"$TUNNEL_FILE"
-      chmod 600 "$TUNNEL_FILE"
-      ;;
-    *)
-      echo "SECURE_MCP=CLIENT_READY"
-      echo "NEXT_HUMAN_BOUNDARY=create_or_select_tunnel_id"
-      echo "Open: https://platform.openai.com/settings/organization/tunnels"
-      exit 0
-      ;;
-  esac
+# Remove the documentation example if it was accidentally entered as though real.
+if [ -s "$TUNNEL_FILE" ] && [ "$(cat "$TUNNEL_FILE")" = "$EXAMPLE_TUNNEL_ID" ]; then
+  echo "example_tunnel_id_detected=YES"
+  rm -f "$TUNNEL_FILE"
 fi
 
 if [ ! -s "$KEY_FILE" ]; then
@@ -152,8 +144,99 @@ if [ ! -s "$KEY_FILE" ]; then
   unset key
 fi
 
-TUNNEL_ID="$(cat "$TUNNEL_FILE")"
 export CONTROL_PLANE_API_KEY="$(cat "$KEY_FILE")"
+
+create_tunnel_with_admin_key() {
+  local admin out tid
+  printf 'Admin API key for one-time tunnel creation (input hidden): ' >/dev/tty
+  IFS= read -r -s admin </dev/tty
+  printf '\n' >/dev/tty
+  [ -n "$admin" ] || return 1
+
+  export OPENAI_ADMIN_KEY="$admin"
+  unset admin
+
+  out="$STATE/tunnel-create.json"
+  if ! "$BIN" admin --json tunnels create       --name "PowerPC Local MCP"       --description "Private tunnel to the PowerPC local stdio MCP"       --organization-id "$ORG_ID" >"$out"; then
+    unset OPENAI_ADMIN_KEY
+    echo "SECURE_MCP=FAIL tunnel_create_failed"
+    cat "$out" 2>/dev/null || true
+    return 2
+  fi
+  unset OPENAI_ADMIN_KEY
+
+  tid="$("$PY3" - "$out" <<'PY'
+import json,sys
+j=json.load(open(sys.argv[1]))
+print(j.get("id",""))
+PY
+)"
+  case "$tid" in
+    tunnel_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
+      printf '%s\n' "$tid" >"$TUNNEL_FILE"
+      chmod 600 "$TUNNEL_FILE"
+      echo "tunnel_created=$tid"
+      echo "waiting_for_tunnel_activation=30s"
+      sleep 30
+      ;;
+    *)
+      echo "SECURE_MCP=FAIL tunnel_create_returned_no_valid_id"
+      return 2
+      ;;
+  esac
+}
+
+if [ ! -s "$TUNNEL_FILE" ]; then
+  printf 'OpenAI tunnel ID (leave blank to create one here with an Admin API key): ' >/dev/tty
+  IFS= read -r tunnel_id </dev/tty
+
+  if [ -n "$tunnel_id" ]; then
+    [ "$tunnel_id" != "$EXAMPLE_TUNNEL_ID" ] || {
+      echo "SECURE_MCP=FAIL documentation_example_is_not_a_real_tunnel"
+      rm -f "$TUNNEL_FILE"
+      exit 2
+    }
+    if ! "$PY3" - "$tunnel_id" <<'PY'
+import re,sys
+raise SystemExit(0 if re.fullmatch(r"tunnel_[0-9a-f]{32}",sys.argv[1]) else 1)
+PY
+    then
+      echo "SECURE_MCP=FAIL invalid_tunnel_id_format"
+      exit 2
+    fi
+    printf '%s\n' "$tunnel_id" >"$TUNNEL_FILE"
+    chmod 600 "$TUNNEL_FILE"
+  else
+    if ! create_tunnel_with_admin_key; then
+      echo "SECURE_MCP=CLIENT_READY"
+      echo "NEXT_HUMAN_BOUNDARY=create_tunnel"
+      echo "Open: https://platform.openai.com/settings/organization/tunnels"
+      exit 0
+    fi
+  fi
+fi
+
+TUNNEL_ID="$(cat "$TUNNEL_FILE")"
+
+echo "== verify remote tunnel with runtime key =="
+if ! "$BIN" admin --json tunnels get "$TUNNEL_ID" >"$META_FILE"; then
+  echo "SECURE_MCP=FAIL tunnel_lookup_failed"
+  cat "$META_FILE" 2>/dev/null || true
+  rm -f "$TUNNEL_FILE"
+  echo "NEXT=rerun installer with a real tunnel ID, or leave the ID blank to create one with an Admin API key"
+  exit 2
+fi
+
+if ! "$PY3" - "$META_FILE" "$TUNNEL_ID" <<'PY'
+import json,sys
+j=json.load(open(sys.argv[1]))
+if j.get("id") != sys.argv[2]:
+    raise SystemExit(1)
+PY
+then
+  echo "SECURE_MCP=FAIL tunnel_metadata_mismatch"
+  exit 2
+fi
 
 echo "== configure local stdio MCP profile =="
 "$BIN" init   --sample sample_mcp_stdio_local   --profile "$PROFILE"   --tunnel-id "$TUNNEL_ID"   --mcp-command "$LOCAL_MCP"   --force
@@ -168,9 +251,29 @@ echo "== managed runtime =="
 "$BIN" runtimes connect   --alias "$ALIAS"   --tunnel-id "$TUNNEL_ID"   --runtime-api-key env:CONTROL_PLANE_API_KEY   --mcp-command "$LOCAL_MCP"
 
 echo "== status =="
-"$BIN" runtimes --json status "$ALIAS"
+"$BIN" runtimes --json status "$ALIAS" >"$STATUS_FILE"
+cat "$STATUS_FILE"
 
-echo "SECURE_MCP=CONNECTED"
+if ! "$PY3" - "$STATUS_FILE" "$TUNNEL_ID" <<'PY'
+import json,sys
+j=json.load(open(sys.argv[1]))
+checks = [
+    j.get("tunnel_id") == sys.argv[2],
+    j.get("process_running") is True,
+    j.get("healthy") is True,
+    j.get("ready") is True,
+    not j.get("remote_error"),
+    j.get("remote") is not None,
+]
+raise SystemExit(0 if all(checks) else 1)
+PY
+then
+  echo "SECURE_MCP=FAIL acceptance_gate"
+  echo "The local alias exists, but the OpenAI tunnel is not fully live/authorized."
+  exit 2
+fi
+
+echo "SECURE_MCP=CONNECTED_VERIFIED"
 echo "alias=$ALIAS"
 echo "tunnel_id=$TUNNEL_ID"
 echo "local_mcp=$LOCAL_MCP"
