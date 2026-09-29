@@ -4,7 +4,7 @@ umask 077
 
 BASE="/home/storage/781/4477781/user/webapp"
 RESTART="$BASE/restart-openwebui-via-passenger.sh"
-PIN="e506a03b97eb7f5dd57c076d13b8d08fd7a08c6e"
+PIN="7219c68ae073848457046042681b38efb57dc996"
 RAW="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/pwa-lkg-1956/restore.py"
 CACHE_GEN="20260929-lkg1956-r1"
 TMP="$(mktemp)"
