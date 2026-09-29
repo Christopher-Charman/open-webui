@@ -1,0 +1,30 @@
+name: Probe PowerPC Control Plane
+
+on:
+  push:
+    paths:
+      - ".github/workflows/probe-powerpc-control.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe identity and status
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://www.powerpc-darwin.org/.well-known/powerpc-control-v1"
+          for name in identity status; do
+            echo "===${name^^}==="
+            code="$(curl -L --connect-timeout 10 --max-time 20 -sS -o "/tmp/$name.json" -w '%{http_code}' "$base/$name.json" || true)"
+            echo "HTTP=$code"
+            if [[ -s "/tmp/$name.json" ]]; then
+              cat "/tmp/$name.json"
+              echo
+            fi
+          done
