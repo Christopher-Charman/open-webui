@@ -1,0 +1,46 @@
+#!/bin/sh
+set -eu
+STATE="/home/storage/781/4477781/user/.powerpc-control-v1"
+DAEMON="$STATE/daemon.py"
+PIDFILE="$STATE/daemon.pid"
+PY=""
+for p in \
+  "/home/storage/781/4477781/user/webapp/miniconda/bin/python3.12" \
+  "/home/storage/781/4477781/user/webapp/miniconda/bin/python3" \
+  "/home/storage/781/4477781/user/webapp/envs/open-terminal/bin/python"
+do
+  if [ -x "$p" ]; then PY="$p"; break; fi
+done
+[ -n "$PY" ] || { echo "python runtime unavailable" >&2; exit 2; }
+LOG="$STATE/service.log"
+
+alive() {
+  [ -s "$PIDFILE" ] || return 1
+  pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  [ -r "/proc/$pid/cmdline" ] || return 1
+  tr '\000' ' ' <"/proc/$pid/cmdline" | grep -F -- "$DAEMON" >/dev/null 2>&1
+}
+
+case "${1:-ensure}" in
+  ensure|start)
+    if alive; then exit 0; fi
+    mkdir -p "$STATE"
+    chmod 700 "$STATE"
+    nohup "$PY" "$DAEMON" >>"$LOG" 2>&1 </dev/null &
+    exit 0
+    ;;
+  status)
+    if alive; then echo "POWERPC_CONTROL=RUNNING pid=$(cat "$PIDFILE")"; exit 0; fi
+    echo "POWERPC_CONTROL=STOPPED"; exit 1
+    ;;
+  stop)
+    if alive; then kill "$(cat "$PIDFILE")" 2>/dev/null || true; fi
+    exit 0
+    ;;
+  *)
+    echo "usage: $0 [ensure|start|status|stop]" >&2
+    exit 2
+    ;;
+esac
