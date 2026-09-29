@@ -74,17 +74,22 @@ if not INDEX.exists():
 
 index_text = INDEX.read_text()
 
-# Idempotent re-entry: if the new cache-busted entrypoints are already installed, verify
-# their files and markers and leave the current deployment unchanged.
+# Idempotent re-entry: if the new cache-busted entrypoint is already installed, verify
+# the actual SvelteKit chain index.html -> app entry -> node 2 and leave the deployment unchanged.
 if MARKER in index_text:
     app_done = re.search(r'/_app/immutable/entry/(app\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', index_text)
-    node_done = re.search(r'/_app/immutable/nodes/(2\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', index_text)
-    if not app_done or not node_done:
-        raise SystemExit('ERROR v6 marker present but cache-busted entrypoint references are incomplete')
+    if not app_done:
+        raise SystemExit('ERROR v6 marker present but cache-busted app entry reference is missing')
     app_done_path = FRONTEND / '_app/immutable/entry' / app_done.group(1)
+    if not app_done_path.exists():
+        raise SystemExit('ERROR v6 app entry reference exists but file is missing')
+    app_done_text = app_done_path.read_text()
+    node_done = re.search(r'\.\./nodes/(2\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', app_done_text)
+    if not node_done:
+        raise SystemExit('ERROR v6 app entry does not reference cache-busted node 2')
     node_done_path = FRONTEND / '_app/immutable/nodes' / node_done.group(1)
-    if not app_done_path.exists() or not node_done_path.exists():
-        raise SystemExit('ERROR v6 marker present but cache-busted entrypoint files are missing')
+    if not node_done_path.exists():
+        raise SystemExit('ERROR v6 node reference exists but file is missing')
     node_done_text = node_done_path.read_text()
     if 'set(DB, null);' not in node_done_text or 'OWUI startup guard: initialization timeout; continuing' not in node_done_text:
         raise SystemExit('ERROR v6 node exists but startup-guard invariants are missing')
@@ -223,8 +228,8 @@ written = INDEX.read_text()
 checks = {
     'inline_marker': MARKER in written,
     'new_app_url': new_app_url in written,
-    'new_node_url': new_node_url in written,
     'new_app_exists': new_app_path.exists(),
+    'app_references_new_node': new_node_rel in new_app_path.read_text(),
     'new_node_exists': new_node_path.exists(),
     'node_direct_bypass': 'set(DB, null);' in new_node_path.read_text(),
     'node_timeout_guard': 'OWUI startup guard: initialization timeout; continuing' in new_node_path.read_text(),
