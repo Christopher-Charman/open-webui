@@ -110,6 +110,31 @@ def pid_alive(pid: int | None) -> bool:
         return False
 
 
+def find_matching_pids(predicate) -> list[int]:
+    matches: list[int] = []
+    proc = Path("/proc")
+    try:
+        entries = proc.iterdir()
+    except Exception:
+        return matches
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            pid = int(entry.name)
+        except ValueError:
+            continue
+        if pid == os.getpid() or not pid_alive(pid):
+            continue
+        line = cmdline(pid)
+        try:
+            if predicate(line):
+                matches.append(pid)
+        except Exception:
+            continue
+    return sorted(matches)
+
+
 def tunnel_binary() -> str | None:
     candidates = [
         shutil.which("tunnel-client"),
@@ -354,6 +379,38 @@ def ensure_tunnel(worker: Worker) -> dict[str, Any]:
         except FileNotFoundError:
             pass
 
+    existing = find_matching_pids(
+        lambda line: os.path.basename(binary) in line
+        and " run " in (" " + line + " ")
+        and TUNNEL_PROFILE in line
+    )
+    if len(existing) == 1:
+        pid = existing[0]
+        TUNNEL_PIDFILE.write_text(str(pid) + "\n", encoding="ascii")
+        os.chmod(TUNNEL_PIDFILE, 0o600)
+        worker.last_health = "adopted_existing"
+        worker.last_error = ""
+        log(f"tunnel_adopt pid={pid}")
+        return {
+            **worker.summary(),
+            "configured": True,
+            "pid": pid,
+            "process_alive": True,
+            "profile": TUNNEL_PROFILE,
+            "adopted": True,
+        }
+    if len(existing) > 1:
+        worker.last_health = "duplicate_processes_fail_closed"
+        worker.last_error = "multiple_existing_tunnel_workers"
+        return {
+            **worker.summary(),
+            "configured": True,
+            "pid": None,
+            "process_alive": False,
+            "profile": TUNNEL_PROFILE,
+            "matching_pids": existing,
+        }
+
     if not worker.can_restart():
         worker.last_health = "restart_suppressed"
         return {
@@ -428,6 +485,36 @@ def ensure_bridge(worker: Worker) -> dict[str, Any]:
             BRIDGE_PIDFILE.unlink()
         except FileNotFoundError:
             pass
+
+    existing = find_matching_pids(
+        lambda line: str(BRIDGE_ROOT) in line or "continuity-bridge" in line
+    )
+    if len(existing) == 1:
+        pid = existing[0]
+        BRIDGE_PIDFILE.write_text(str(pid) + "\n", encoding="ascii")
+        os.chmod(BRIDGE_PIDFILE, 0o600)
+        worker.last_health = "adopted_existing"
+        worker.last_error = ""
+        log(f"bridge_adopt pid={pid}")
+        return {
+            **worker.summary(),
+            "configured": True,
+            "pid": pid,
+            "process_alive": True,
+            "endpoint": BRIDGE_HEALTH,
+            "adopted": True,
+        }
+    if len(existing) > 1:
+        worker.last_health = "duplicate_processes_fail_closed"
+        worker.last_error = "multiple_existing_bridge_workers"
+        return {
+            **worker.summary(),
+            "configured": True,
+            "pid": None,
+            "process_alive": False,
+            "endpoint": BRIDGE_HEALTH,
+            "matching_pids": existing,
+        }
 
     if not worker.can_restart():
         worker.last_health = "restart_suppressed"
