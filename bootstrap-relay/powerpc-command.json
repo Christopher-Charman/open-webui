@@ -1,1 +1,1 @@
-{"version":1,"seq":1790695974,"expires":1790696274,"action":"read","args":{"path":"/home/storage/781/4477781/user/webapp/bin/local-mcp","max_bytes":131072},"sig":"c4b20dc15cbd119dc96b242cf08228a8bb85d632332fef93ff616614ce90623c"}
+{"version":1,"seq":1790696076,"expires":1790696376,"action":"status","args":{},"sig":"a4602e89c29b5e3fb303eb59f006d42b2b06fc71e6b93e8d426e8e6d3ab1622e"}
