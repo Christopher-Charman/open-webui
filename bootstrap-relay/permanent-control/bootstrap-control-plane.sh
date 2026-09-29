@@ -5,7 +5,7 @@ umask 077
 ACCOUNT="/home/storage/781/4477781/user"
 WEBAPP="$ACCOUNT/webapp"
 STATE="$WEBAPP/.control-plane-bootstrap"
-PPC_INSTALL_COMMIT="a1fc69127e85c4ecf2e1d867b531cf5061de238c"
+PPC_INSTALL_COMMIT="b76f19092bc1e07d1efb38147fee25d70802f524"
 MCP_KEEPALIVE_INSTALL_COMMIT="9866eead9164993fd55d2b49340be5ffb5086149"
 PPC_INSTALL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PPC_INSTALL_COMMIT/bootstrap-relay/permanent-control/install.sh"
 MCP_INSTALL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$MCP_KEEPALIVE_INSTALL_COMMIT/bootstrap-relay/permanent-control/install-secure-mcp-keepalive.sh"
