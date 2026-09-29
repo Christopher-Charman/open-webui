@@ -31,6 +31,11 @@ HTDOCS = Path(os.environ.get("PPC_CONTROL_HTDOCS", str(ACCOUNT / "htdocs")))
 STATE = Path(os.environ.get("PPC_CONTROL_STATE", str(ACCOUNT / ".powerpc-control-v1")))
 PUBLIC = HTDOCS / ".well-known" / PROTOCOL
 RESULTS = PUBLIC / "results"
+PUBLIC_MIRROR = Path(os.environ.get(
+    "PPC_CONTROL_PUBLIC_MIRROR",
+    str(WEBAPP / "envs" / "openwebui" / "lib" / "python3.11" / "site-packages" / "open_webui" / "static" / PROTOCOL),
+))
+MIRROR_RESULTS = PUBLIC_MIRROR / "results"
 PIDFILE = STATE / "daemon.pid"
 DBFILE = STATE / "state.sqlite3"
 LOGFILE = STATE / "daemon.log"
@@ -163,7 +168,9 @@ def _publish_identity(xpriv, spriv, started_at: int) -> None:
     sig = spriv.sign(_canon(body))
     out = dict(body)
     out["signature_b64"] = _b64e(sig)
-    _atomic_write(PUBLIC / "identity.json", _canon(out) + b"\n", 0o644)
+    identity_bytes = _canon(out) + b"\n"
+    _atomic_write(PUBLIC / "identity.json", identity_bytes, 0o644)
+    _atomic_write(PUBLIC_MIRROR / "identity.json", identity_bytes, 0o644)
     status = {
         "protocol": PROTOCOL,
         "version": VERSION,
@@ -173,7 +180,9 @@ def _publish_identity(xpriv, spriv, started_at: int) -> None:
         "pid": os.getpid(),
     }
     status["signature_b64"] = _b64e(spriv.sign(_canon(status)))
-    _atomic_write(PUBLIC / "status.json", _canon(status) + b"\n", 0o644)
+    status_bytes = _canon(status) + b"\n"
+    _atomic_write(PUBLIC / "status.json", status_bytes, 0o644)
+    _atomic_write(PUBLIC_MIRROR / "status.json", status_bytes, 0o644)
 
 
 def _db() -> sqlite3.Connection:
@@ -369,7 +378,9 @@ def _result_envelope(task: dict[str, Any], shared: bytes, spriv, result: dict[st
 def _publish_result(task: dict[str, Any], shared: bytes, spriv, result: dict[str, Any]) -> str:
     env = _result_envelope(task, shared, spriv, result)
     path = RESULTS / (task["task_id"] + ".json")
-    _atomic_write(path, _canon(env) + b"\n", 0o644)
+    data = _canon(env) + b"\n"
+    _atomic_write(path, data, 0o644)
+    _atomic_write(MIRROR_RESULTS / (task["task_id"] + ".json"), data, 0o644)
     return str(path)
 
 
@@ -494,6 +505,8 @@ def main() -> int:
     STATE.mkdir(parents=True, exist_ok=True)
     PUBLIC.mkdir(parents=True, exist_ok=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
+    PUBLIC_MIRROR.mkdir(parents=True, exist_ok=True)
+    MIRROR_RESULTS.mkdir(parents=True, exist_ok=True)
     os.chmod(STATE, 0o700)
     xpriv, spriv = _load_or_create_keys()
     conn = _db()
