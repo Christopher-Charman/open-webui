@@ -74,6 +74,26 @@ if not INDEX.exists():
 
 index_text = INDEX.read_text()
 
+# Idempotent re-entry: if the new cache-busted entrypoints are already installed, verify
+# their files and markers and leave the current deployment unchanged.
+if MARKER in index_text:
+    app_done = re.search(r'/_app/immutable/entry/(app\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', index_text)
+    node_done = re.search(r'/_app/immutable/nodes/(2\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', index_text)
+    if not app_done or not node_done:
+        raise SystemExit('ERROR v6 marker present but cache-busted entrypoint references are incomplete')
+    app_done_path = FRONTEND / '_app/immutable/entry' / app_done.group(1)
+    node_done_path = FRONTEND / '_app/immutable/nodes' / node_done.group(1)
+    if not app_done_path.exists() or not node_done_path.exists():
+        raise SystemExit('ERROR v6 marker present but cache-busted entrypoint files are missing')
+    node_done_text = node_done_path.read_text()
+    if 'set(DB, null);' not in node_done_text or 'OWUI startup guard: initialization timeout; continuing' not in node_done_text:
+        raise SystemExit('ERROR v6 node exists but startup-guard invariants are missing')
+    print('ALREADY_APPLIED')
+    print('MARKER=' + MARKER)
+    print('APP=/_app/immutable/entry/' + app_done.group(1))
+    print('NODE=/_app/immutable/nodes/' + node_done.group(1))
+    raise SystemExit(0)
+
 # Discover the concrete SvelteKit app entry currently referenced by this installed build.
 app_match = re.search(r'/_app/immutable/entry/(app\.[A-Za-z0-9_-]+\.js)', index_text)
 if not app_match:
