@@ -15,6 +15,7 @@ STAMP = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 BACKUP = BACKUPS / f'pre-orb-beam-reintro-{STAMP}'
 GEN = '20260930.1'
 MARKER = 'owui-postmount-orb-beam-v20260930.1'
+HERO_MARKER = 'continuity-landing-hero-150-v20260930.1'
 
 JS_HASH = '71fab45c74489a147a3184044574da6d29051684f7848b59c3bb5627d58badc7'
 CSS_HASH = '6d71e7327a98c6c72904de25e0e379a96d78bf450ec8825978db201343a06e63'
@@ -89,6 +90,41 @@ if 'owui-border-beam-v1' not in js_text:
     raise SystemExit('ERROR Border Beam JS marker missing')
 if 'owui-thinking-orb-v1' not in js_text:
     raise SystemExit('ERROR thinking-orb host marker missing')
+if '[data-surface="landing"]' not in css_text:
+    raise SystemExit('ERROR accepted v1.4.5 landing selector missing')
+if 'dataset.surface' not in js_text and 'setAttribute("data-surface"' not in js_text and "setAttribute('data-surface'" not in js_text:
+    raise SystemExit('ERROR route-aware surface marker missing from v1.4.5 JS')
+
+# Presentation-only derivative requested after v1.4.5 acceptance:
+# enlarge the landing hero by 50% while leaving compact chat telemetry and
+# Border Beam state behavior unchanged. Mobile width is viewport-capped to
+# avoid horizontal overflow, while height/orb scale remain 150%.
+hero_override = f"""
+/* {HERO_MARKER}
+   Base accepted v1.4.5 landing hero: ~410x108, orb ~82.
+   Requested derivative: 150% => 615x162, orb 123.
+   Mobile base: ~326x94, orb ~74 => 489x141, orb 111.
+   Width is capped to the viewport on narrow screens. */
+#owui-thinking-orb-v1[data-surface="landing"] {{
+  width: min(615px, calc(100vw - 24px)) !important;
+  min-height: 162px !important;
+}}
+#owui-thinking-orb-v1[data-surface="landing"] canvas {{
+  width: 123px !important;
+  height: 123px !important;
+}}
+@media (max-width: 420px) {{
+  #owui-thinking-orb-v1[data-surface="landing"] {{
+    width: min(489px, calc(100vw - 16px)) !important;
+    min-height: 141px !important;
+  }}
+  #owui-thinking-orb-v1[data-surface="landing"] canvas {{
+    width: 111px !important;
+    height: 111px !important;
+  }}
+}}
+"""
+css_text = css_text.rstrip() + "\n\n" + hero_override.strip() + "\n"
 
 # Qualify the exact historical JS before use.
 node_candidates = [
@@ -189,18 +225,22 @@ try:
         raise RuntimeError('stock bootstrap extension points changed')
     if sha(FSTATIC/'owui-orb-v1.js') != JS_HASH:
         raise RuntimeError('orb JS hash drift after write')
-    if sha(FSTATIC/'owui-orb-v1.css') != CSS_HASH:
-        raise RuntimeError('orb CSS hash drift after write')
+    if HERO_MARKER not in (FSTATIC/'owui-orb-v1.css').read_text():
+        raise RuntimeError('landing hero 150% marker missing after write')
 except Exception:
     shutil.copy2(BACKUP/'frontend/index.html', INDEX)
     print('ORB_BEAM_REINTRO=ROLLBACK_AUTO_RESTORED')
     raise
 
 print('ORB_BEAM_REINTRO=STAGED_ON_DISK_PASS')
-print('LAYER=POSTMOUNT_ORB_BORDERBEAM_ONLY')
-print('ORB_VERSION=1.4.5')
+print('LAYER=POSTMOUNT_ORB_BORDERBEAM_V145_PLUS_LANDING_HERO_150')
+print('ORB_SOURCE_VERSION=1.4.5')
+print('LANDING_HERO_SCALE=1.5')
+print('LANDING_DESKTOP_TARGET=615x162_ORB123')
+print('LANDING_MOBILE_TARGET=489x141_ORB111_VIEWPORT_CAPPED')
 print('ORB_JS_SHA256='+sha(FSTATIC/'owui-orb-v1.js'))
-print('ORB_CSS_SHA256='+sha(FSTATIC/'owui-orb-v1.css'))
+print('ORB_CSS_BASE_SHA256='+CSS_HASH)
+print('ORB_CSS_DERIVED_SHA256='+sha(FSTATIC/'owui-orb-v1.css'))
 print('SOURCE_JS='+str(src_js))
 print('SOURCE_CSS='+str(src_css))
 print('STOCK_LOADER_BYTES='+str((FSTATIC/'loader.js').stat().st_size))
