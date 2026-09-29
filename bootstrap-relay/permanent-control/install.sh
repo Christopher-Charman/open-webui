@@ -6,8 +6,10 @@ ACCOUNT="/home/storage/781/4477781/user"
 WEBAPP="$ACCOUNT/webapp"
 HTDOCS="$ACCOUNT/htdocs"
 STATE="$ACCOUNT/.powerpc-control-v1"
+WORKER_STATE="$ACCOUNT/.powerpc-control-workers"
 BIN="$WEBAPP/bin/powerpc-control"
-PIN="09540dcf30b60070fc6b467a8121d8f129eebbd2"
+WORKER_BIN="$WEBAPP/bin/powerpc-control-workers"
+PIN="784090634eaf9ebcd4c417793952a1477f0dd80d"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
@@ -22,43 +24,71 @@ done
 [ -n "$PY" ] || { echo "REFUSED Python missing" >&2; exit 2; }
 "$PY" -c 'import cryptography,sqlite3' >/dev/null 2>&1 || { echo "REFUSED cryptography/sqlite unavailable" >&2; exit 2; }
 
-mkdir -p "$STATE" "$HTDOCS/.well-known/powerpc-control-v1/results" "$WEBAPP/bin"
-chmod 700 "$STATE"
+mkdir -p "$STATE" "$WORKER_STATE" "$HTDOCS/.well-known/powerpc-control-v1/results" "$WEBAPP/bin"
+chmod 700 "$STATE" "$WORKER_STATE"
 
-curl -fsSL --retry 4 "$BASE/daemon.py" -o "$STATE/daemon.py"
-curl -fsSL --retry 4 "$BASE/local-mcp-call.mjs" -o "$STATE/local-mcp-call.mjs"
-curl -fsSL --retry 4 "$BASE/powerpc-control-service" -o "$BIN"
-chmod 700 "$STATE/daemon.py" "$STATE/local-mcp-call.mjs" "$BIN"
+fetch_private() {
+  url="$1"
+  dest="$2"
+  tmp="$dest.tmp.$$"
+  curl -fsSL --retry 4 "$url" -o "$tmp"
+  chmod 700 "$tmp"
+  mv -f "$tmp" "$dest"
+}
 
-"$PY" -m py_compile "$STATE/daemon.py"
+fetch_private "$BASE/daemon.py" "$STATE/daemon.py"
+fetch_private "$BASE/local-mcp-call.mjs" "$STATE/local-mcp-call.mjs"
+fetch_private "$BASE/powerpc-control-service" "$BIN"
+fetch_private "$BASE/control-plane-workers.py" "$WORKER_STATE/control-plane-workers.py"
+fetch_private "$BASE/powerpc-control-workers-service" "$WORKER_BIN"
+
+"$PY" -m py_compile "$STATE/daemon.py" "$WORKER_STATE/control-plane-workers.py"
 "$WEBAPP/.local/node22-glibc217/bin/node" --check "$STATE/local-mcp-call.mjs"
+sh -n "$BIN"
+sh -n "$WORKER_BIN"
 
-MARK="# POWERPC_CONTROL_V1"
+MARK_CONTROL="# POWERPC_CONTROL_V1"
+MARK_WORKERS="# POWERPC_CONTROL_WORKERS_V1"
 TMP="$STATE/crontab.$$"
-(crontab -l 2>/dev/null || true) | awk -v m="$MARK" '$0 !~ m {print}' >"$TMP"
-printf '%s\n' "@reboot $BIN ensure >/dev/null 2>&1 $MARK" "* * * * * $BIN ensure >/dev/null 2>&1 $MARK" >>"$TMP"
+(crontab -l 2>/dev/null || true) | awk   -v a="$MARK_CONTROL"   -v b="$MARK_WORKERS"   '$0 !~ a && $0 !~ b {print}' >"$TMP"
+
+printf '%s\n'   "@reboot $BIN ensure >/dev/null 2>&1 $MARK_CONTROL"   "* * * * * $BIN ensure >/dev/null 2>&1 $MARK_CONTROL"   "@reboot $WORKER_BIN ensure >/dev/null 2>&1 $MARK_WORKERS"   "* * * * * $WORKER_BIN ensure >/dev/null 2>&1 $MARK_WORKERS"   >>"$TMP"
+
 crontab "$TMP"
 rm -f "$TMP"
 
-"$BIN" ensure
+"$BIN" start
+"$WORKER_BIN" start
 
 IDENTITY="$HTDOCS/.well-known/powerpc-control-v1/identity.json"
 STATUS="$HTDOCS/.well-known/powerpc-control-v1/status.json"
-deadline=$(( $(date +%s) + 25 ))
+deadline=$(( $(date +%s) + 40 ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
+  control_ok=0
+  workers_ok=0
   if [ -s "$IDENTITY" ] && [ -s "$STATUS" ] && "$BIN" status >/dev/null 2>&1; then
+    control_ok=1
+  fi
+  if "$WORKER_BIN" status >/dev/null 2>&1; then
+    workers_ok=1
+  fi
+  if [ "$control_ok" = 1 ] && [ "$workers_ok" = 1 ]; then
     fp="$("$PY" -c 'import json,sys;print(json.load(open(sys.argv[1]))["identity_fingerprint"])' "$IDENTITY")"
     echo "POWERPC_CONTROL_V1=READY"
     echo "identity_fingerprint=$fp"
     echo "identity_url=https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/identity.json"
     echo "status_url=https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/status.json"
     echo "transport=GITHUB_ENCRYPTED_QUEUE"
-    echo "supervision=CRON_ENSURE"
+    echo "control_supervision=CRON_ENSURE_DETACHED"
+    echo "worker_supervision=CRON_ENSURE_DETACHED"
+    "$WORKER_BIN" status || true
     exit 0
   fi
   sleep 1
 done
 
 echo "POWERPC_CONTROL_V1=FAIL" >&2
-tail -n 80 "$STATE/service.log" "$STATE/daemon.log" 2>/dev/null || true
+"$BIN" status 2>&1 || true
+"$WORKER_BIN" status 2>&1 || true
+tail -n 80 "$STATE/service.log" "$STATE/daemon.log" "$WORKER_STATE/service.log" "$WORKER_STATE/supervisor.log" 2>/dev/null || true
 exit 1
