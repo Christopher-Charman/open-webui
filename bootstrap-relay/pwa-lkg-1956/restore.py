@@ -68,6 +68,32 @@ def fetch_asset(name: str) -> bytes:
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.read()
 
+def runtime_bytes(name: str, data: bytes, meta: dict) -> bytes:
+    """Preserve Git identity, then normalize only a single terminal newline when
+    required to reproduce the archived live-runtime SHA-256."""
+    expected = meta.get('sha256')
+    if not expected:
+        return data
+    if sha256_bytes(data) == expected:
+        return data
+
+    candidates = []
+    if data.endswith(b'\r\n'):
+        candidates.append(data[:-2])
+    elif data.endswith(b'\n'):
+        candidates.append(data[:-1])
+    else:
+        candidates.append(data + b'\n')
+
+    for candidate in candidates:
+        if sha256_bytes(candidate) == expected:
+            print(f'NORMALIZED_TRAILING_NEWLINE={name}')
+            return candidate
+
+    raise SystemExit(
+        f'ERROR historical runtime sha256 mismatch after bounded newline normalization: {name}'
+    )
+
 def atomic_write(path: Path, data: bytes):
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=path.name + '.', dir=str(path.parent))
@@ -110,12 +136,10 @@ if not FRONT_STATIC.exists() or not SERVED_STATIC.exists():
 
 downloaded = {}
 for name, meta in ASSETS.items():
-    data = fetch_asset(name)
-    if git_blob_sha1(data) != meta['blob']:
+    source_data = fetch_asset(name)
+    if git_blob_sha1(source_data) != meta['blob']:
         raise SystemExit(f'ERROR source blob mismatch: {name}')
-    if meta.get('sha256') and sha256_bytes(data) != meta['sha256']:
-        raise SystemExit(f'ERROR source sha256 mismatch: {name}')
-    downloaded[name] = data
+    downloaded[name] = runtime_bytes(name, source_data, meta)
 
 index_text = INDEX.read_text()
 
