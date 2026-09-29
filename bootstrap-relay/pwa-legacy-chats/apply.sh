@@ -5,11 +5,12 @@ umask 077
 BASE="/home/storage/781/4477781/user/webapp"
 TARGET="$BASE/envs/openwebui/lib/python3.11/site-packages/open_webui/frontend/index.html"
 RESTART="$BASE/restart-openwebui-via-passenger.sh"
-PIN="b32699f54bad78826aa202ebd664c30d4111582a"
+PIN="b661a7bca426c022f004edd5adb96759cd3e0578"
 RAW="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/pwa-legacy-chats/install.py"
 TMP="$(mktemp)"
 PUBLIC_HTML="$(mktemp)"
-trap 'rm -f "$TMP" "$PUBLIC_HTML"' EXIT
+PUBLIC_APP="$(mktemp)"
+trap 'rm -f "$TMP" "$PUBLIC_HTML" "$PUBLIC_APP"' EXIT
 
 curl -fsSL --retry 3 --connect-timeout 10 "$RAW" -o "$TMP"
 python3 "$TMP"
@@ -53,7 +54,10 @@ code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 8 http://127.0.0.1:18
 }
 
 probe="https://powerpc-darwin.org/?__owui_pwa_probe=20260929.6-$(date +%s)"
-curl -fsSL --retry 3 --connect-timeout 10 --max-time 25   -H 'Cache-Control: no-cache'   -H 'Pragma: no-cache'   "$probe" -o "$PUBLIC_HTML" || {
+curl -fsSL --retry 3 --connect-timeout 10 --max-time 25 \
+  -H 'Cache-Control: no-cache' \
+  -H 'Pragma: no-cache' \
+  "$probe" -o "$PUBLIC_HTML" || {
     echo "PWA_BYPASS=FAIL public_html_fetch"
     exit 2
   }
@@ -66,17 +70,18 @@ grep -Fq "$APP" "$PUBLIC_HTML" || {
   echo "PWA_BYPASS=FAIL public_app_reference_missing"
   exit 2
 }
-grep -Fq "$NODE" "$PUBLIC_HTML" || {
-  echo "PWA_BYPASS=FAIL public_node_reference_missing"
-  exit 2
-}
 
-app_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://powerpc-darwin.org$APP?cb=20260929.6" || true)"
-node_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://powerpc-darwin.org$NODE?cb=20260929.6" || true)"
+app_code="$(curl -sS -o "$PUBLIC_APP" -w '%{http_code}' --max-time 15 "https://powerpc-darwin.org$APP?cb=20260929.6" || true)"
 [ "$app_code" = "200" ] || {
   echo "PWA_BYPASS=FAIL public_app_http=$app_code"
   exit 2
 }
+node_base="${NODE##*/}"
+grep -Fq "../nodes/$node_base" "$PUBLIC_APP" || {
+  echo "PWA_BYPASS=FAIL public_app_missing_node_reference"
+  exit 2
+}
+node_code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://powerpc-darwin.org$NODE?cb=20260929.6" || true)"
 [ "$node_code" = "200" ] || {
   echo "PWA_BYPASS=FAIL public_node_http=$node_code"
   exit 2
