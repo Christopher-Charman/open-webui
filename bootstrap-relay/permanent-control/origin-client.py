@@ -174,6 +174,7 @@ def prepare(args: argparse.Namespace) -> int:
                 serialization.PublicFormat.SubjectPublicKeyInfo,
             )
         ),
+        "identity_fingerprint": fingerprint,
         "created_at": created_at,
         "expires_at": expires_at,
     }
