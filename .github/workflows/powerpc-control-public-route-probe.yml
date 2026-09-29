@@ -16,9 +16,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://www.powerpc-darwin.org/wiki/ppc-control-identity.json"
+          URL="https://www.powerpc-darwin.org/ppc-control-identity.json"
           for i in $(seq 1 40); do
-            if curl -fsS --connect-timeout 8 --max-time 15 "$URL?t=$(date +%s%N)" -o /tmp/identity.json; then
+            code="$(curl -sS -o /tmp/identity.json -w '%{http_code}' --connect-timeout 8 --max-time 15 "$URL?t=$(date +%s%N)" || true)"
+            echo "attempt=$i http=$code"
+            if [ "$code" = "200" ]; then
               if python3 - /tmp/identity.json <<'PY'
           import json,sys,time
           d=json.load(open(sys.argv[1]))
@@ -36,6 +38,9 @@ jobs:
                 echo "POWERPC_PUBLIC_PROTOCOL_JSON=PASS"
                 exit 0
               fi
+              echo "body was HTTP 200 but not valid PowerPC protocol JSON"
+              head -c 160 /tmp/identity.json || true
+              echo
             fi
             sleep 5
           done
