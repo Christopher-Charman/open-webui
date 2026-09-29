@@ -6,12 +6,13 @@ ACCOUNT="/home/storage/781/4477781/user"
 WEBAPP="$ACCOUNT/webapp"
 STATE="$WEBAPP/.secure-mcp-keepalive"
 TARGET="$WEBAPP/bin/secure-mcp-keepalive"
+ACCEPT="$WEBAPP/bin/secure-mcp-keepalive-accept"
 PROFILE_DIR="$WEBAPP/.config/tunnel-client"
 ALIAS="powerpc-local-mcp"
 SECRET_FILE="$STATE/runtime-api-key"
 BIN_HINT="$STATE/tunnel-client-bin"
-PIN="907f5de60bc408f0afd5718f9d3c693c1154fcfb"
-SOURCE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control/secure-mcp-keepalive"
+PIN="5568fb491606b354498ef7877da1b005c783ed7c"
+BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
 [ -d "$WEBAPP" ] || { echo "REFUSED webapp missing" >&2; exit 2; }
@@ -38,8 +39,8 @@ TC="$(resolve_bin)" || { echo "REFUSED tunnel-client missing" >&2; exit 2; }
 printf '%s\n' "$TC" >"$BIN_HINT"
 chmod 600 "$BIN_HINT"
 
-# The existing tunnel profile references env:CONTROL_PLANE_API_KEY. Cron does
-# not inherit the interactive webshell environment, so migrate that already
+# The accepted runtime profile references env:CONTROL_PLANE_API_KEY. Cron does
+# not inherit an interactive Web Terminal environment, so migrate the already
 # present host-side value into a private file reference without printing it.
 if [ ! -s "$SECRET_FILE" ] || [ "${SECURE_MCP_REFRESH_RUNTIME_KEY:-0}" = "1" ]; then
   if [ -n "${CONTROL_PLANE_API_KEY:-}" ]; then
@@ -57,11 +58,18 @@ fi
 chmod 600 "$SECRET_FILE"
 
 tmp="$STATE/secure-mcp-keepalive.$$"
-curl -fsSL --retry 4 "$SOURCE" -o "$tmp"
+curl -fsSL --retry 4 "$BASE/secure-mcp-keepalive" -o "$tmp"
 chmod 700 "$tmp"
 sh -n "$tmp"
 mv -f "$tmp" "$TARGET"
 chmod 700 "$TARGET"
+
+tmp="$STATE/accept-secure-mcp-keepalive.$$"
+curl -fsSL --retry 4 "$BASE/accept-secure-mcp-keepalive.sh" -o "$tmp"
+chmod 700 "$tmp"
+sh -n "$tmp"
+mv -f "$tmp" "$ACCEPT"
+chmod 700 "$ACCEPT"
 
 MARK="# SECURE_MCP_KEEPALIVE_V1"
 TMP="$STATE/crontab.$$"
@@ -85,4 +93,5 @@ echo "alias=$ALIAS"
 echo "supervision=NATIVE_TUNNEL_RUNTIME_PLUS_CRON_HEALTH_ENSURE"
 echo "local_mcp=STDIO_CHILD_NOT_DAEMONIZED"
 echo "runtime_key=file:$SECRET_FILE"
+echo "acceptance=$ACCEPT"
 echo "source_commit=$PIN"
