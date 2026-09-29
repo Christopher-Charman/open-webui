@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - bootstrap-relay/permanent-control/queue.json
+      - .github/workflows/powerpc-control-public-route-probe.yml
 permissions:
   contents: read
 jobs:
