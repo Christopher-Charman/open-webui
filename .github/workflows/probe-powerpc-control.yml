@@ -20,24 +20,13 @@ jobs:
           set -euo pipefail
           code="$(curl -sS --connect-timeout 10 --max-time 30 -o /tmp/create.json -w '%{http_code}' -H 'Content-Type: application/json' -d '{"cols":100,"rows":30}' https://www.powerpc-darwin.org/terminal/api/session || true)"
           echo "TERMINAL_CREATE_HTTP=$code"
-          case "$code" in
-            200)
-              python3 - <<'PY'
-import json
-d=json.load(open('/tmp/create.json'))
-assert d.get('ok') is True
-assert isinstance(d.get('session_id'),str) and d['session_id']
-assert isinstance(d.get('csrf_token'),str) and d['csrf_token']
-print('TERMINAL_MACHINE_CALLABLE=PASS')
-PY
-              ;;
-            409)
-              echo "TERMINAL_MACHINE_CALLABLE=SESSION_EXISTS"
-              ;;
-            403)
-              echo "TERMINAL_MACHINE_CALLABLE=GATE_REQUIRED"
-              ;;
-            *)
-              echo "TERMINAL_MACHINE_CALLABLE=FAIL"
-              ;;
-          esac
+          if [ "$code" = "200" ]; then
+            python3 -c 'import json; d=json.load(open("/tmp/create.json")); assert d.get("ok") is True; assert isinstance(d.get("session_id"),str) and d["session_id"]; assert isinstance(d.get("csrf_token"),str) and d["csrf_token"]'
+            echo "TERMINAL_MACHINE_CALLABLE=PASS"
+          elif [ "$code" = "409" ]; then
+            echo "TERMINAL_MACHINE_CALLABLE=SESSION_EXISTS"
+          elif [ "$code" = "403" ]; then
+            echo "TERMINAL_MACHINE_CALLABLE=GATE_REQUIRED"
+          else
+            echo "TERMINAL_MACHINE_CALLABLE=FAIL"
+          fi
