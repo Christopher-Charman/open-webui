@@ -152,6 +152,7 @@ registry = r"""(() => {
     if(!v) return false;
     window.OWUILCARS?.disable?.();
     localStorage.setItem('theme',v);
+    for(const k of ['--color-gray-800','--color-gray-850','--color-gray-900','--color-gray-950']) r.style.removeProperty(k);
     r.classList.remove('her','light');
     if(v==='system'){
       const dark=matchMedia('(prefers-color-scheme: dark)').matches;
