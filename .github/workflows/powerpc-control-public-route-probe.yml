@@ -10,20 +10,34 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Probe
+      - name: Strict protocol probe
+        shell: bash
         run: |
-          set -e
-          for i in $(seq 1 30); do
-            if curl -fsS --max-time 15 https://www.powerpc-darwin.org/powerpc-control-v1/identity.json -o /tmp/identity.json; then
-              echo IDENTITY_OK
-              cat /tmp/identity.json
-              if curl -fsS --max-time 15 https://www.powerpc-darwin.org/powerpc-control-v1/results/ppc-public-route-symlink-20260929T2306Z.json -o /tmp/result.json; then
-                echo RESULT_OK
-                cat /tmp/result.json
+          set -euo pipefail
+          URL="https://www.powerpc-darwin.org/wiki/ppc-control-identity.json"
+          for i in $(seq 1 40); do
+            if curl -fsS --connect-timeout 8 --max-time 15 "$URL?t=$(date +%s%N)" -o /tmp/identity.json; then
+              if python3 - /tmp/identity.json <<'PY'
+          import json,sys,time
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("version")==1
+          assert d.get("runtime_id")=="fasthost.powerpc"
+          assert d.get("state")=="ready"
+          assert d.get("uid")==2257347
+          assert d.get("user")=="csh3280350"
+          assert d.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+          assert set(d.get("tool_contract",[]))=={"runtime_health","read_text","list_dir","terminal_exec"}
+          assert int(time.time())-int(d.get("heartbeat_at",0)) < 180
+          PY
+              then
+                echo "POWERPC_PUBLIC_PROTOCOL_JSON=PASS"
                 exit 0
               fi
             fi
             sleep 5
           done
+          echo "POWERPC_PUBLIC_PROTOCOL_JSON=FAIL" >&2
           exit 1
