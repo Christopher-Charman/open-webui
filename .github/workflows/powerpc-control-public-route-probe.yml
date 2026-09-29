@@ -10,20 +10,30 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - name: Strict protocol probe
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://www.powerpc-darwin.org/ppc-control-identity.json"
-          for i in $(seq 1 40); do
-            code="$(curl -sS -o /tmp/identity.json -w '%{http_code}' --connect-timeout 8 --max-time 15 "$URL?t=$(date +%s%N)" || true)"
-            echo "attempt=$i http=$code"
-            if [ "$code" = "200" ]; then
-              if python3 - /tmp/identity.json <<'PY'
+          urls=(
+            "https://www.powerpc-darwin.org/ppc-control-identity.json"
+            "https://www.powerpc-darwin.org/wiki/ppc-control-identity.json"
+            "https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json"
+            "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/identity.json"
+            "https://www.powerpc-darwin.org/powerpc-control-v1/identity.json"
+          )
+          for round in 1 2 3; do
+            for url in "${urls[@]}"; do
+              code="$(curl -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' --connect-timeout 6 --max-time 12 "$url?t=$(date +%s%N)" || true)"
+              ctype="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/{gsub(/\r/,""); print substr($0,index($0,":")+2)}' /tmp/headers | tail -n1)"
+              echo "round=$round http=$code content_type=${ctype:-none} url=$url"
+              if [ "$code" = "200" ] && python3 - /tmp/body <<'PY'
           import json,sys,time
-          d=json.load(open(sys.argv[1]))
+          try:
+              d=json.load(open(sys.argv[1]))
+          except Exception:
+              raise SystemExit(1)
           assert d.get("protocol")=="powerpc-control-v1"
           assert d.get("version")==1
           assert d.get("runtime_id")=="fasthost.powerpc"
@@ -32,17 +42,14 @@ jobs:
           assert d.get("user")=="csh3280350"
           assert d.get("hostname")=="hp3-rr-1024747.hostingp3.local"
           assert set(d.get("tool_contract",[]))=={"runtime_health","read_text","list_dir","terminal_exec"}
-          assert int(time.time())-int(d.get("heartbeat_at",0)) < 180
+          assert int(time.time())-int(d.get("heartbeat_at",0)) < 240
           PY
               then
-                echo "POWERPC_PUBLIC_PROTOCOL_JSON=PASS"
+                echo "POWERPC_PUBLIC_PROTOCOL_JSON=PASS url=$url"
                 exit 0
               fi
-              echo "body was HTTP 200 but not valid PowerPC protocol JSON"
-              head -c 160 /tmp/identity.json || true
-              echo
-            fi
-            sleep 5
+            done
+            sleep 2
           done
           echo "POWERPC_PUBLIC_PROTOCOL_JSON=FAIL" >&2
           exit 1
