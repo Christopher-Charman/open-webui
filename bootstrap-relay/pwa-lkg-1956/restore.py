@@ -232,13 +232,17 @@ try:
     atomic_write(INDEX, index_text.encode())
 
     # On-disk verification before lifecycle action.
+    # Source provenance was already verified against the Git blob before normalization.
+    # Runtime bytes are authoritative here: assets with an archived live SHA must match
+    # that exact SHA; assets without one remain byte-identical to the Git source blob.
     for name, meta in ASSETS.items():
         for root in (FRONT_STATIC, SERVED_STATIC):
             data = (root / name).read_bytes()
-            if git_blob_sha1(data) != meta['blob']:
-                raise RuntimeError(f'postwrite blob mismatch: {root / name}')
-            if meta.get('sha256') and sha256_bytes(data) != meta['sha256']:
-                raise RuntimeError(f'postwrite sha256 mismatch: {root / name}')
+            if meta.get('sha256'):
+                if sha256_bytes(data) != meta['sha256']:
+                    raise RuntimeError(f'postwrite runtime sha256 mismatch: {root / name}')
+            elif git_blob_sha1(data) != meta['blob']:
+                raise RuntimeError(f'postwrite source blob mismatch: {root / name}')
 
     written = INDEX.read_text()
     if f'/static/loader.js?v={CACHE_GEN}' not in written:
