@@ -1,0 +1,51 @@
+/* LCARS interface v0.3.3 — independent theme, no extracted game assets. */
+html.lcars{--lc-bg:#050507;--lc-orange:#d88f50;--lc-gold:#efb861;--lc-salmon:#d76f61;--lc-lilac:#bd91c8;--lc-violet:#8f75b5;--lc-blue:#7899c8;--lc-text:#f1c98b;--lc-dim:#b9a789;--lc-ink:#100c0e;color-scheme:dark}
+html.lcars,html.lcars body{background:var(--lc-bg)!important;color:var(--lc-text)!important;background-image:none!important}
+html.lcars body::before{content:"LCARS 47 • COMPUTER ACCESS";position:fixed;z-index:9997;top:env(safe-area-inset-top);left:92px;right:0;height:38px;padding:10px 18px 0 110px;box-sizing:border-box;background:linear-gradient(90deg,var(--lc-lilac) 0 28%,#050507 28% 29%,var(--lc-orange) 29% 100%);border-radius:0 0 0 22px;color:var(--lc-ink);font:800 12px/16px ui-sans-serif,system-ui;letter-spacing:.18em;text-align:right;pointer-events:none}
+html.lcars body::after{content:"";position:fixed;z-index:9996;top:calc(env(safe-area-inset-top) + 38px);bottom:0;left:0;width:22px;background:linear-gradient(var(--lc-orange) 0 20%,#050507 20% 21%,var(--lc-lilac) 21% 43%,#050507 43% 44%,var(--lc-gold) 44% 66%,#050507 66% 67%,var(--lc-salmon) 67% 84%,#050507 84% 85%,var(--lc-orange) 85%);pointer-events:none}
+html.lcars #app{padding-top:calc(env(safe-area-inset-top) + 38px);padding-left:22px;background:#050507!important;background-image:none!important}
+html.lcars .custom-shell-landing,html.lcars .custom-shell-landing::before,html.lcars .custom-shell-landing::after{background:#050507!important;background-image:none!important;box-shadow:none!important}
+html.lcars .hero-network,html.lcars .hero-aura,html.lcars .hero-aura::before,html.lcars .hero-aura::after{display:none!important;background:none!important;filter:none!important;animation:none!important}
+html.lcars .orb-slot{filter:none!important;border:0!important;box-shadow:none!important;opacity:.9}
+html.lcars .orb-slot::before{content:"COMPUTER CORE";display:block;color:var(--lc-orange);font:800 10px/1 ui-sans-serif,system-ui;letter-spacing:.18em;text-align:center;margin-bottom:8px}
+html.lcars .custom-shell-agent-name{color:var(--lc-gold)!important;letter-spacing:.14em;text-transform:uppercase}
+html.lcars .custom-shell-agent-description{color:var(--lc-dim)!important}
+html.lcars .custom-shell-prompt{border:0!important;border-radius:28px 0 28px 0!important;background:#111013!important;box-shadow:-12px 0 0 var(--lc-orange),-18px 0 0 #050507,-24px 0 0 var(--lc-lilac),0 -5px 0 var(--lc-gold),0 5px 0 var(--lc-salmon)!important;overflow:visible!important}
+html.lcars .custom-shell-prompt::before{content:"INPUT"!important;inset:auto 0 100% auto!important;width:auto!important;height:18px!important;padding:3px 16px 0!important;border-radius:14px 0 0 0!important;background:var(--lc-gold)!important;color:var(--lc-ink)!important;filter:none!important;mask:none!important;opacity:1!important;font:800 10px/15px ui-sans-serif,system-ui!important;letter-spacing:.15em!important}
+html.lcars .custom-shell-prompt::after{display:none!important;content:none!important}
+html.lcars .custom-shell-prompt-tools,html.lcars .custom-shell-prompt-actions,html.lcars .custom-shell-controls textarea,html.lcars .custom-shell-controls input,html.lcars .custom-shell-controls select{background:#111013!important;color:#eee!important}
+html.lcars button,html.lcars [role="button"]{border-radius:14px 2px 14px 2px!important}
+html.lcars button:hover,html.lcars [role="button"]:hover{box-shadow:inset 0 0 0 2px var(--lc-gold)!important}
+html.lcars .custom-shell-sidebar,html.lcars .custom-shell-model-selector-panel,html.lcars .custom-shell-settings-modal,html.lcars .custom-shell-controls{background:#0b0a0d!important;background-image:none!important;border:2px solid var(--lc-lilac)!important;border-radius:22px 4px 22px 4px!important;box-shadow:none!important}
+html.lcars .chat-telemetry{background:#0b0a0d!important;border:0!important;border-left:12px solid var(--lc-violet)!important;border-radius:18px 0 18px 0!important;box-shadow:none!important;color:var(--lc-text)!important}
+html.lcars textarea,html.lcars input{border-color:var(--lc-lilac)!important}html.lcars .prose{color:#e8dfd2!important}html.lcars ::selection{background:var(--lc-lilac);color:var(--lc-ink)}
+html.lcars .custom-shell-footer{color:var(--lc-dim)!important;letter-spacing:.12em}
+html.lcars.lcars-processing body::before{content:"LCARS 47 • PROCESSING";animation:lcarsPulse .72s steps(2,end) infinite}html.lcars.lcars-standby body::before{content:"LCARS 47 • STAND BY"}@keyframes lcarsPulse{50%{filter:brightness(1.38)}}
+@media(max-width:640px){html.lcars body::before{left:62px;height:34px;padding:9px 10px 0 50px;font-size:9px;letter-spacing:.12em}html.lcars body::after{top:calc(env(safe-area-inset-top) + 34px);width:12px}html.lcars #app{padding-top:calc(env(safe-area-inset-top) + 34px);padding-left:12px}html.lcars .custom-shell-prompt{margin-left:12px!important;margin-right:10px!important;box-shadow:-7px 0 0 var(--lc-orange),-11px 0 0 #050507,-15px 0 0 var(--lc-lilac),0 -4px 0 var(--lc-gold),0 4px 0 var(--lc-salmon)!important}html.lcars .orb-slot{transform:scale(.88)}}
+@media(prefers-reduced-motion:reduce){html.lcars.lcars-processing body::before{animation:none!important}}
+
+/* Mobile composition pass: reserve LCARS chrome instead of allowing it to cover live telemetry. */
+@media(max-width:640px){html.lcars .orb-slot{margin-top:18px!important}html.lcars .chat-telemetry{margin-left:8px!important;margin-right:10px!important}html.lcars .prose{line-height:1.58!important}html.lcars .custom-shell-prompt{max-width:calc(100vw - 42px)!important}}
+
+/* v0.4 semantic-state presentation: composition responds to runtime state. */
+html.lcars{--lc-state:var(--lc-gold)}
+html.lcars.lcars-listening{--lc-state:var(--lc-blue)}html.lcars.lcars-processing,html.lcars.lcars-generating{--lc-state:var(--lc-orange)}html.lcars.lcars-speaking{--lc-state:var(--lc-lilac)}html.lcars.lcars-tool{--lc-state:var(--lc-violet)}html.lcars.lcars-warning{--lc-state:#f0a12d}html.lcars.lcars-error{--lc-state:#ef3125}
+html.lcars body::before{transition:background-color .22s ease,filter .22s ease}html.lcars .custom-shell-prompt{transition:box-shadow .22s ease,transform .22s ease}html.lcars .orb-slot{transition:transform .22s ease,filter .22s ease}
+html.lcars.lcars-listening body::before{content:"LCARS 47 • LISTENING"}html.lcars.lcars-processing body::before{content:"LCARS 47 • PROCESSING"}html.lcars.lcars-generating body::before{content:"LCARS 47 • RESPONSE"}html.lcars.lcars-speaking body::before{content:"LCARS 47 • AUDIO"}html.lcars.lcars-tool body::before{content:"LCARS 47 • AUXILIARY"}html.lcars.lcars-warning body::before{content:"LCARS 47 • CAUTION"}html.lcars.lcars-error body::before{content:"LCARS 47 • ALERT";background:var(--lc-state)!important}
+html.lcars.lcars-processing .orb-slot,html.lcars.lcars-generating .orb-slot{transform:scale(1.04);filter:brightness(1.18)!important}html.lcars.lcars-speaking .orb-slot{transform:scale(1.025);filter:brightness(1.12)!important}
+html.lcars.lcars-error body::after{background:linear-gradient(#ef3125 0 20%,#050507 20% 21%,#a51d17 21% 43%,#050507 43% 44%,#ef3125 44% 66%,#050507 66% 67%,#a51d17 67% 84%,#050507 84% 85%,#ef3125 85%)}
+@media(prefers-reduced-motion:reduce){html.lcars body::before,html.lcars .custom-shell-prompt,html.lcars .orb-slot{transition:none!important;animation:none!important}}
+
+/* v0.5 owned composition layer — LCARS geometry is structural, not decorative overlay. */
+html.lcars .custom-shell-landing{--lc-rail:22px;position:relative!important}
+html.lcars .custom-shell-landing::after{content:""!important;display:block!important;position:fixed!important;z-index:1!important;left:var(--lc-rail)!important;right:0!important;bottom:0!important;height:12px!important;background:linear-gradient(90deg,var(--lc-salmon) 0 27%,#050507 27% 28%,var(--lc-gold) 28% 52%,#050507 52% 53%,var(--lc-lilac) 53% 76%,#050507 76% 77%,var(--lc-orange) 77%)!important;pointer-events:none!important}
+html.lcars .chat-telemetry{position:relative!important;padding-left:18px!important}
+html.lcars .chat-telemetry::before{content:attr(data-lcars-label);position:absolute;left:-12px;top:0;bottom:0;width:7px;background:var(--lc-state);border-radius:8px 0 0 8px}
+html.lcars .custom-shell-prompt{z-index:4!important}
+html.lcars.lcars-listening .custom-shell-prompt{box-shadow:-12px 0 0 var(--lc-blue),-18px 0 0 #050507,-24px 0 0 var(--lc-lilac),0 -5px 0 var(--lc-blue),0 5px 0 var(--lc-salmon)!important}
+html.lcars.lcars-processing .custom-shell-prompt,html.lcars.lcars-generating .custom-shell-prompt{box-shadow:-12px 0 0 var(--lc-orange),-18px 0 0 #050507,-24px 0 0 var(--lc-gold),0 -5px 0 var(--lc-orange),0 5px 0 var(--lc-salmon)!important}
+html.lcars.lcars-speaking .custom-shell-prompt{box-shadow:-12px 0 0 var(--lc-lilac),-18px 0 0 #050507,-24px 0 0 var(--lc-violet),0 -5px 0 var(--lc-lilac),0 5px 0 var(--lc-blue)!important}
+@media(max-width:640px){html.lcars .custom-shell-landing{--lc-rail:12px}html.lcars .custom-shell-landing::after{height:8px!important}html.lcars .chat-telemetry{padding-left:14px!important}}
+
+/* mobile label repair 20260928.12 */
+@media(max-width:640px){html.lcars .orb-slot::before{display:none!important;content:none!important}}
