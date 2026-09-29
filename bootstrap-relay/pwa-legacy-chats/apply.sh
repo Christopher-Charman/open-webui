@@ -5,7 +5,7 @@ umask 077
 BASE="/home/storage/781/4477781/user/webapp"
 TARGET="$BASE/envs/openwebui/lib/python3.11/site-packages/open_webui/frontend/index.html"
 RESTART="$BASE/restart-openwebui-via-passenger.sh"
-PIN="b661a7bca426c022f004edd5adb96759cd3e0578"
+PIN="4094ff02c0c61525ea2259904e565df103736064"
 RAW="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/pwa-legacy-chats/install.py"
 TMP="$(mktemp)"
 PUBLIC_HTML="$(mktemp)"
@@ -31,9 +31,15 @@ PY
 NODE="$(python3 - <<'PY'
 import re
 from pathlib import Path
-p=Path('/home/storage/781/4477781/user/webapp/envs/openwebui/lib/python3.11/site-packages/open_webui/frontend/index.html')
-m=re.search(r'/_app/immutable/nodes/2\.[A-Za-z0-9_-]+\.pwa20260929_6\.js', p.read_text())
-print(m.group(0) if m else '')
+base=Path('/home/storage/781/4477781/user/webapp/envs/openwebui/lib/python3.11/site-packages/open_webui/frontend')
+index=(base/'index.html').read_text()
+appm=re.search(r'/_app/immutable/entry/(app\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', index)
+if not appm:
+    print('')
+    raise SystemExit(0)
+app=(base/'_app/immutable/entry'/appm.group(1)).read_text()
+nodem=re.search(r'\.\./nodes/(2\.[A-Za-z0-9_-]+\.pwa20260929_6\.js)', app)
+print('/_app/immutable/nodes/' + nodem.group(1) if nodem else '')
 PY
 )"
 
