@@ -123,7 +123,11 @@ def candidate_dirs():
         if not exact_index:
             continue
         has_client = any(list(p.rglob(name)) for name in CLIENT_ASSETS)
-        if not has_client:
+        # The documented 2026-09-28 spinner-repair checkpoint may contain only the
+        # pre-cache-generation index plus control-state material. It is still a valid
+        # first rollback boundary when combined with the already-restored 19:56 client bytes.
+        known_index_boundary = 'openwebui-spinner-repair-20260928-2105' in p.name
+        if not has_client and not known_index_boundary:
             continue
         out.append((key, p))
     out.sort(key=lambda x: (x[0], str(x[1])), reverse=True)
