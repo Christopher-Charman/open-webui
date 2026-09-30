@@ -1,0 +1,40 @@
+name: Probe PowerPC Root Identity
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/probe-powerpc-root-identity.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Require signed PowerPC identity JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://www.powerpc-darwin.org/ppc-control-identity.json"
+          for i in $(seq 1 20); do
+            code="$(curl -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
+            ctype="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/{gsub(/\r/,""); print substr($0,index($0,":")+2)}' /tmp/headers | tail -n1)"
+            echo "attempt=$i http=$code content_type=${ctype:-none}"
+            if [ "$code" = "200" ] && python3 - /tmp/body <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("runtime_id")=="fasthost.powerpc"
+          assert d.get("uid")==2257347
+          assert d.get("user")=="csh3280350"
+          assert d.get("state")=="ready"
+          print("POWERPC_ROOT_IDENTITY=PASS")
+          PY
+            then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "POWERPC_ROOT_IDENTITY=FAIL" >&2
+          exit 1
