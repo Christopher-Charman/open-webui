@@ -2,7 +2,22 @@
 set -Eeuo pipefail
 umask 077
 
-BASE="${HOME}/webapp"
+BASE=""
+for candidate in "${HOME}" "${HOME}/webapp" "${PWD}" "${PWD}/webapp"; do
+  if [ -d "${candidate}/envs/openwebui/lib/python3.11/site-packages/open_webui" ]; then
+    BASE="${candidate}"
+    break
+  fi
+done
+[ -n "$BASE" ] || {
+  echo "ERROR unable to resolve webapp root"
+  echo "HOME=${HOME}"
+  echo "PWD=${PWD}"
+  exit 2
+}
+BASE="$(cd "$BASE" && pwd -P)"
+echo "BASE_RESOLVED=$BASE"
+
 PKG="${BASE}/envs/openwebui/lib/python3.11/site-packages/open_webui"
 FRONTEND="${PKG}/frontend"
 INDEX="${FRONTEND}/index.html"
