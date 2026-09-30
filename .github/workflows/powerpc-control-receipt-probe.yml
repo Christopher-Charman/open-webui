@@ -25,15 +25,18 @@ jobs:
           set -euo pipefail
           id="$(cat /tmp/task-id)"
           for i in $(seq 1 40); do
-            flat="https://www.powerpc-darwin.org/static/ppc-control-result-$id.json"
-            if curl -fsS --connect-timeout 8 --max-time 15 "$flat" -o /tmp/receipt.json; then
-              echo "RECEIPT_URL=$flat"
-              echo "RECEIPT_BEGIN"
-              cat /tmp/receipt.json
-              echo
-              echo "RECEIPT_END"
-              exit 0
-            fi
+            flat="https://www.powerpc-darwin.org/static/powerpc-control-result-$id.json"
+            compat="https://www.powerpc-darwin.org/static/ppc-control-result-$id.json"
+            for candidate in "$flat" "$compat"; do
+              if curl -fsS --connect-timeout 8 --max-time 15 "$candidate" -o /tmp/receipt.json; then
+                echo "RECEIPT_URL=$candidate"
+                echo "RECEIPT_BEGIN"
+                cat /tmp/receipt.json
+                echo
+                echo "RECEIPT_END"
+                exit 0
+              fi
+            done
             for base in               "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/results"               "https://www.powerpc-darwin.org/static/powerpc-control-v1/results"
             do
               if curl -fsS --connect-timeout 8 --max-time 15 "$base/$id.json" -o /tmp/receipt.json; then
