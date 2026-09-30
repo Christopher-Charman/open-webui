@@ -1,164 +1,39 @@
-/* Continuity Shell semantic binder — geometry/state bridge only.
-   Historical colour/theme rules remain owned by the accepted theme layer. */
-:root { --continuity-safe-top: max(env(safe-area-inset-top), 0px); }
+/* Continuity Shell semantic binder v20260930.2
+   Mapping only. It creates no hero, no READY label, no footer, no chat telemetry,
+   no Border Beam, and owns no loader/audio/model/runtime behaviour. */
 
-[data-continuity-superseded="1"] { display:none !important; }
+.continuity-shell-hide-landing-detritus{display:none!important}
 
-.continuity-hero-owned {
-  position:fixed;
-  z-index:18;
-  left:50%;
-  top:calc(var(--continuity-safe-top) + 19vh);
-  transform:translateX(-50%);
-  width:min(72vw,330px);
-  height:min(72vw,330px);
-  pointer-events:none;
-  display:grid;
-  place-items:center;
-  contain:layout style;
-}
-.continuity-hero-owned .hero-network {
-  position:relative;
-  width:min(58vw,270px);
-  height:min(58vw,270px);
-  z-index:2;
-  animation:continuity-hero-float 8s ease-in-out infinite;
-}
-.continuity-hero-owned .hero-aura {
-  position:absolute;
-  inset:0;
-  z-index:1;
-  border-radius:50%;
-  opacity:.82;
-  background:
-    radial-gradient(circle at 37% 42%,rgba(70,190,255,.22),transparent 42%),
-    radial-gradient(circle at 66% 58%,rgba(225,78,220,.16),transparent 50%);
-  filter:blur(28px);
-}
-.continuity-neural-svg { width:100%; height:100%; overflow:visible; }
-.continuity-neural-lines,.continuity-neural-nodes {
-  transform-origin:120px 120px;
-  animation:continuity-neural-breathe 6.5s ease-in-out infinite;
-}
-.continuity-neural-nodes { animation-delay:-1.8s; }
-.continuity-hero-ready {
-  position:absolute;
-  top:calc(100% - 18px);
-  left:50%;
-  transform:translateX(-50%);
-  color:rgba(238,243,255,.96);
-  font:700 12px/1 ui-sans-serif,system-ui,-apple-system,sans-serif;
-  letter-spacing:.34em;
-  text-indent:.34em;
-  text-shadow:0 0 18px rgba(115,190,255,.18);
-  white-space:nowrap;
-}
-.continuity-footer-owned {
-  position:fixed;
-  z-index:16;
-  left:50%;
-  bottom:calc(max(env(safe-area-inset-bottom),0px) + 17vh);
-  transform:translateX(-50%);
-  pointer-events:none;
-  color:rgba(197,204,219,.64);
-  font:500 10.5px/1.2 ui-sans-serif,system-ui,-apple-system,sans-serif;
-  letter-spacing:.08em;
-  white-space:nowrap;
-}
-.continuity-chat-telemetry-owned {
-  position:fixed;
-  z-index:36;
-  left:50%;
-  top:calc(var(--continuity-safe-top) + 11.5vh);
-  transform:translateX(-50%);
-  min-width:220px;
-  max-width:min(74vw,360px);
-  min-height:58px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:8px 18px 8px 10px;
-  border:1px solid rgba(102,208,237,.30);
-  border-radius:999px;
-  background:linear-gradient(100deg,rgba(5,10,19,.94),rgba(7,8,19,.90));
-  color:rgba(245,248,255,.96);
-  box-shadow:0 8px 26px rgba(0,0,0,.40),inset 0 1px 0 rgba(255,255,255,.05);
-  backdrop-filter:blur(18px) saturate(130%);
-  -webkit-backdrop-filter:blur(18px) saturate(130%);
-  pointer-events:none;
-}
-.continuity-chat-telemetry-owned .orb-slot {
-  width:42px;
-  height:42px;
-  flex:0 0 42px;
-  display:grid;
-  place-items:center;
-}
-.continuity-telemetry-orb-svg { width:34px; height:34px; overflow:visible; }
-.continuity-chat-telemetry-owned .copy {
-  min-width:0;
-  display:flex;
-  align-items:baseline;
-  gap:0;
-  white-space:nowrap;
-}
-.continuity-chat-telemetry-owned strong {
-  font:650 15px/1.15 ui-sans-serif,system-ui,-apple-system,sans-serif;
-  letter-spacing:.01em;
-}
-.continuity-telemetry-detail {
-  color:rgba(202,213,229,.64);
-  font:500 11px/1.15 ui-sans-serif,system-ui,-apple-system,sans-serif;
-}
-.continuity-chat-telemetry-owned[data-phase="processing"] .continuity-orb-ring,
-.continuity-chat-telemetry-owned[data-phase="thinking"] .continuity-orb-ring,
-.continuity-chat-telemetry-owned[data-phase="generating"] .continuity-orb-ring,
-.continuity-chat-telemetry-owned[data-phase="speaking"] .continuity-orb-ring,
-.continuity-chat-telemetry-owned[data-phase="listening"] .continuity-orb-ring {
-  transform-origin:120px 120px;
-  animation:continuity-orb-spin 1.8s linear infinite;
-}
-.continuity-chat-telemetry-owned[data-phase="speaking"] {
-  transform:translateX(-50%) scale(1.015);
-}
-.custom-shell-prompt.continuity-bound { z-index:24; }
-
-@keyframes continuity-neural-breathe {
-  0%,100% { transform:scale(.98) rotate(-1deg); opacity:.82; }
-  50% { transform:scale(1.025) rotate(1.5deg); opacity:1; }
-}
-@keyframes continuity-hero-float {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-5px); }
-}
-@keyframes continuity-orb-spin { to { transform:rotate(360deg); } }
-
-@media (max-width:640px) {
-  .continuity-hero-owned {
-    top:calc(var(--continuity-safe-top) + 17.5vh);
-    width:min(78vw,300px);
-    height:min(78vw,300px);
-  }
-  .continuity-hero-owned .hero-network {
-    width:min(60vw,245px);
-    height:min(60vw,245px);
-  }
-  .continuity-hero-ready { top:calc(100% - 24px); }
-  .continuity-footer-owned {
-    bottom:calc(max(env(safe-area-inset-bottom),0px) + 14.5vh);
-    font-size:10px;
-  }
-  .continuity-chat-telemetry-owned {
-    top:calc(var(--continuity-safe-top) + 9.6vh);
-    min-width:205px;
-    min-height:54px;
-    padding:7px 15px 7px 9px;
-  }
+.custom-shell-footer{
+  color:var(--shell-text-muted,rgba(171,197,224,.72))!important;
+  letter-spacing:.10em!important;
+  text-shadow:0 0 14px rgb(var(--shell-accent-rgb,115 216 255)/.10);
 }
 
-@media (prefers-reduced-motion:reduce) {
-  .continuity-neural-lines,
-  .continuity-neural-nodes,
-  .continuity-hero-owned .hero-network,
-  .continuity-orb-ring { animation:none !important; }
+.custom-shell-top-control{
+  border-radius:999px!important;
+  border:1px solid rgb(var(--shell-accent-rgb,115 216 255)/.18)!important;
+  background:linear-gradient(145deg,rgb(var(--shell-accent-rgb,115 216 255)/.035),transparent 50%),rgba(4,11,23,.62)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.26),inset 0 1px 0 rgba(235,249,255,.045)!important;
+  backdrop-filter:blur(14px) saturate(1.22)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.22)!important;
+}
+
+.custom-shell-top-control:hover{
+  background:rgba(108,211,255,.10)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.26),0 0 16px rgba(103,211,255,.10)!important;
+}
+
+html.continuity-shell-semantic-active #message-input-container.custom-shell-prompt{
+  border-width:1px!important;
+  border-style:solid!important;
+}
+
+html.continuity-shell-semantic-active #owui-thinking-orb-v1[data-surface="chat"].orb-slot{
+  border:0!important;
+  background:transparent!important;
+}
+
+@media(max-width:640px){
+  .custom-shell-top-control{min-width:48px;min-height:48px}
 }
