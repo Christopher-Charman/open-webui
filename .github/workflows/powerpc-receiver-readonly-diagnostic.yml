@@ -1,4 +1,4 @@
-name: PowerPC receiver read-only diagnostic
+name: PowerPC receiver external path diagnostic
 
 on:
   push:
@@ -11,100 +11,44 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     steps:
-      - name: Inspect receiver without mutation
+      - name: Probe queue propagation and public flat egress
         shell: bash
         run: |
           set -euo pipefail
-
-          # Reuse only the proven gate/terminal helper definitions from the
-          # pinned bootstrap workflow. Deliberately discard its executable
-          # bootstrap section before sourcing.
-          curl -fsSL --retry 4 \
-            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/b5be6178d0fdf3bee9daea01909733c50837f082/bootstrap-relay/permanent-control/actions-bootstrap-live.sh" \
-            -o /tmp/ppc-bootstrap-functions.full.sh
-          sed '/^recover_gate$/,$d' /tmp/ppc-bootstrap-functions.full.sh \
-            > /tmp/ppc-bootstrap-functions.sh
-          source /tmp/ppc-bootstrap-functions.sh
-
-          recover_gate
-          create_terminal
-
-          cat > /tmp/ppc-readonly-diag.sh <<'REMOTE'
-          set +e
-          P=/home/storage/781/4477781/user
-          W="$P/webapp"
-          S="$P/.powerpc-control-v1"
-          ST="$W/envs/openwebui/lib/python3.11/site-packages/open_webui/static"
-
-          echo PPC_DIAG_BEGIN
+          echo PPC_EXTERNAL_DIAG_BEGIN
           date -u
-          id
-          hostname
 
-          echo ===SERVICE===
-          "$W/bin/powerpc-control" status 2>&1
-
-          echo ===PID===
-          cat "$S/daemon.pid" 2>&1
-
-          echo ===DAEMON_SHA256===
-          sha256sum "$S/daemon.py" 2>&1
-
-          echo ===FLAT_ALIAS_CODE===
-          grep -nF "ppc-control-result-" "$S/daemon.py" 2>&1 | tail -n 5
-
-          echo ===LOG_TAIL===
-          tail -n 120 "$S/daemon.log" 2>&1
-
-          echo ===DB_RECENT===
-          PY=""
-          for p in "$W/miniconda/bin/python3.12" "$W/miniconda/bin/python3" "$W/envs/open-terminal/bin/python"; do
-            if [ -x "$p" ]; then PY="$p"; break; fi
-          done
-          if [ -n "$PY" ]; then
-            "$PY" - <<'PY'
-          import sqlite3
-          db="/home/storage/781/4477781/user/.powerpc-control-v1/state.sqlite3"
-          c=sqlite3.connect(db)
-          for row in c.execute("select task_id,state,received_at,completed_at,result_path from tasks order by received_at desc limit 30"):
-              print(row)
+          QURL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json"
+          curl -fsSL -H 'Cache-Control: no-cache' "$QURL?diag=$(date +%s%N)" -o /tmp/q.json
+          echo ===QUEUE_TASKS===
+          python3 - <<'PY'
+          import json
+          q=json.load(open('/tmp/q.json'))
+          for t in q.get('tasks',[]):
+              print(t.get('task_id',''))
           PY
-          else
-            echo PYTHON_MISSING
-          fi
 
-          echo ===STATIC_CONTROL_FILES===
-          find "$ST" -maxdepth 1 -type f -name 'ppc-control-*' \
-            -printf '%f %s %TY-%Tm-%TdT%TH:%TM:%TS\n' 2>/dev/null | sort | tail -n 60
+          probe() {
+            label="$1"
+            url="$2"
+            out="/tmp/$label.out"
+            code="$(curl -sS -D "/tmp/$label.headers" -o "$out" -w '%{http_code}' \
+              --connect-timeout 8 --max-time 20 \
+              -H 'Cache-Control: no-cache' "$url" || true)"
+            echo "===${label}==="
+            echo "HTTP=$code"
+            sed -n '1,25p' "/tmp/$label.headers" || true
+            head -c 2048 "$out" || true
+            echo
+          }
 
-          echo ===QUEUE_FETCH===
-          Q="/tmp/ppc-q.$$"
-          CODE="$(curl -sS -L --connect-timeout 8 --max-time 20 -o "$Q" -w '%{http_code}' \
-            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json?diag=$(date +%s%N)" || true)"
-          echo QUEUE_HTTP="$CODE"
-          if [ "$CODE" = 200 ]; then
-            grep -o 'ppc-flat-postdeploy-health-[0-9]*\|ppc-runtime-marker-[0-9]*' "$Q" | tail -n 20
-          fi
-          rm -f "$Q"
+          stamp="$(date +%s%N)"
+          probe STATUS "https://www.powerpc-darwin.org/static/ppc-control-status-live.json?diag=$stamp"
+          probe IDENTITY "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json?diag=$stamp"
+          probe POSTDEPLOY "https://www.powerpc-darwin.org/static/ppc-control-result-ppc-flat-postdeploy-health-1790769474.json?diag=$stamp"
+          probe MARKER "https://www.powerpc-darwin.org/static/ppc-control-runtime-probe-1790769593.json?diag=$stamp"
+          probe STATICROOT "https://www.powerpc-darwin.org/static/ppc-static-root-diag.json?diag=$stamp"
 
-          echo PPC_DIAG_END
-          REMOTE
-
-          DIAG_B64="$(base64 -w0 /tmp/ppc-readonly-diag.sh)"
-          send_text "printf '%s' '$DIAG_B64' | base64 -d | sh"
-
-          if ! poll_until "PPC_DIAG_END" 150; then
-            echo DIAGNOSTIC=TIMEOUT
-            exit 34
-          fi
-
-          echo PPC_DIAGNOSTIC_OUTPUT_BEGIN
-          sed -n '/PPC_DIAG_BEGIN/,/PPC_DIAG_END/p' "$TERM_OUT"
-          echo PPC_DIAGNOSTIC_OUTPUT_END
-
-          destroy_terminal
-          SID=""
-          CSRF=""
-          echo RUNTIME_MUTATION=NONE
+          echo PPC_EXTERNAL_DIAG_END
