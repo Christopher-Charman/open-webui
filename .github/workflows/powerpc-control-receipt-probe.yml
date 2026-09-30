@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - bootstrap-relay/permanent-control/queue.json
+      - .github/workflows/powerpc-control-receipt-probe.yml
 permissions:
   contents: read
 jobs:
@@ -14,7 +15,10 @@ jobs:
       - name: Fetch queue
         run: |
           set -euo pipefail
-          curl -fsSL --retry 4             https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json             -o /tmp/queue.json
+          curl -fsSL --retry 4 \
+            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
+            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json?t=$(date +%s%N)" \
+            -o /tmp/queue.json
           python3 - <<'PY' >/tmp/task-id
           import json
           q=json.load(open('/tmp/queue.json'))
