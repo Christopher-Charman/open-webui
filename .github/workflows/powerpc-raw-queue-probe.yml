@@ -43,6 +43,10 @@ jobs:
           PY
             then
               echo "FLAT_RECEIPT=PASS"
+              echo "RECEIPT_BEGIN"
+              cat /tmp/result
+              echo
+              echo "RECEIPT_END"
               exit 0
             fi
             sleep 5
