@@ -1,0 +1,38 @@
+name: PowerPC terminal direct probe
+
+on:
+  push:
+    branches:
+      - control/root-egress-acceptance
+    paths:
+      - ".github/workflows/powerpc-terminal-direct-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Create and destroy blank terminal session without gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://www.powerpc-darwin.org"
+          body='{"cols":80,"rows":24}'
+          code="$(curl -sS --connect-timeout 8 --max-time 20             -o /tmp/create.json -w '%{http_code}'             -H 'Content-Type: application/json'             -d "$body" "$base/terminal/api/session" || true)"
+          echo "DIRECT_TERMINAL_CREATE_HTTP=$code"
+          if [ "$code" != "200" ]; then
+            head -c 160 /tmp/create.json | tr '\n' ' ' || true
+            echo
+            exit 2
+          fi
+          sid="$(python3 -c 'import json; print(json.load(open("/tmp/create.json"))["session_id"])')"
+          csrf="$(python3 -c 'import json; print(json.load(open("/tmp/create.json"))["csrf_token"])')"
+          echo "::add-mask::$sid"
+          echo "::add-mask::$csrf"
+          del="$(curl -sS --connect-timeout 8 --max-time 20             -o /tmp/delete.json -w '%{http_code}'             -X DELETE -H "X-Terminal-CSRF: $csrf"             "$base/terminal/api/session/$sid" || true)"
+          echo "DIRECT_TERMINAL_DELETE_HTTP=$del"
+          [ "$del" = "200" ]
+          echo "DIRECT_TERMINAL_MACHINE_CALLABLE=PASS"
