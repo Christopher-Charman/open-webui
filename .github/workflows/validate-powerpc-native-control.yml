@@ -87,9 +87,12 @@ jobs:
           cat > "$EG" <<EOF
           #!/bin/sh
           SRC="$P/htdocs/.well-known/powerpc-control-v1/results"
+          ID_SRC="$P/htdocs/.well-known/powerpc-control-v1/identity.json"
+          ID_DST="$STATIC/ppc-control-identity.json"
           DST="$STATIC/ppc-control-results"
           END=\$((\$(date +%s)+900))
           while [ \$(date +%s) -lt \$END ]; do
+            cp "\$ID_SRC" "\$ID_DST"
             for f in "\$SRC"/*.json; do
               [ -f "\$f" ] || continue
               cp "\$f" "\$DST/\$(basename "\$f")"
