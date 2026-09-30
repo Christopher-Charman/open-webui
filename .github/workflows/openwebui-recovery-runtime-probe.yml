@@ -26,87 +26,91 @@ jobs:
       - name: Install crypto dependency
         run: python3 -m pip install --disable-pip-version-check --quiet cryptography
 
+      - name: Resolve and verify current signed runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          rm -f /tmp/identity.json /tmp/identity-candidate.json /tmp/id-test.json /tmp/id-test.ctx
+          found=""
+
+          for url in \
+            "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json" \
+            "https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json" \
+            "https://www.powerpc-darwin.org/ppc-control-identity.json" \
+            "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/identity.json" \
+            "https://www.powerpc-darwin.org/static/identity.json" \
+            "https://www.powerpc-darwin.org/static/powerpc-control-v1/ppc-control-identity-live.json"
+          do
+            code="$(curl -sS -o /tmp/identity-candidate.json -w '%{http_code}' \
+              --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
+            echo "IDENTITY_CANDIDATE_HTTP=$code URL=$url"
+            [ "$code" = "200" ] || continue
+
+            if python3 - /tmp/identity-candidate.json <<'PY'
+          import json,sys,time
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("version")==1
+          assert d.get("runtime_id")=="fasthost.powerpc"
+          assert d.get("state")=="ready"
+          assert d.get("uid")==2257347
+          assert d.get("user")=="csh3280350"
+          assert d.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+          assert set(d.get("tool_contract",[]))=={"runtime_health","read_text","list_dir","terminal_exec"}
+          age=int(time.time())-int(d.get("heartbeat_at",0))
+          assert 0 <= age < 240, age
+          PY
+            then
+              if python3 "$CLIENT" prepare \
+                --identity /tmp/identity-candidate.json \
+                --task-id "identity-validation-only-$GITHUB_RUN_ID" \
+                --tool runtime_health \
+                --arguments '{}' \
+                --authority read_only \
+                --ttl 60 \
+                --output /tmp/id-test.json \
+                --context /tmp/id-test.ctx >/tmp/id-test.out 2>/tmp/id-test.err
+              then
+                cp /tmp/identity-candidate.json /tmp/identity.json
+                found="$url"
+                break
+              fi
+            fi
+          done
+
+          [ -n "$found" ] || { echo "SIGNED_RUNTIME_IDENTITY=UNAVAILABLE" >&2; exit 1; }
+          echo "SIGNED_RUNTIME_IDENTITY=PASS"
+          echo "IDENTITY_ROUTE=$found"
+          sed -n 's/^IDENTITY_FINGERPRINT=/IDENTITY_FINGERPRINT=/p' /tmp/id-test.out
+
       - name: Prepare and append encrypted read-only diagnostic
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "OpenWebUI Recovery Probe"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
-          git fetch origin main
-          git reset --hard origin/main
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/8cfef618972142084235d2818e823a0228993d74/bootstrap-relay/recovery-runtime-probe-20260930/probe.sh"
+          TASK_ID="owui-recovery-probe-$GITHUB_RUN_ID"
 
-          python3 - <<'PY'
-          import base64, json, os, time
-          from pathlib import Path
-          from cryptography.hazmat.primitives import hashes, serialization
-          from cryptography.hazmat.primitives.asymmetric import x25519
-          from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-          from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+          COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | bash"
+          ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":90000},separators=(",",":")))' "$COMMAND")"
 
-          def b64e(b):
-              return base64.urlsafe_b64encode(b).decode("ascii").rstrip("=")
-          def canon(o):
-              return json.dumps(o, sort_keys=True, separators=(",",":"), ensure_ascii=False).encode()
-          def derive(shared, task_id, purpose):
-              return HKDF(
-                  algorithm=hashes.SHA256(), length=32,
-                  salt=task_id.encode(),
-                  info=b"powerpc-control-v1/" + purpose,
-              ).derive(shared)
+          python3 "$CLIENT" prepare \
+            --identity /tmp/identity.json \
+            --task-id "$TASK_ID" \
+            --tool terminal_exec \
+            --arguments "$ARGS" \
+            --authority bounded_operator \
+            --allowed terminal_exec \
+            --ttl 600 \
+            --output /tmp/envelope.json \
+            --context /tmp/context.json >/tmp/prepare.out
 
-          runtime_raw = bytes.fromhex("61c8a515978b84457cda13437ec82b69d82994c0f83052660bf458954993297a")
-          runtime_pub = x25519.X25519PublicKey.from_public_bytes(runtime_raw)
-          origin_priv = x25519.X25519PrivateKey.generate()
-          origin_der = origin_priv.public_key().public_bytes(
-              serialization.Encoding.DER,
-              serialization.PublicFormat.SubjectPublicKeyInfo,
-          )
-          shared = origin_priv.exchange(runtime_pub)
-
-          now = int(time.time())
-          task_id = "owui-recovery-probe-" + os.environ["GITHUB_RUN_ID"]
-          task = {
-              "protocol":"powerpc-control-v1",
-              "version":1,
-              "task_id":task_id,
-              "target_runtime_id":"fasthost.powerpc",
-              "created_at":now,
-              "expires_at":now+600,
-              "origin_ephemeral_x25519_spki_b64":b64e(origin_der),
-          }
-
-          probe_url = "https://raw.githubusercontent.com/Christopher-Charman/open-webui/8cfef618972142084235d2818e823a0228993d74/bootstrap-relay/recovery-runtime-probe-20260930/probe.sh"
-          command = f"""set -eu
-          P=/home/storage/781/4477781/user
-          WEBAPP="$P/webapp"
-          STATIC="$("$WEBAPP/envs/openwebui/bin/python" -c 'import open_webui,os; print(os.path.join(os.path.dirname(open_webui.__file__),"static"))')"
-          cp "$P/htdocs/.well-known/powerpc-control-v1/identity.json" "$STATIC/ppc-control-identity-{task_id}.json"
-          curl -fsSL --retry 4 --connect-timeout 10 "{probe_url}" | bash
-          """
-          payload = {
-              "task_id":task_id,
-              "target_runtime_id":"fasthost.powerpc",
-              "tool":"terminal_exec",
-              "arguments":{"command":command,"timeout_ms":90000},
-              "authority_ceiling":"bounded_operator",
-              "allowed_capability_profile":["terminal_exec"],
-              "expected_result_schema":"assistant-delegation-receipt-v1",
-          }
-          aad = canon(task)
-          nonce = os.urandom(12)
-          task["nonce_b64"] = b64e(nonce)
-          task["ciphertext_b64"] = b64e(
-              AESGCM(derive(shared, task_id, b"command")).encrypt(nonce, canon(payload), aad)
-          )
-
-          Path("/tmp/envelope.json").write_text(json.dumps(task,sort_keys=True,separators=(",",":"))+"\n")
-          Path("/tmp/context.json").write_text(json.dumps({
-              "task_id":task_id,
-              "shared_secret_b64":b64e(shared),
-          }))
-          Path("/tmp/task-id").write_text(task_id)
-          print("RECOVERY_TASK_PREPARED="+task_id)
-          PY
+          sed -n 's/^TASK_PREPARED=/TASK_PREPARED=/p' /tmp/prepare.out
+          sed -n 's/^IDENTITY_FINGERPRINT=/IDENTITY_FINGERPRINT=/p' /tmp/prepare.out
+          printf '%s' "$TASK_ID" >/tmp/task-id
 
           for attempt in 1 2 3 4; do
             git fetch origin main
@@ -120,7 +124,8 @@ jobs:
           assert q.get("protocol")=="powerpc-control-v1" and q.get("version")==1
           tasks=q.get("tasks")
           assert isinstance(tasks,list)
-          if not any(t.get("task_id")==task["task_id"] for t in tasks if isinstance(t,dict)):
+          assert len(tasks) < 128
+          if not any(isinstance(t,dict) and t.get("task_id")==task["task_id"] for t in tasks):
               tasks.append(task)
           qpath.write_text(json.dumps(q,sort_keys=True,separators=(",",":"))+"\n")
           PY
@@ -140,21 +145,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
           id="$(cat /tmp/task-id)"
-          identity_url="https://www.powerpc-darwin.org/static/ppc-control-identity-$id.json"
           result_flat="https://www.powerpc-darwin.org/static/powerpc-control-result-$id.json"
           result_compat="https://www.powerpc-darwin.org/static/ppc-control-result-$id.json"
-
-          for i in $(seq 1 90); do
-            if curl -fsS --connect-timeout 8 --max-time 15 "$identity_url?t=$(date +%s%N)" -o /tmp/identity.json; then
-              break
-            fi
-            [ "$i" -lt 90 ] || { echo "TASK_SCOPED_IDENTITY=FAIL"; exit 1; }
-            sleep 2
-          done
-          echo "TASK_SCOPED_IDENTITY=PASS"
-
           found=""
+
           for i in $(seq 1 120); do
             for url in "$result_flat" "$result_compat"; do
               if curl -fsS --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" -o /tmp/result.json; then
@@ -166,79 +162,30 @@ jobs:
           done
           [ -n "$found" ] || { echo "RECOVERY_PROBE_RECEIPT=FAIL"; exit 1; }
           echo "RECOVERY_PROBE_RECEIPT=PASS"
+          echo "RECEIPT_ROUTE=$found"
+
+          python3 "$CLIENT" decode \
+            --result /tmp/result.json \
+            --context /tmp/context.json \
+            --output /tmp/receipt.json
 
           python3 - <<'PY'
-          import base64, hashlib, json
-          from cryptography.hazmat.primitives import hashes, serialization
-          from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-          from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-
-          def b64d(s):
-              return base64.urlsafe_b64decode((s+"="*(-len(s)%4)).encode())
-          def canon(o):
-              return json.dumps(o,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
-          def derive(shared,task_id,purpose):
-              return HKDF(
-                  algorithm=hashes.SHA256(), length=32,
-                  salt=task_id.encode(),
-                  info=b"powerpc-control-v1/"+purpose,
-              ).derive(shared)
-
-          ident=json.load(open("/tmp/identity.json"))
-          assert ident["protocol"]=="powerpc-control-v1"
-          assert ident["runtime_id"]=="fasthost.powerpc"
-          assert ident["uid"]==2257347
-          assert ident["user"]=="csh3280350"
-          assert ident["hostname"]=="hp3-rr-1024747.hostingp3.local"
-
-          xder=b64d(ident["x25519_spki_b64"])
-          eder=b64d(ident["ed25519_spki_b64"])
-          xpub=serialization.load_der_public_key(xder)
-          expected_x=bytes.fromhex("61c8a515978b84457cda13437ec82b69d82994c0f83052660bf458954993297a")
-          raw=xpub.public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)
-          assert raw==expected_x
-          epub=serialization.load_der_public_key(eder)
-          signed_ident=dict(ident); isig=b64d(signed_ident.pop("signature_b64"))
-          epub.verify(isig,canon(signed_ident))
-          print("RUNTIME_IDENTITY_VERIFIED=PASS")
-
-          result=json.load(open("/tmp/result.json"))
-          ctx=json.load(open("/tmp/context.json"))
-          assert result["protocol"]=="powerpc-control-v1"
-          assert result["version"]==1
-          assert result["task_id"]==ctx["task_id"]
-          assert result["target_runtime_id"]=="fasthost.powerpc"
-          assert result["kind"]=="result"
-          signed_result=dict(result); rsig=b64d(signed_result.pop("signature_b64"))
-          epub.verify(rsig,canon(signed_result))
-          print("RESULT_SIGNATURE=PASS")
-
-          aad=canon({
-              "protocol":"powerpc-control-v1",
-              "version":1,
-              "task_id":ctx["task_id"],
-              "target_runtime_id":"fasthost.powerpc",
-              "kind":"result",
-          })
-          plain=AESGCM(derive(b64d(ctx["shared_secret_b64"]),ctx["task_id"],b"result")).decrypt(
-              b64d(result["nonce_b64"]),b64d(result["ciphertext_b64"]),aad
-          )
-          receipt=json.loads(plain)
-          assert receipt["task_id"]==ctx["task_id"]
+          import json
+          receipt=json.load(open("/tmp/receipt.json"))
           assert receipt["completion_state"]=="COMPLETED", receipt
-          ex=receipt["executor_identity"]
-          assert ex["runtime_id"]=="fasthost.powerpc"
-          assert ex["uid"]==2257347
-          assert ex["user"]=="csh3280350"
-          assert ex["hostname"]=="hp3-rr-1024747.hostingp3.local"
-          result_obj=receipt.get("result") or {}
-          assert result_obj.get("isError") is not True, receipt
+          ex=receipt.get("executor_identity") or {}
+          assert ex.get("runtime_id")=="fasthost.powerpc"
+          assert ex.get("uid")==2257347
+          assert ex.get("user")=="csh3280350"
+          assert ex.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+          result=receipt.get("result") or {}
+          assert result.get("isError") is not True, receipt
           text="\n".join(
-              x.get("text","") for x in (result_obj.get("content") or [])
+              x.get("text","") for x in (result.get("content") or [])
               if isinstance(x,dict) and x.get("type")=="text"
           )
           assert "probe=OPENWEBUI_RECOVERY_READONLY_V1" in text
-          assert "NO_REPAIR_PERFORMED" in text
+          assert "rule=NO_REPAIR_PERFORMED" in text
           assert "OPENWEBUI_RECOVERY_READONLY_V1=END" in text
           print("RECOVERY_PROBE_DECRYPTION=PASS")
           print("PROBE_OUTPUT_BEGIN")
