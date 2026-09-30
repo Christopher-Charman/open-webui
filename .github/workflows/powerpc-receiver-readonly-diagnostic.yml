@@ -11,7 +11,7 @@ permissions:
 jobs:
   accept:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,7 +47,7 @@ jobs:
             --tool runtime_health \
             --arguments '{}' \
             --authority read_only \
-            --ttl 900 \
+            --ttl 1200 \
             --output "$TASK" \
             --context "$CTX")"
           TASK_ID="$(printf '%s\n' "$OUT" | sed -n 's/^TASK_PREPARED=//p' | tail -n1)"
@@ -76,7 +76,7 @@ jobs:
 
           URL="https://www.powerpc-darwin.org/static/ppc-control-result-$TASK_ID.json"
           ok=0
-          for i in $(seq 1 60); do
+          for i in $(seq 1 240); do
             code="$(curl -sS -o "$RESULT" -w '%{http_code}' \
               --connect-timeout 8 --max-time 15 -H 'Cache-Control: no-cache' \
               "$URL?accept=$(date +%s%N)" || true)"
