@@ -1,4 +1,4 @@
-name: PowerPC receiver external path diagnostic
+name: PowerPC fresh-origin cryptographic acceptance
 
 on:
   push:
@@ -6,49 +6,148 @@ on:
       - ".github/workflows/powerpc-receiver-readonly-diagnostic.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose:
+  accept:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - name: Probe queue propagation and public flat egress
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install crypto dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet cryptography
+
+      - name: Issue, retrieve, verify and clean fresh runtime_health task
         shell: bash
         run: |
           set -euo pipefail
-          echo PPC_EXTERNAL_DIAG_BEGIN
-          date -u
+          git config user.name "PowerPC Control Acceptance"
+          git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
 
-          QURL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json"
-          curl -fsSL -H 'Cache-Control: no-cache' "$QURL?diag=$(date +%s%N)" -o /tmp/q.json
-          echo ===QUEUE_TASKS===
-          python3 - <<'PY'
-          import json
-          q=json.load(open('/tmp/q.json'))
-          for t in q.get('tasks',[]):
-              print(t.get('task_id',''))
+          ID=/tmp/identity.json
+          TASK=/tmp/task.json
+          CTX=/tmp/task.context.json
+          RESULT=/tmp/result.json
+          RECEIPT=/tmp/receipt.json
+          CLIENT=bootstrap-relay/permanent-control/origin-client.py
+          QUEUE=bootstrap-relay/permanent-control/queue.json
+
+          curl -fsSL --connect-timeout 8 --max-time 20 \
+            -H 'Cache-Control: no-cache' \
+            "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json?accept=$(date +%s%N)" \
+            -o "$ID"
+
+          OUT="$(python3 "$CLIENT" prepare \
+            --identity "$ID" \
+            --tool runtime_health \
+            --arguments '{}' \
+            --authority read_only \
+            --ttl 600 \
+            --output "$TASK" \
+            --context "$CTX")"
+          TASK_ID="$(printf '%s\n' "$OUT" | sed -n 's/^TASK_PREPARED=//p' | tail -n1)"
+          FP="$(printf '%s\n' "$OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n1)"
+          test -n "$TASK_ID"
+          test -n "$FP"
+          echo "::add-mask::$FP"
+          echo "TASK_ID=$TASK_ID"
+
+          python3 - "$QUEUE" "$TASK" <<'PY'
+          import json,sys
+          q=json.load(open(sys.argv[1]))
+          t=json.load(open(sys.argv[2]))
+          assert q.get("protocol")=="powerpc-control-v1"
+          assert q.get("version")==1
+          tasks=q.setdefault("tasks",[])
+          assert not any(x.get("task_id")==t["task_id"] for x in tasks)
+          tasks.append(t)
+          with open(sys.argv[1],"w") as f:
+              json.dump(q,f,separators=(",",":"),sort_keys=True)
+              f.write("\n")
           PY
 
-          probe() {
-            label="$1"
-            url="$2"
-            out="/tmp/$label.out"
-            code="$(curl -sS -D "/tmp/$label.headers" -o "$out" -w '%{http_code}' \
-              --connect-timeout 8 --max-time 20 \
-              -H 'Cache-Control: no-cache' "$url" || true)"
-            echo "===${label}==="
-            echo "HTTP=$code"
-            sed -n '1,25p' "/tmp/$label.headers" || true
-            head -c 2048 "$out" || true
-            echo
-          }
+          git add "$QUEUE"
+          git commit -m "control: fresh-origin runtime health acceptance [skip ci]"
+          for n in 1 2 3; do
+            if git push origin HEAD:main; then break; fi
+            test "$n" -lt 3
+            git fetch origin main
+            git rebase origin/main
+          done
 
-          stamp="$(date +%s%N)"
-          probe STATUS "https://www.powerpc-darwin.org/static/ppc-control-status-live.json?diag=$stamp"
-          probe IDENTITY "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json?diag=$stamp"
-          probe POSTDEPLOY "https://www.powerpc-darwin.org/static/ppc-control-result-ppc-flat-postdeploy-health-1790769474.json?diag=$stamp"
-          probe MARKER "https://www.powerpc-darwin.org/static/ppc-control-runtime-probe-1790769593.json?diag=$stamp"
-          probe STATICROOT "https://www.powerpc-darwin.org/static/ppc-static-root-diag.json?diag=$stamp"
+          URL="https://www.powerpc-darwin.org/static/ppc-control-result-$TASK_ID.json"
+          ok=0
+          for i in $(seq 1 45); do
+            code="$(curl -sS -o "$RESULT" -w '%{http_code}' \
+              --connect-timeout 8 --max-time 15 -H 'Cache-Control: no-cache' \
+              "$URL?accept=$(date +%s%N)" || true)"
+            if [ "$code" = 200 ] && python3 - "$RESULT" "$TASK_ID" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("version")==1
+          assert d.get("task_id")==sys.argv[2]
+          assert d.get("kind")=="result"
+          PY
+            then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          test "$ok" = 1
 
-          echo PPC_EXTERNAL_DIAG_END
+          python3 "$CLIENT" decode --result "$RESULT" --context "$CTX" --output "$RECEIPT" >/dev/null
+          python3 - "$RECEIPT" "$TASK_ID" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get("task_id")==sys.argv[2]
+          assert d.get("completion_state")=="COMPLETED"
+          ex=d.get("executor_identity") or {}
+          assert ex.get("runtime_id")=="fasthost.powerpc"
+          assert ex.get("user")=="csh3280350"
+          assert ex.get("uid")==2257347
+          assert ex.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+          rr=d.get("runtime_receipt") or {}
+          assert rr.get("namespace")=="/home/storage/781/4477781/user"
+          assert rr.get("webapp")=="/home/storage/781/4477781/user/webapp"
+          assert d.get("unresolved")==[]
+          assert len(d.get("actions") or [])==1
+          assert (d.get("actions") or [])[0].get("capability")=="runtime_health"
+          print("FRESH_ORIGIN_RUNTIME_HEALTH=PASS")
+          print("SIGNED_RESULT_SIGNATURE_AND_DECRYPTION=PASS")
+          print("RUNTIME_RECEIPT=fasthost.powerpc")
+          print("COMPLETION_STATE=COMPLETED")
+          PY
+
+          # Remove only this acceptance task from the current main queue.
+          git fetch origin main
+          git reset --hard origin/main
+          python3 - "$QUEUE" "$TASK_ID" <<'PY'
+          import json,sys
+          p,tid=sys.argv[1],sys.argv[2]
+          q=json.load(open(p))
+          before=len(q.get("tasks",[]))
+          q["tasks"]=[t for t in q.get("tasks",[]) if t.get("task_id")!=tid]
+          assert len(q["tasks"])==before-1
+          with open(p,"w") as f:
+              json.dump(q,f,separators=(",",":"),sort_keys=True)
+              f.write("\n")
+          PY
+          git add "$QUEUE"
+          git commit -m "control: remove completed acceptance task [skip ci]"
+          for n in 1 2 3; do
+            if git push origin HEAD:main; then break; fi
+            test "$n" -lt 3
+            git fetch origin main
+            git rebase origin/main
+          done
+
+          rm -f "$ID" "$TASK" "$CTX" "$RESULT" "$RECEIPT"
+          echo "QUEUE_CLEANUP=PASS"
+          echo "PERMANENT_ACCESS_EGRESS_CRYPTO_ACCEPTANCE=PASS"
