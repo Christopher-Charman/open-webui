@@ -24,9 +24,10 @@ INDEX="${FRONTEND}/index.html"
 STATIC_A="${PKG}/static"
 STATIC_B="${FRONTEND}/static"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-BACKUP="${BASE}/runtime-domains/pwa-repair-agent/backups/pre-semantic-binder-${STAMP}"
-MARKER="continuity-shell-semantic-binder-v20260930.1"
-REF="70b520c17bc4ab6f23ace3cce152c91fe1888c18"
+BACKUP="${BASE}/runtime-domains/pwa-repair-agent/backups/pre-semantic-binder-v2-${STAMP}"
+GEN="20260930.2"
+MARKER="continuity-shell-semantic-binder-v${GEN}"
+REF="cf5fb5bf4c3f37e4332d914bc105c697ec019fa5"
 
 [ -f "$INDEX" ] || { echo "ERROR index missing: $INDEX"; exit 2; }
 mkdir -p "$STATIC_A" "$STATIC_B" "$BACKUP"
@@ -58,30 +59,46 @@ if [ ! -x "$NODE" ]; then NODE="$(command -v node || true)"; fi
 [ -n "$NODE" ] || { echo "ERROR node unavailable for syntax check"; exit 3; }
 "$NODE" --check "$TMP/continuity-shell-semantic-binder.js"
 
+grep -Fq "const VERSION='20260930.2'" "$TMP/continuity-shell-semantic-binder.js" || {
+  echo "ERROR mapping-only binder version marker missing"
+  exit 3
+}
+if grep -Eq 'continuity-hero-owned|continuity-footer-owned|continuity-chat-telemetry-owned|makeNeuralSvg|createElement\(.section.\)'   "$TMP/continuity-shell-semantic-binder.js" "$TMP/continuity-shell-semantic-binder.css"; then
+  echo "ERROR binder still owns presentation nodes"
+  exit 3
+fi
+
 install -m 0644 "$TMP/continuity-shell-semantic-binder.js" "$STATIC_A/continuity-shell-semantic-binder.js"
 install -m 0644 "$TMP/continuity-shell-semantic-binder.css" "$STATIC_A/continuity-shell-semantic-binder.css"
 install -m 0644 "$TMP/continuity-shell-semantic-binder.js" "$STATIC_B/continuity-shell-semantic-binder.js"
 install -m 0644 "$TMP/continuity-shell-semantic-binder.css" "$STATIC_B/continuity-shell-semantic-binder.css"
 
-python3 - "$INDEX" "$MARKER" <<'PY'
+python3 - "$INDEX" "$MARKER" "$GEN" <<'PY'
 from pathlib import Path
-import sys
-p=Path(sys.argv[1]); marker=sys.argv[2]
+import re, sys
+p=Path(sys.argv[1]); marker=sys.argv[2]; gen=sys.argv[3]
 s=p.read_text()
-if marker in s:
-    print("INDEX_MARKER=ALREADY_PRESENT")
-    raise SystemExit(0)
+
+# Remove only prior semantic-binder injection blocks. No stock/bootstrap mutation.
+pat=re.compile(
+    r'\n?<!-- continuity-shell-semantic-binder-v[0-9.]+ -->.*?'
+    r'<!-- /continuity-shell-semantic-binder-v[0-9.]+ -->\n?',
+    re.S
+)
+s,n=pat.subn('\n',s)
+
 block=f"""
 <!-- {marker} -->
-<link rel="stylesheet" href="/static/continuity-shell-semantic-binder.css?v=20260930.1">
-<script defer src="/static/continuity-shell-semantic-binder.js?v=20260930.1"></script>
+<link rel="stylesheet" href="/static/continuity-shell-semantic-binder.css?v={gen}">
+<script defer src="/static/continuity-shell-semantic-binder.js?v={gen}"></script>
 <!-- /{marker} -->
 """
 needle="</body>"
 if needle not in s:
     raise SystemExit("ERROR closing body not found")
 p.write_text(s.replace(needle,block+"\n"+needle,1))
-print("INDEX_MARKER=INSTALLED")
+print(f"INDEX_BINDER_BLOCKS_REMOVED={n}")
+print("INDEX_MARKER=INSTALLED_V2")
 PY
 
 while read -r before p; do
@@ -93,7 +110,8 @@ while read -r before p; do
   fi
 done < "$PROTECTED"
 
-echo "SEMANTIC_BINDER_STAGE=PASS"
+echo "SEMANTIC_BINDER_V2_STAGE=PASS"
+echo "ownership=MAPPING_ONLY_NO_PRESENTATION_CREATION"
 echo "BACKUP=$BACKUP"
 echo "index_sha256=$(sha256sum "$INDEX" | awk '{print $1}')"
 echo "binder_js_sha256=$(sha256sum "$STATIC_A/continuity-shell-semantic-binder.js" | awk '{print $1}')"
@@ -117,4 +135,4 @@ else
   echo "RESTART_REQUIRED=YES_BUT_NOT_PERFORMED_CONCURRENT_SESSION_BOUNDARY"
 fi
 
-echo "NEXT=DEVICE_TEST_LANDING_CHAT_WBW_LCARS"
+echo "NEXT=DEVICE_TEST_LANDING_ONLY_THEN_ACTIVE_CHAT"
