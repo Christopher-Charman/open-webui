@@ -1,4 +1,4 @@
-name: PowerPC Ollama read-only diagnostic
+name: PowerPC Ollama config and log diagnostic
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
       - name: Install crypto dependency
         run: python3 -m pip install --disable-pip-version-check --quiet cryptography
 
-      - name: Run bounded Ollama diagnostic through owned receiver
+      - name: Inspect Ollama launcher configuration and log through owned receiver
         shell: bash
         run: |
           set -euo pipefail
@@ -42,32 +42,38 @@ jobs:
 
           cat > /tmp/ollama-diag.sh <<'SH'
           set +e
-          echo OLLAMA_DIAG_BEGIN
+          W=/home/storage/781/4477781/user/webapp
+          echo OLLAMA_CONFIG_DIAG_BEGIN
           date -u
           id
-          echo ===PROCESS===
-          ps -ef | grep '[o]llama' || true
-          echo ===LISTEN_11434===
-          (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null || true) | grep '11434' || true
-          echo ===HTTP_VERSION===
-          curl -sS -i --connect-timeout 3 --max-time 5 http://127.0.0.1:11434/api/version || true
-          echo
-          echo ===HTTP_TAGS===
-          curl -sS -i --connect-timeout 3 --max-time 5 http://127.0.0.1:11434/api/tags || true
-          echo
-          echo ===BINARY===
-          command -v ollama || true
-          find /home/storage/781/4477781/user/webapp -maxdepth 5 -type f -name 'ollama' -perm -111 -print 2>/dev/null | head -n 20
-          echo ===SUPERVISION===
-          crontab -l 2>/dev/null | grep -i ollama || true
-          grep -RIl --exclude='*.log' --exclude='*.json' --exclude='*.db' 'OLLAMA_HOST\|11434\|ollama serve' \
-            /home/storage/781/4477781/user/webapp/bin \
-            /home/storage/781/4477781/user/webapp/runtime-domains \
-            /home/storage/781/4477781/user/webapp 2>/dev/null | head -n 40
-          echo ===RECENT_OLLAMA_LOGS===
-          find /home/storage/781/4477781/user -maxdepth 6 -type f \
-            \( -iname '*ollama*.log' -o -iname 'ollama.log' \) -print 2>/dev/null | head -n 20
-          echo OLLAMA_DIAG_END
+
+          echo ===RUN_SCRIPT===
+          if [ -f "$W/run-ollama.sh" ]; then
+            sed -n '1,160p' "$W/run-ollama.sh"
+          else
+            echo RUN_SCRIPT_MISSING
+          fi
+
+          echo ===ENV_SELECTED===
+          if [ -f "$W/ollama-runtime.env" ]; then
+            grep -E '^(OLLAMA_(HOST|MODELS|NUM_PARALLEL|MAX_LOADED_MODELS|MAX_QUEUE|KEEP_ALIVE|NUM_THREADS|CONTEXT_LENGTH|DEBUG)|OMP_NUM_THREADS|GOMAXPROCS)=' "$W/ollama-runtime.env" || true
+          else
+            echo ENV_MISSING
+          fi
+
+          echo ===FILE_META===
+          ls -l "$W/run-ollama.sh" "$W/ollama-runtime.env" "$W/ollama-runtime.log" 2>&1 || true
+          stat "$W/ollama-runtime.log" 2>&1 || true
+
+          echo ===LOG_TAIL===
+          tail -n 160 "$W/ollama-runtime.log" 2>&1 || true
+
+          echo ===SHELL_REFERENCES===
+          grep -RIn --include='*.sh' --include='*.env' --include='*.py' \
+            'run-ollama.sh\|ollama-runtime.env\|ollama-runtime.log' \
+            "$W/bin" "$W/runtime-domains" "$W" 2>/dev/null | head -n 80
+
+          echo OLLAMA_CONFIG_DIAG_END
           exit 0
           SH
 
@@ -94,7 +100,7 @@ jobs:
               json.dump(q,f,separators=(",",":"),sort_keys=True); f.write("\n")
           PY
           git add "$QUEUE"
-          git commit -m "control: issue read-only Ollama diagnostic [skip ci]"
+          git commit -m "control: issue Ollama config-log diagnostic [skip ci]"
           for n in 1 2 3; do
             if git push origin HEAD:main; then break; fi
             test "$n" -lt 3
@@ -147,7 +153,7 @@ jobs:
           PY
           if ! git diff --quiet -- "$QUEUE"; then
             git add "$QUEUE"
-            git commit -m "control: remove completed Ollama diagnostic task [skip ci]"
+            git commit -m "control: remove completed Ollama config-log task [skip ci]"
             for n in 1 2 3; do
               if git push origin HEAD:main; then break; fi
               test "$n" -lt 3
