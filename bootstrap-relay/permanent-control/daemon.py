@@ -36,6 +36,18 @@ PUBLIC_MIRROR = Path(os.environ.get(
     str(WEBAPP / "envs" / "openwebui" / "lib" / "python3.11" / "site-packages" / "open_webui" / "static" / PROTOCOL),
 ))
 MIRROR_RESULTS = PUBLIC_MIRROR / "results"
+
+def _discover_public_mirrors() -> list[Path]:
+    mirrors = {PUBLIC_MIRROR}
+    try:
+        for marker in WEBAPP.glob("**/site-packages/open_webui/static/owui-orb-v1.js"):
+            if marker.is_file():
+                mirrors.add(marker.parent)
+    except Exception as e:
+        _log("mirror_discovery_error=" + type(e).__name__)
+    return sorted(mirrors, key=lambda p: str(p))
+
+PUBLIC_MIRRORS = _discover_public_mirrors()
 PIDFILE = STATE / "daemon.pid"
 DBFILE = STATE / "state.sqlite3"
 LOGFILE = STATE / "daemon.log"
@@ -170,7 +182,8 @@ def _publish_identity(xpriv, spriv, started_at: int) -> None:
     out["signature_b64"] = _b64e(sig)
     identity_bytes = _canon(out) + b"\n"
     _atomic_write(PUBLIC / "identity.json", identity_bytes, 0o644)
-    _atomic_write(PUBLIC_MIRROR / "identity.json", identity_bytes, 0o644)
+    for mirror in PUBLIC_MIRRORS:
+        _atomic_write(mirror / "identity.json", identity_bytes, 0o644)
     status = {
         "protocol": PROTOCOL,
         "version": VERSION,
@@ -182,7 +195,8 @@ def _publish_identity(xpriv, spriv, started_at: int) -> None:
     status["signature_b64"] = _b64e(spriv.sign(_canon(status)))
     status_bytes = _canon(status) + b"\n"
     _atomic_write(PUBLIC / "status.json", status_bytes, 0o644)
-    _atomic_write(PUBLIC_MIRROR / "status.json", status_bytes, 0o644)
+    for mirror in PUBLIC_MIRRORS:
+        _atomic_write(mirror / "status.json", status_bytes, 0o644)
 
 
 def _db() -> sqlite3.Connection:
@@ -380,7 +394,8 @@ def _publish_result(task: dict[str, Any], shared: bytes, spriv, result: dict[str
     path = RESULTS / (task["task_id"] + ".json")
     data = _canon(env) + b"\n"
     _atomic_write(path, data, 0o644)
-    _atomic_write(MIRROR_RESULTS / (task["task_id"] + ".json"), data, 0o644)
+    for mirror in PUBLIC_MIRRORS:
+        _atomic_write(mirror / "results" / (task["task_id"] + ".json"), data, 0o644)
     return str(path)
 
 
@@ -505,8 +520,9 @@ def main() -> int:
     STATE.mkdir(parents=True, exist_ok=True)
     PUBLIC.mkdir(parents=True, exist_ok=True)
     RESULTS.mkdir(parents=True, exist_ok=True)
-    PUBLIC_MIRROR.mkdir(parents=True, exist_ok=True)
-    MIRROR_RESULTS.mkdir(parents=True, exist_ok=True)
+    for mirror in PUBLIC_MIRRORS:
+        mirror.mkdir(parents=True, exist_ok=True)
+        (mirror / "results").mkdir(parents=True, exist_ok=True)
     os.chmod(STATE, 0o700)
     xpriv, spriv = _load_or_create_keys()
     conn = _db()
