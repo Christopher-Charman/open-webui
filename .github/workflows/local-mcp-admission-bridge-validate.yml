@@ -1,0 +1,32 @@
+name: local-mcp-admission-bridge-validate
+
+on:
+  push:
+    branches:
+      - tooling/local-mcp-admission-bridge
+    paths:
+      - .github/workflows/local-mcp-admission-bridge-validate.yml
+      - bootstrap-relay/permanent-control/install-local-mcp-admission-candidate.sh
+      - bootstrap-relay/permanent-control/local-mcp-call.mjs
+      - bootstrap-relay/permanent-control/local-mcp-admission-candidate/**
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate installer and candidate
+        run: |
+          set -euo pipefail
+          sh -n bootstrap-relay/permanent-control/install-local-mcp-admission-candidate.sh
+          node --check bootstrap-relay/permanent-control/local-mcp-call.mjs
+          cd bootstrap-relay/permanent-control/local-mcp-admission-candidate
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check:syntax
+          npm run test:path-policy
