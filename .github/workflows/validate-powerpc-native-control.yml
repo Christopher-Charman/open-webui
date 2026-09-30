@@ -80,15 +80,15 @@ jobs:
           P=/home/storage/781/4477781/user
           WEBAPP="$P/webapp"
           STATIC="$("$WEBAPP/envs/openwebui/bin/python3" -c 'import open_webui,os; print(os.path.join(os.path.dirname(open_webui.__file__),"static"))')"
-          cp "$P/htdocs/.well-known/powerpc-control-v1/identity.json" "$STATIC/ppc-control-identity.json"
+          cp "$P/htdocs/.well-known/powerpc-control-v1/identity.json" "$STATIC/ppc-control-identity-{task_id}.json"
           mkdir -p "$STATIC/ppc-control-results"
-          printf '%s\n' '{{"protocol":"powerpc-control-v1","runtime_id":"fasthost.powerpc","proof":"canonical_envelope_decrypted","task_id":"{task_id}"}}' > "$STATIC/ppc-control-proof.json"
+          printf '%s\n' '{{"protocol":"powerpc-control-v1","runtime_id":"fasthost.powerpc","proof":"canonical_envelope_decrypted","task_id":"{task_id}"}}' > "$STATIC/ppc-control-proof-{task_id}.json"
           EG="$P/.powerpc-control-v1/acceptance-egress.sh"
           cat > "$EG" <<EOF
           #!/bin/sh
           SRC="$P/htdocs/.well-known/powerpc-control-v1/results"
           ID_SRC="$P/htdocs/.well-known/powerpc-control-v1/identity.json"
-          ID_DST="$STATIC/ppc-control-identity.json"
+          ID_DST="$STATIC/ppc-control-identity-live.json"
           DST="$STATIC/ppc-control-results"
           END=\$((\$(date +%s)+900))
           while [ \$(date +%s) -lt \$END ]; do
@@ -147,8 +147,8 @@ jobs:
         run: |
           set -euo pipefail
           id="$(cat /tmp/task-id)"
-          proof_url="https://www.powerpc-darwin.org/static/ppc-control-proof.json"
-          identity_url="https://www.powerpc-darwin.org/static/ppc-control-identity.json"
+          proof_url="https://www.powerpc-darwin.org/static/ppc-control-proof-$id.json"
+          identity_url="https://www.powerpc-darwin.org/static/ppc-control-identity-$id.json"
           result_url="https://www.powerpc-darwin.org/static/ppc-control-results/$id.json"
 
           for i in $(seq 1 60); do
