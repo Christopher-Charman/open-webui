@@ -9,33 +9,79 @@ CLIENT="$CONTROL_DIR/origin-client.py"
 IDENTITY_URL="${PPC_ACCEPT_IDENTITY_URL:-https://www.powerpc-darwin.org/static/ppc-control-identity.json}"
 RESULT_BASE="${PPC_ACCEPT_RESULT_BASE:-https://www.powerpc-darwin.org/static/ppc-control-results}"
 WORK="$(mktemp -d)"
-ORIGINAL="$WORK/queue.original.json"
+OWNED_TASK_IDS="$WORK/owned-task-ids"
 IDENTITY="$WORK/identity.json"
 FP=""
-RESTORING=0
+CLEANING=0
 
 log() { printf '%s\n' "$*"; }
 fail() { log "POWERPC_OWNED_CONTROL_ACCEPTANCE=FAIL"; log "reason=$1"; exit 1; }
 
 git config user.name "PowerPC Control Acceptance"
 git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
+touch "$OWNED_TASK_IDS"
 
-cp "$QUEUE" "$ORIGINAL"
+sync_main() {
+  git fetch origin main >/dev/null 2>&1
+  git reset --hard origin/main >/dev/null 2>&1
+}
 
-restore_queue() {
-  rc=$?
-  if [ "$RESTORING" = "1" ]; then exit "$rc"; fi
-  RESTORING=1
-  cp "$ORIGINAL" "$QUEUE" || true
-  if ! git diff --quiet -- "$QUEUE"; then
+remove_owned_task() {
+  local task_id="$1" attempt
+  for attempt in 1 2 3 4 5; do
+    sync_main || continue
+    python3 - "$QUEUE" "$task_id" <<'PY'
+import json,sys
+path,task_id=sys.argv[1:3]
+with open(path,encoding="utf-8") as f:
+    q=json.load(f)
+assert q.get("protocol")=="powerpc-control-v1"
+assert q.get("version")==1
+tasks=q.get("tasks")
+assert isinstance(tasks,list)
+kept=[t for t in tasks if not (isinstance(t,dict) and t.get("task_id")==task_id)]
+if len(kept)==len(tasks):
+    raise SystemExit(0)
+q["tasks"]=kept
+with open(path,"w",encoding="utf-8") as f:
+    json.dump(q,f,separators=(",",":"),sort_keys=True)
+    f.write("\n")
+PY
+    if git diff --quiet -- "$QUEUE"; then
+      return 0
+    fi
     git add "$QUEUE"
-    git commit -m "control: restore empty acceptance queue" >/dev/null 2>&1 || true
-    git push origin HEAD:main >/dev/null 2>&1 || true
+    git commit -m "control: retire acceptance task $task_id" >/dev/null 2>&1 || return 1
+    if git push origin HEAD:main >/dev/null 2>&1; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+cleanup_owned_tasks() {
+  local rc=$? cleanup_failed=0 task_id
+  if [ "$CLEANING" = "1" ]; then exit "$rc"; fi
+  CLEANING=1
+  set +e
+  if [ -s "$OWNED_TASK_IDS" ]; then
+    while IFS= read -r task_id; do
+      [ -n "$task_id" ] || continue
+      remove_owned_task "$task_id" || {
+        log "cleanup_warning=failed_to_retire_acceptance_task task_id=$task_id"
+        cleanup_failed=1
+      }
+    done < <(sort -u "$OWNED_TASK_IDS")
   fi
   rm -rf "$WORK"
+  if [ "$rc" -eq 0 ] && [ "$cleanup_failed" -ne 0 ]; then
+    log "POWERPC_OWNED_CONTROL_ACCEPTANCE=FAIL"
+    log "reason=acceptance_task_cleanup_conflict"
+    exit 1
+  fi
   exit "$rc"
 }
-trap restore_queue EXIT INT TERM
+trap cleanup_owned_tasks EXIT INT TERM
 
 python3 - "$QUEUE" <<'PY'
 import json,sys
@@ -63,18 +109,51 @@ PY
 }
 
 queue_envelope() {
-  local envelope="$1" task_id="$2"
-  python3 - "$envelope" "$QUEUE" <<'PY'
+  local envelope="$1" task_id="$2" attempt
+  for attempt in 1 2 3 4 5; do
+    sync_main || continue
+    python3 - "$envelope" "$QUEUE" <<'PY'
 import json,sys
-task=json.load(open(sys.argv[1]))
-q={"protocol":"powerpc-control-v1","version":1,"tasks":[task]}
-with open(sys.argv[2],"w") as f:
+envelope_path,queue_path=sys.argv[1:3]
+with open(envelope_path,encoding="utf-8") as f:
+    task=json.load(f)
+with open(queue_path,encoding="utf-8") as f:
+    q=json.load(f)
+assert q.get("protocol")=="powerpc-control-v1"
+assert q.get("version")==1
+tasks=q.get("tasks")
+assert isinstance(tasks,list)
+task_id=task.get("task_id")
+if not isinstance(task_id,str) or not task_id:
+    raise SystemExit("task_id missing")
+same=[t for t in tasks if isinstance(t,dict) and t.get("task_id")==task_id]
+if same:
+    if len(same)==1 and same[0]==task:
+        raise SystemExit(0)
+    raise SystemExit("task_id conflict")
+if len(tasks)>=128:
+    raise SystemExit("queue capacity exhausted")
+tasks.append(task)
+with open(queue_path,"w",encoding="utf-8") as f:
     json.dump(q,f,separators=(",",":"),sort_keys=True)
     f.write("\n")
 PY
-  git add "$QUEUE"
-  git commit -m "control: acceptance task $task_id" >/dev/null
-  git push origin HEAD:main >/dev/null
+    py_rc=$?
+    if [ "$py_rc" -ne 0 ]; then
+      fail "queue_append_invalid:$task_id"
+    fi
+    if git diff --quiet -- "$QUEUE"; then
+      printf '%s\n' "$task_id" >>"$OWNED_TASK_IDS"
+      return 0
+    fi
+    git add "$QUEUE"
+    git commit -m "control: acceptance task $task_id" >/dev/null
+    if git push origin HEAD:main >/dev/null 2>&1; then
+      printf '%s\n' "$task_id" >>"$OWNED_TASK_IDS"
+      return 0
+    fi
+  done
+  fail "queue_append_conflict:$task_id"
 }
 
 wait_result() {
