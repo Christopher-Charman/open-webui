@@ -36,3 +36,4 @@ jobs:
           set -euo pipefail
           chmod 700 bootstrap-relay/permanent-control/actions-accept-live.sh
           bootstrap-relay/permanent-control/actions-accept-live.sh
+# acceptance trigger: concurrency-safe queue semantics 2026-10-01
