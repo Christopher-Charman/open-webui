@@ -43,8 +43,8 @@ def _discover_public_mirrors() -> list[Path]:
         for marker in WEBAPP.glob("**/site-packages/open_webui/static/owui-orb-v1.js"):
             if marker.is_file():
                 mirrors.add(marker.parent)
-    except Exception as e:
-        _log("mirror_discovery_error=" + type(e).__name__)
+    except Exception:
+        pass
     return sorted(mirrors, key=lambda p: str(p))
 
 PUBLIC_MIRRORS = _discover_public_mirrors()
@@ -184,6 +184,8 @@ def _publish_identity(xpriv, spriv, started_at: int) -> None:
     _atomic_write(PUBLIC / "identity.json", identity_bytes, 0o644)
     for mirror in PUBLIC_MIRRORS:
         _atomic_write(mirror / "identity.json", identity_bytes, 0o644)
+        _atomic_write(mirror / "ppc-control-identity-live.json", identity_bytes, 0o644)
+        _atomic_write(mirror / PROTOCOL / "identity.json", identity_bytes, 0o644)
     status = {
         "protocol": PROTOCOL,
         "version": VERSION,
@@ -197,6 +199,8 @@ def _publish_identity(xpriv, spriv, started_at: int) -> None:
     _atomic_write(PUBLIC / "status.json", status_bytes, 0o644)
     for mirror in PUBLIC_MIRRORS:
         _atomic_write(mirror / "status.json", status_bytes, 0o644)
+        _atomic_write(mirror / "ppc-control-status-live.json", status_bytes, 0o644)
+        _atomic_write(mirror / PROTOCOL / "status.json", status_bytes, 0o644)
 
 
 def _db() -> sqlite3.Connection:
@@ -395,7 +399,10 @@ def _publish_result(task: dict[str, Any], shared: bytes, spriv, result: dict[str
     data = _canon(env) + b"\n"
     _atomic_write(path, data, 0o644)
     for mirror in PUBLIC_MIRRORS:
-        _atomic_write(mirror / "results" / (task["task_id"] + ".json"), data, 0o644)
+        leaf = task["task_id"] + ".json"
+        _atomic_write(mirror / "results" / leaf, data, 0o644)
+        _atomic_write(mirror / "ppc-control-results" / leaf, data, 0o644)
+        _atomic_write(mirror / PROTOCOL / "results" / leaf, data, 0o644)
     return str(path)
 
 
@@ -523,6 +530,8 @@ def main() -> int:
     for mirror in PUBLIC_MIRRORS:
         mirror.mkdir(parents=True, exist_ok=True)
         (mirror / "results").mkdir(parents=True, exist_ok=True)
+        (mirror / "ppc-control-results").mkdir(parents=True, exist_ok=True)
+        (mirror / PROTOCOL / "results").mkdir(parents=True, exist_ok=True)
     os.chmod(STATE, 0o700)
     xpriv, spriv = _load_or_create_keys()
     conn = _db()
