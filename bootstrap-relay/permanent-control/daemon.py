@@ -60,9 +60,19 @@ QUEUE_URL = os.environ.get(
     "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json",
 )
 POLL_SECONDS = float(os.environ.get("PPC_CONTROL_POLL_SECONDS", "7"))
-QUEUE_REFRESH_BUCKET_SECONDS = max(
-    10, int(os.environ.get("PPC_CONTROL_QUEUE_REFRESH_BUCKET_SECONDS", "30"))
+QUEUE_REF_URL = os.environ.get(
+    "PPC_CONTROL_QUEUE_REF_URL",
+    "https://api.github.com/repos/Christopher-Charman/open-webui/commits/main",
 )
+QUEUE_SHA_URL_TEMPLATE = os.environ.get(
+    "PPC_CONTROL_QUEUE_SHA_URL_TEMPLATE",
+    "https://raw.githubusercontent.com/Christopher-Charman/open-webui/{sha}/bootstrap-relay/permanent-control/queue.json",
+)
+QUEUE_REF_CHECK_SECONDS = max(
+    60, int(os.environ.get("PPC_CONTROL_QUEUE_REF_CHECK_SECONDS", "90"))
+)
+_QUEUE_REF_LAST_CHECK = 0.0
+_QUEUE_REF_SHA = ""
 HEARTBEAT_SECONDS = int(os.environ.get("PPC_CONTROL_HEARTBEAT_SECONDS", "30"))
 MAX_QUEUE_BYTES = 1024 * 1024
 MAX_TASKS = 128
@@ -223,12 +233,62 @@ def _db() -> sqlite3.Connection:
     return conn
 
 
+def _resolve_queue_url() -> tuple[str, str]:
+    global _QUEUE_REF_LAST_CHECK, _QUEUE_REF_SHA
+    now = time.time()
+
+    if _QUEUE_REF_SHA and (now - _QUEUE_REF_LAST_CHECK) < QUEUE_REF_CHECK_SECONDS:
+        return QUEUE_SHA_URL_TEMPLATE.format(sha=_QUEUE_REF_SHA), "immutable_sha"
+
+    if (now - _QUEUE_REF_LAST_CHECK) < QUEUE_REF_CHECK_SECONDS:
+        return QUEUE_URL, "mutable_fallback"
+
+    _QUEUE_REF_LAST_CHECK = now
+    req = urllib.request.Request(
+        QUEUE_REF_URL,
+        headers={
+            "User-Agent": "powerpc-control-v1/1",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            raw = r.read(262145)
+            remaining = r.headers.get("X-RateLimit-Remaining", "?")
+        if len(raw) > 262144:
+            raise ValueError("queue_ref_response_too_large")
+        obj = json.loads(raw.decode("utf-8"))
+        sha = obj.get("sha") if isinstance(obj, dict) else None
+        if (
+            not isinstance(sha, str)
+            or len(sha) != 40
+            or any(ch not in "0123456789abcdefABCDEF" for ch in sha)
+        ):
+            raise ValueError("queue_ref_invalid_sha")
+        sha = sha.lower()
+        if sha != _QUEUE_REF_SHA:
+            _log("queue_ref_update=" + sha[:12] + " remaining=" + str(remaining))
+        _QUEUE_REF_SHA = sha
+        return QUEUE_SHA_URL_TEMPLATE.format(sha=sha), "immutable_sha"
+    except urllib.error.HTTPError as e:
+        remaining = e.headers.get("X-RateLimit-Remaining", "?") if e.headers else "?"
+        _log(
+            "queue_ref_error=HTTPError status="
+            + str(e.code)
+            + " remaining="
+            + str(remaining)
+        )
+    except urllib.error.URLError as e:
+        _log("queue_ref_error=URLError reason=" + type(e.reason).__name__)
+    except Exception as e:
+        _log("queue_ref_error=" + type(e).__name__)
+
+    _QUEUE_REF_SHA = ""
+    return QUEUE_URL, "mutable_fallback"
+
+
 def _fetch_queue() -> dict[str, Any] | None:
-    # Reuse one cache-buster for a short bucket instead of forcing a unique
-    # raw-GitHub origin request on every poll. This bounds command latency while
-    # allowing the CDN to absorb repeated polls from shared hosting.
-    bucket = int(time.time() // QUEUE_REFRESH_BUCKET_SECONDS)
-    url = QUEUE_URL + ("&" if "?" in QUEUE_URL else "?") + "b=" + str(bucket)
+    url, source = _resolve_queue_url()
     req = urllib.request.Request(
         url,
         headers={
@@ -251,13 +311,23 @@ def _fetch_queue() -> dict[str, Any] | None:
             raise ValueError("invalid_task_list")
         return obj
     except urllib.error.HTTPError as e:
-        _log("queue_fetch_error=HTTPError status=" + str(e.code))
+        _log(
+            "queue_fetch_error=HTTPError status="
+            + str(e.code)
+            + " source="
+            + source
+        )
         return None
     except urllib.error.URLError as e:
-        _log("queue_fetch_error=URLError reason=" + type(e.reason).__name__)
+        _log(
+            "queue_fetch_error=URLError reason="
+            + type(e.reason).__name__
+            + " source="
+            + source
+        )
         return None
     except Exception as e:
-        _log("queue_fetch_error=" + type(e).__name__)
+        _log("queue_fetch_error=" + type(e).__name__ + " source=" + source)
         return None
 
 
