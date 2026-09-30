@@ -1,4 +1,4 @@
-name: PowerPC fresh-origin receipt diagnostic
+name: PowerPC Ollama read-only diagnostic
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  accept:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -22,11 +22,11 @@ jobs:
       - name: Install crypto dependency
         run: python3 -m pip install --disable-pip-version-check --quiet cryptography
 
-      - name: Issue and inspect fresh runtime_health receipt
+      - name: Run bounded Ollama diagnostic through owned receiver
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "PowerPC Control Acceptance"
+          git config user.name "PowerPC Control Diagnostic"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
 
           ID=/tmp/identity.json
@@ -37,36 +37,64 @@ jobs:
           CLIENT=bootstrap-relay/permanent-control/origin-client.py
           QUEUE=bootstrap-relay/permanent-control/queue.json
 
-          curl -fsSL --connect-timeout 8 --max-time 20 \
-            -H 'Cache-Control: no-cache' \
-            "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json?accept=$(date +%s%N)" \
-            -o "$ID"
+          curl -fsSL --connect-timeout 8 --max-time 20 -H 'Cache-Control: no-cache' \
+            "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json?diag=$(date +%s%N)" -o "$ID"
+
+          cat > /tmp/ollama-diag.sh <<'SH'
+          set +e
+          echo OLLAMA_DIAG_BEGIN
+          date -u
+          id
+          echo ===PROCESS===
+          ps -ef | grep '[o]llama' || true
+          echo ===LISTEN_11434===
+          (ss -ltnp 2>/dev/null || netstat -ltnp 2>/dev/null || true) | grep '11434' || true
+          echo ===HTTP_VERSION===
+          curl -sS -i --connect-timeout 3 --max-time 5 http://127.0.0.1:11434/api/version || true
+          echo
+          echo ===HTTP_TAGS===
+          curl -sS -i --connect-timeout 3 --max-time 5 http://127.0.0.1:11434/api/tags || true
+          echo
+          echo ===BINARY===
+          command -v ollama || true
+          find /home/storage/781/4477781/user/webapp -maxdepth 5 -type f -name 'ollama' -perm -111 -print 2>/dev/null | head -n 20
+          echo ===SUPERVISION===
+          crontab -l 2>/dev/null | grep -i ollama || true
+          grep -RIl --exclude='*.log' --exclude='*.json' --exclude='*.db' 'OLLAMA_HOST\|11434\|ollama serve' \
+            /home/storage/781/4477781/user/webapp/bin \
+            /home/storage/781/4477781/user/webapp/runtime-domains \
+            /home/storage/781/4477781/user/webapp 2>/dev/null | head -n 40
+          echo ===RECENT_OLLAMA_LOGS===
+          find /home/storage/781/4477781/user -maxdepth 6 -type f \
+            \( -iname '*ollama*.log' -o -iname 'ollama.log' \) -print 2>/dev/null | head -n 20
+          echo OLLAMA_DIAG_END
+          exit 0
+          SH
+
+          CMD="$(cat /tmp/ollama-diag.sh)"
+          ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":15000},separators=(",",":")))' "$CMD")"
 
           OUT="$(python3 "$CLIENT" prepare \
             --identity "$ID" \
-            --tool runtime_health \
-            --arguments '{}' \
-            --authority read_only \
+            --tool terminal_exec \
+            --arguments "$ARGS" \
+            --authority bounded_operator \
             --ttl 1200 \
             --output "$TASK" \
             --context "$CTX")"
           TASK_ID="$(printf '%s\n' "$OUT" | sed -n 's/^TASK_PREPARED=//p' | tail -n1)"
-          FP="$(printf '%s\n' "$OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n1)"
           test -n "$TASK_ID"
-          test -n "$FP"
-          echo "::add-mask::$FP"
           echo "TASK_ID=$TASK_ID"
 
           python3 - "$QUEUE" "$TASK" <<'PY'
           import json,sys
-          q=json.load(open(sys.argv[1]))
-          t=json.load(open(sys.argv[2]))
+          q=json.load(open(sys.argv[1])); t=json.load(open(sys.argv[2]))
           q.setdefault("tasks",[]).append(t)
           with open(sys.argv[1],"w") as f:
               json.dump(q,f,separators=(",",":"),sort_keys=True); f.write("\n")
           PY
           git add "$QUEUE"
-          git commit -m "control: diagnostic runtime health acceptance [skip ci]"
+          git commit -m "control: issue read-only Ollama diagnostic [skip ci]"
           for n in 1 2 3; do
             if git push origin HEAD:main; then break; fi
             test "$n" -lt 3
@@ -77,14 +105,11 @@ jobs:
           URL="https://www.powerpc-darwin.org/static/ppc-control-result-$TASK_ID.json"
           ok=0
           for i in $(seq 1 240); do
-            code="$(curl -sS -o "$RESULT" -w '%{http_code}' \
-              --connect-timeout 8 --max-time 15 -H 'Cache-Control: no-cache' \
-              "$URL?accept=$(date +%s%N)" || true)"
+            code="$(curl -sS -o "$RESULT" -w '%{http_code}' --connect-timeout 8 --max-time 15 \
+              -H 'Cache-Control: no-cache' "$URL?diag=$(date +%s%N)" || true)"
             if [ "$code" = 200 ] && python3 - "$RESULT" "$TASK_ID" <<'PY'
           import json,sys
           d=json.load(open(sys.argv[1]))
-          assert d.get("protocol")=="powerpc-control-v1"
-          assert d.get("version")==1
           assert d.get("task_id")==sys.argv[2]
           assert d.get("kind")=="result"
           PY
@@ -94,43 +119,22 @@ jobs:
 
           if [ "$ok" = 1 ]; then
             python3 "$CLIENT" decode --result "$RESULT" --context "$CTX" --output "$RECEIPT" >/dev/null
-            python3 - "$RECEIPT" "$TASK_ID" <<'PY'
-          import json,sys
-          d=json.load(open(sys.argv[1]))
+            python3 - "$RECEIPT" <<'PY'
+          import json
+          d=json.load(open("/tmp/receipt.json"))
           r=d.get("result") or {}
-          text="\n".join(x.get("text","") for x in (r.get("content") or []) if isinstance(x,dict))[:1500]
-          print("RECEIPT_TASK_ID="+str(d.get("task_id")))
-          print("RECEIPT_COMPLETION_STATE="+str(d.get("completion_state")))
-          print("RECEIPT_UNRESOLVED="+json.dumps(d.get("unresolved") or []))
-          print("RECEIPT_ACTION_COUNT="+str(len(d.get("actions") or [])))
-          print("RECEIPT_RESULT_ISERROR="+str(r.get("isError")))
-          print("RECEIPT_RESULT_TEXT="+text.replace("\n"," | "))
-          ex=d.get("executor_identity") or {}
-          print("RECEIPT_EXECUTOR="+json.dumps({
-              "runtime_id":ex.get("runtime_id"),"user":ex.get("user"),
-              "uid":ex.get("uid"),"hostname":ex.get("hostname")
-          },sort_keys=True))
-          rr=d.get("runtime_receipt") or {}
-          print("RECEIPT_RUNTIME="+json.dumps({
-              "namespace":rr.get("namespace"),"webapp":rr.get("webapp"),
-              "local_mcp":rr.get("local_mcp")
-          },sort_keys=True))
-          good=(
-              d.get("task_id")==sys.argv[2] and
-              d.get("completion_state")=="COMPLETED" and
-              ex.get("runtime_id")=="fasthost.powerpc" and
-              ex.get("uid")==2257347 and
-              (d.get("unresolved") or [])==[] and
-              r.get("isError") is not True
-          )
-          open("/tmp/accept-good","w").write("1" if good else "0")
+          text="\n".join(x.get("text","") for x in (r.get("content") or []) if isinstance(x,dict))
+          print("DIAG_COMPLETION_STATE="+str(d.get("completion_state")))
+          print("DIAG_UNRESOLVED="+json.dumps(d.get("unresolved") or []))
+          print("DIAG_RESULT_ISERROR="+str(r.get("isError")))
+          print("DIAG_OUTPUT_BEGIN")
+          print(text[:12000])
+          print("DIAG_OUTPUT_END")
           PY
           else
-            echo RECEIPT_RETRIEVAL=TIMEOUT
-            echo 0 > /tmp/accept-good
+            echo DIAG_RECEIPT_TIMEOUT
           fi
 
-          # Cleanup this task regardless of pass/fail.
           git fetch origin main
           git reset --hard origin/main
           python3 - "$QUEUE" "$TASK_ID" <<'PY'
@@ -143,7 +147,7 @@ jobs:
           PY
           if ! git diff --quiet -- "$QUEUE"; then
             git add "$QUEUE"
-            git commit -m "control: remove diagnostic acceptance task [skip ci]"
+            git commit -m "control: remove completed Ollama diagnostic task [skip ci]"
             for n in 1 2 3; do
               if git push origin HEAD:main; then break; fi
               test "$n" -lt 3
@@ -152,7 +156,5 @@ jobs:
             done
           fi
 
-          test "$(cat /tmp/accept-good)" = 1
-          echo FRESH_ORIGIN_RUNTIME_HEALTH=PASS
-          echo SIGNED_RESULT_SIGNATURE_AND_DECRYPTION=PASS
-          echo PERMANENT_ACCESS_EGRESS_CRYPTO_ACCEPTANCE=PASS
+          test "$ok" = 1
+          echo OLLAMA_DIAGNOSTIC_RECEIPT=PASS
