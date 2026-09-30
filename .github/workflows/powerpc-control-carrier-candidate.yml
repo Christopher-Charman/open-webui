@@ -1,0 +1,37 @@
+name: powerpc-control-carrier-candidate
+
+on:
+  push:
+    branches:
+      - tooling/powerpc-control-carrier-hardening
+    paths:
+      - .github/workflows/powerpc-control-carrier-candidate.yml
+      - bootstrap-relay/permanent-control/daemon.py
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tooling/powerpc-control-carrier-hardening
+      - name: Validate receiver carrier hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile bootstrap-relay/permanent-control/daemon.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("bootstrap-relay/permanent-control/daemon.py")
+          s=p.read_text()
+          assert 'QUEUE_REFRESH_BUCKET_SECONDS' in s
+          assert 'str(time.time_ns())' not in s
+          assert '"Cache-Control": "no-cache"' not in s
+          assert '"Pragma": "no-cache"' not in s
+          assert 'queue_fetch_error=HTTPError status=' in s
+          assert 'queue_fetch_error=URLError reason=' in s
+          print("CARRIER_SOURCE_VALIDATION=PASS")
+          PY
