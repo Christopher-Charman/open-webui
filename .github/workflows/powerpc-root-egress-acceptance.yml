@@ -1,0 +1,67 @@
+name: PowerPC root egress acceptance
+
+on:
+  push:
+    branches:
+      - control/root-egress-acceptance
+    paths:
+      - ".github/workflows/powerpc-root-egress-acceptance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Probe fresh root identity and existing receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://www.powerpc-darwin.org"
+          stamp="$(date +%s%N)"
+
+          code="$(curl -sS -o /tmp/identity.json -D /tmp/identity.h -w '%{http_code}'             --connect-timeout 8 --max-time 15 "$base/ppc-control-identity.json?t=$stamp" || true)"
+          echo "ROOT_IDENTITY_HTTP=$code"
+          [ "$code" = "200" ]
+          python3 - /tmp/identity.json <<'PY'
+          import json,sys,time
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("runtime_id")=="fasthost.powerpc"
+          assert d.get("uid")==2257347
+          hb=int(d.get("heartbeat_at",0))
+          age=int(time.time())-hb
+          print(f"ROOT_IDENTITY_HEARTBEAT={hb}")
+          print(f"ROOT_IDENTITY_AGE={age}")
+          print("ROOT_IDENTITY_FRESH="+("PASS" if 0 <= age < 180 else "FAIL"))
+          if not (0 <= age < 180):
+              raise SystemExit(2)
+          PY
+
+          found=0
+          for id in             ppc-canonical-flat-deploy-1790773592             ppc-canonical-flat-health-1790773682             ppc-liveproof-1790773844
+          do
+            url="$base/powerpc-control-v1/results/$id.json"
+            code="$(curl -sS -o /tmp/result.json -w '%{http_code}'               --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
+            echo "RESULT_TASK=$id HTTP=$code URL=$url"
+            if [ "$code" = "200" ] && python3 - /tmp/result.json "$id" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("task_id")==sys.argv[2]
+          assert d.get("target_runtime_id")=="fasthost.powerpc"
+          assert d.get("kind")=="result"
+          print("RESULT_ENVELOPE=PASS published_at="+str(d.get("published_at")))
+          PY
+            then
+              echo "RECEIPT_BEGIN id=$id"
+              cat /tmp/result.json
+              echo
+              echo "RECEIPT_END id=$id"
+              found=$((found+1))
+            fi
+          done
+          echo "ROOT_RECEIPTS_FOUND=$found"
+          [ "$found" -ge 1 ]
