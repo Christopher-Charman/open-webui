@@ -1,17 +1,27 @@
 # Continuity Shell post-mount semantic binder
 
-Recovery lane: OpenWebUI/Continuity Shell presentation only.
+Recovery lane: OpenWebUI/Continuity Shell presentation semantics only.
 
-## Boundary
+## Current boundary — v20260930.2
 
-This packet reconstructs the missing semantic DOM/state layer above the accepted stock OpenWebUI 0.11.3 mount. It does not restore or modify stock loader.js, stock custom.css, pwa-client-runtime.js, the accepted pwa-voice-bridge.js 1.3.4-nowarm, immutable application bundles, Passenger/controller, or the native control-plane receiver.
+Cross-browser/device testing of v20260930.1 established that its generated hero, READY label,
+footer and chat-telemetry nodes duplicated presentation already owned by the accepted historical
+Continuity/Neural/Orb layers. v20260930.2 therefore demotes this component to a **mapping-only
+semantic binder**.
 
-The existing accepted continuity-theme-overlay.css and lcars-theme.css remain presentation authorities. This binder supplies the semantic classes and owned elements they expect.
+It creates no hero, READY label, footer, neural SVG, chat telemetry or Border Beam. It only maps
+the protected stock OpenWebUI DOM onto the historical semantic classes expected by the accepted
+Continuity Shell CSS and rewrites the existing stock footer identity in-place.
 
-## Recovered historical contract
+Protected invariants remain:
+- stock loader.js untouched and empty;
+- stock custom.css untouched and empty;
+- pwa-client-runtime.js untouched;
+- accepted pwa-voice-bridge.js / no-warm boundary untouched;
+- no Passenger/OpenWebUI restart in this concurrent-session lane.
 
-The surviving compiled Svelte writer established custom-shell-landing-prompt, chat-telemetry custom-shell-motion, role=status, aria-live=polite, orb-slot, semantic phase/detail state, default phase=ready, and telemetry orb geometry engineSize=20 / displaySize=27.
+## Device acceptance order
 
-## Concurrency
-
-Development is isolated on branch repair/continuity-shell-postmount-20260930. The installer deliberately does not restart Passenger/OpenWebUI; any restart is a separate serialized operation because three assistant sessions are live.
+Landing only first: Safari / Firefox / iOS Home-Screen. Confirm duplicate READY/footer and desktop
+overlap are gone before testing active-chat telemetry. Do not advance the chat layer on a failed
+landing acceptance.
