@@ -9,27 +9,43 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
-      - name: Verify raw main queue head
+      - name: Verify raw queue and flat receipt
         shell: bash
         run: |
           set -euo pipefail
-          url="https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json"
+          qurl="https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json"
           expected="ppc-health-valid-1790727010"
-          for i in $(seq 1 12); do
-            curl -fsSL -H 'Cache-Control: no-cache' "$url?probe=$(date +%s%N)" -o /tmp/q.json
-            got="$(python3 - <<'PY'
+          curl -fsSL -H 'Cache-Control: no-cache' "$qurl?probe=$(date +%s%N)" -o /tmp/q.json
+          got="$(python3 - <<'PY'
           import json
           q=json.load(open('/tmp/q.json'))
           print(','.join(t.get('task_id','') for t in q.get('tasks',[])))
           PY
           )"
-            echo "attempt=$i tasks=$got"
-            case ",$got," in
-              *",$expected,"*) echo "RAW_QUEUE_CURRENT=PASS"; exit 0 ;;
-            esac
+          echo "queue_tasks=$got"
+          case ",$got," in
+            *",$expected,"*) echo "RAW_QUEUE_CURRENT=PASS" ;;
+            *) echo "RAW_QUEUE_CURRENT=FAIL"; exit 1 ;;
+          esac
+          rurl="https://www.powerpc-darwin.org/static/powerpc-control-result-$expected.json"
+          for i in $(seq 1 18); do
+            code="$(curl -sS -o /tmp/result -w '%{http_code}' --connect-timeout 6 --max-time 12 "$rurl?t=$(date +%s%N)" || true)"
+            echo "receipt_attempt=$i http=$code"
+            if [ "$code" = "200" ] && python3 - /tmp/result "$expected" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get("protocol")=="powerpc-control-v1"
+          assert d.get("version")==1
+          assert d.get("task_id")==sys.argv[2]
+          assert d.get("kind")=="result"
+          PY
+            then
+              echo "FLAT_RECEIPT=PASS"
+              exit 0
+            fi
             sleep 5
           done
-          echo "RAW_QUEUE_CURRENT=FAIL" >&2
+          echo "FLAT_RECEIPT=FAIL" >&2
           exit 1
