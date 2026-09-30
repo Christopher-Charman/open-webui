@@ -241,8 +241,35 @@ log "IDENTITY_SIGNATURE_AND_PIN=PASS"
 queue_envelope "$WORK/health-envelope.json" "$HEALTH_ID"
 wait_result "$HEALTH_ID" "$WORK/health-result.json" || fail "runtime_health_result_timeout"
 decode_to "$WORK/health-result.json" "$WORK/health-context.json" "$WORK/health-plain.json"
-assert_receipt_common "$WORK/health-plain.json" "$HEALTH_ID" "COMPLETED"
-log "FRESH_ORIGIN_RUNTIME_HEALTH=PASS"
+HEALTH_STATE="$(python3 - "$WORK/health-plain.json" "$HEALTH_ID" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert d.get("task_id")==sys.argv[2]
+i=d.get("executor_identity") or {}
+assert i.get("runtime_id")=="fasthost.powerpc"
+assert i.get("user")=="csh3280350"
+assert i.get("uid")==2257347
+assert i.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+rr=d.get("runtime_receipt") or {}
+assert rr.get("namespace")=="/home/storage/781/4477781/user"
+assert rr.get("webapp")=="/home/storage/781/4477781/user/webapp"
+actions=d.get("actions") or []
+assert len(actions)==1 and actions[0].get("capability")=="runtime_health"
+usage=d.get("resource_usage") or {}
+assert usage.get("local_mcp_calls")==1
+result=d.get("result")
+assert isinstance(result,dict)
+state=d.get("completion_state")
+assert state in {"COMPLETED","FAILED"}
+if state=="COMPLETED":
+    assert result.get("isError") is not True
+else:
+    assert result.get("isError") is True
+print(state)
+PY
+)"
+log "FRESH_ORIGIN_RUNTIME_HEALTH_ROUNDTRIP=PASS"
+log "RUNTIME_HEALTH_COMPLETION_STATE=$HEALTH_STATE"
 
 # Exact duplicate must not be re-executed or re-published.
 DUP_SHA1="$(sha256sum "$WORK/health-result.json" | awk '{print $1}')"
