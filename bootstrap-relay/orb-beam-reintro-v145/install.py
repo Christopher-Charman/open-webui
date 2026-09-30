@@ -119,8 +119,8 @@ src_css = find_exact('owui-orb-v1.css', CSS_HASH)
 js_text = src_js.read_text()
 css_text = src_css.read_text()
 
-if 'ORB_VERSION = 1.4.5' not in js_text:
-    raise SystemExit('ERROR v1.4.5 JS marker missing')
+if not re.search(r"ORB_VERSION\s*=\s*['\"]1\.4\.5['\"]", js_text):
+    raise SystemExit('ERROR v1.4.5 JS version marker missing despite exact hash match')
 if 'owui-border-beam-v1' not in js_text:
     raise SystemExit('ERROR Border Beam JS marker missing')
 if 'owui-thinking-orb-v1' not in js_text:
