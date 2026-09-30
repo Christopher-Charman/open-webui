@@ -403,6 +403,10 @@ def _publish_result(task: dict[str, Any], shared: bytes, spriv, result: dict[str
         _atomic_write(mirror / "results" / leaf, data, 0o644)
         _atomic_write(mirror / "ppc-control-results" / leaf, data, 0o644)
         _atomic_write(mirror / PROTOCOL / "results" / leaf, data, 0o644)
+        # Some public frontends pass flat static JSON files while blocking nested
+        # static paths. Publish a task-scoped flat alias as an additive egress
+        # compatibility route; the signed/encrypted envelope remains unchanged.
+        _atomic_write(mirror / ("ppc-control-result-" + leaf), data, 0o644)
     return str(path)
 
 
