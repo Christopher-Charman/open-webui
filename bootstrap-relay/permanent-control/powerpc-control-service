@@ -44,6 +44,15 @@ except Exception:
 PY
 }
 
+healthy() {
+  alive || return 1
+  age="$(heartbeat_age)"
+  case "$age" in
+    ''|-1) return 1 ;;
+    *) [ "$age" -le 75 ] ;;
+  esac
+}
+
 wait_healthy() {
   n=0
   while [ "$n" -lt 30 ]; do
@@ -106,7 +115,11 @@ do_ensure() {
   if command -v flock >/dev/null 2>&1; then
     flock -n 9 || return 0
   fi
-  if alive; then return 0; fi
+  if healthy; then return 0; fi
+  if alive; then
+    echo "POWERPC_CONTROL=STALE_RECOVERY heartbeat_age=$(heartbeat_age)" >>"$LOG"
+    stop_one
+  fi
   start_one
 }
 
@@ -123,11 +136,12 @@ case "${1:-ensure}" in
   status)
     if alive; then
       age="$(heartbeat_age)"
-      echo "POWERPC_CONTROL=RUNNING pid=$(cat "$PIDFILE") heartbeat_age=$age"
-      case "$age" in
-        ''|-1) exit 4 ;;
-        *) [ "$age" -le 75 ] && exit 0 || exit 4 ;;
-      esac
+      if healthy; then
+        echo "POWERPC_CONTROL=RUNNING pid=$(cat "$PIDFILE") heartbeat_age=$age"
+        exit 0
+      fi
+      echo "POWERPC_CONTROL=STALE pid=$(cat "$PIDFILE") heartbeat_age=$age"
+      exit 4
     fi
     if [ -e "$DISABLED" ]; then
       echo "POWERPC_CONTROL=DISABLED"
