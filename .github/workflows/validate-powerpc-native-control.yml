@@ -32,6 +32,8 @@ jobs:
           set -euo pipefail
           git config user.name "PowerPC Native Acceptance"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
 
           python3 - <<'PY'
           import base64, json, os, time
@@ -129,7 +131,13 @@ jobs:
 
           git add bootstrap-relay/permanent-control/queue.json
           git commit -m "control: issue canonical native acceptance task"
-          git push origin HEAD:main
+          for n in 1 2 3; do
+            if git push origin HEAD:main; then
+              break
+            fi
+            [ "$n" -lt 3 ] || exit 1
+            git pull --rebase origin main
+          done
 
       - name: Verify execution proof and signed encrypted receipt
         shell: bash
