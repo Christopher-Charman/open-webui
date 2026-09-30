@@ -1,0 +1,50 @@
+name: Recover PowerPC Owned Receiver
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/recover-powerpc-owned-receiver.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: powerpc-owned-receiver-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Run bounded machine recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          runner="https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/actions-bootstrap-live.sh"
+          repair="https://raw.githubusercontent.com/Christopher-Charman/open-webui/5371f994b03828e843171bb762862ea30b40b8d0/bootstrap-relay/permanent-control/recover-receiver-host.sh"
+          curl -fsSL --retry 4 "$runner" -o /tmp/ppc-recover.sh
+          python3 - /tmp/ppc-recover.sh "$repair" <<'PY'
+          import pathlib,sys
+          p=pathlib.Path(sys.argv[1])
+          repair=sys.argv[2]
+          s=p.read_text()
+          old="https://raw.githubusercontent.com/Christopher-Charman/open-webui/daaa4e3226e81788858eb3d209d956d728347c93/bootstrap-relay/permanent-control/bootstrap-control-plane.sh"
+          if old not in s:
+              raise SystemExit("expected bootstrap pin missing")
+          s=s.replace(old,repair,1)
+          s=s.replace(
+              "$BASE/static/powerpc-control-v1/identity.json",
+              "$BASE/static/ppc-control-identity-live.json",
+          )
+          s=s.replace(
+              "$BASE/static/powerpc-control-v1/status.json",
+              "$BASE/static/ppc-control-status-live.json",
+          )
+          p.write_text(s)
+          PY
+          chmod 700 /tmp/ppc-recover.sh
+          bash -n /tmp/ppc-recover.sh
+          /tmp/ppc-recover.sh
