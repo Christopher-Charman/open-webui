@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION='20260930.3-landing';
+  const VERSION='20260930.4-landing';
   const HOST_ID='continuity-shell-landing-hero-presenter';
   const READY_SUPPRESS='continuity-shell-landing-ready-superseded';
   const LEGACY_SUPPRESS='data-continuity-hero-superseded';
@@ -11,6 +11,7 @@
   window.__CONTINUITY_SHELL_HERO_PRESENTER__={version:VERSION,state:'booting'};
 
   const visible=(el)=>!!el&&!!(el.offsetWidth||el.offsetHeight||el.getClientRects().length);
+  const norm=(s)=>String(s||'').replace(/\s+/g,' ').trim();
 
   function isAuthSurface(){
     if(/^\/auth(?:\/|$)/.test(location.pathname)) return true;
@@ -18,24 +19,32 @@
     return /Sign in to Open WebUI/i.test(body)&&!!document.querySelector('input[type="password"]');
   }
 
+  function hasConversationMessages(){
+    return [...document.querySelectorAll('.message-listitem,[role="listitem"].message-listitem')]
+      .some(visible);
+  }
+
   function isChatRoute(){
-    return /^\/c\/[^/]+/.test(location.pathname);
+    return /^\/c\/[^/]+/.test(location.pathname)||hasConversationMessages();
   }
 
   function promptNode(){
-    const direct=document.querySelector(
-      '#message-input-container,[data-testid="message-input-container"],.message-input-container'
-    );
+    const direct=document.querySelector('#message-input-container');
     if(direct&&visible(direct)) return direct;
     const ta=[...document.querySelectorAll('textarea')].find(visible);
     if(!ta) return null;
-    let p=ta;
-    for(let i=0;i<7&&p;i++,p=p.parentElement){
+
+    const candidates=[];
+    for(let p=ta.parentElement,depth=0;p&&depth<9;p=p.parentElement,depth++){
       const r=p.getBoundingClientRect();
       const buttons=p.querySelectorAll?.('button').length||0;
-      if(r.width>260&&r.height>=64&&r.height<300&&buttons>=2) return p;
+      if(r.width>260&&r.height>=64&&r.height<320&&buttons>=2){
+        candidates.push({el:p,r,buttons});
+      }
     }
-    return ta.parentElement;
+    if(!candidates.length) return ta.parentElement;
+    candidates.sort((a,b)=>(b.r.width*b.r.height)-(a.r.width*a.r.height));
+    return candidates[0].el;
   }
 
   function landingRoute(){
@@ -73,7 +82,7 @@
     wrap.className='continuity-shell-hero-sphere-wrap';
 
     const svg=svgEl('svg',{viewBox:'0 0 240 240','aria-hidden':'true'});
-    svg.classList.add('continuity-shell-hero-svg','hero-network','chat-landing-network');
+    svg.classList.add('continuity-shell-hero-svg');
 
     const defs=svgEl('defs');
     const glow=svgEl('filter',{
@@ -101,10 +110,7 @@
     const edgeGroup=svgEl('g',{class:'continuity-shell-hero-edges'});
     for(const a of pts){
       const nearest=pts.filter(b=>b!==a)
-        .map(b=>({
-          b,
-          d:(a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2
-        }))
+        .map(b=>({b,d:(a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2}))
         .sort((u,v)=>u.d-v.d)
         .slice(0,3);
       for(const {b} of nearest){
@@ -151,7 +157,7 @@
     host.setAttribute('aria-label','Continuity system ready');
 
     const aura=document.createElement('div');
-    aura.className='continuity-shell-hero-aura hero-aura chat-landing-aura';
+    aura.className='continuity-shell-hero-aura';
     const sphere=makeSphere();
     const ready=document.createElement('div');
     ready.className='continuity-shell-hero-ready';
@@ -178,24 +184,18 @@
     document.querySelectorAll('['+LEGACY_SUPPRESS+'="1"]').forEach(el=>el.removeAttribute(LEGACY_SUPPRESS));
   }
 
-  function readyCandidates(composer){
-    const cr=composer.getBoundingClientRect();
-    const cx=(cr.left+cr.right)/2;
+  function readyCandidates(){
     return [...document.querySelectorAll('div,span,p,h1,h2,h3,strong')]
       .filter(el=>{
         if(el.closest('#'+HOST_ID)||el.closest('#message-input-container')||el.closest('#continuity-control-host')) return false;
-        if(el.children.length!==0||!visible(el)||(el.textContent||'').trim()!=='READY') return false;
+        if(el.children.length!==0||!visible(el)||norm(el.textContent)!=='READY') return false;
         const r=el.getBoundingClientRect();
-        if(!r.width||!r.height) return false;
-        if(r.bottom>cr.top+24) return false;
-        if(cr.top-r.bottom>520) return false;
-        if(Math.abs((r.left+r.right)/2-cx)>Math.max(180,cr.width*.42)) return false;
-        return true;
+        return r.width>0&&r.height>0;
       });
   }
 
-  function suppressExternalReady(composer){
-    for(const el of readyCandidates(composer)) el.classList.add(READY_SUPPRESS);
+  function suppressExternalReady(){
+    for(const el of readyCandidates()) el.classList.add(READY_SUPPRESS);
   }
 
   function restoreExternalReady(){
@@ -203,37 +203,70 @@
   }
 
   function rewriteFooter(){
-    if(!document.body) return;
-    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
-    const nodes=[];
-    while(walker.nextNode()) nodes.push(walker.currentNode);
-    for(const node of nodes){
-      const t=(node.nodeValue||'').trim();
-      if(/^Open WebUI\s*·\s*v0\.11\.3$/i.test(t)){
-        node.nodeValue='Continuity Shell · Open WebUI · v0.11.3';
-        node.parentElement?.classList.add('custom-shell-footer','continuity-shell-footer-bound');
-      }else if(/^Continuity Shell\s*·\s*Open WebUI\s*·\s*v0\.11\.3$/i.test(t)){
-        node.parentElement?.classList.add('custom-shell-footer','continuity-shell-footer-bound');
-      }
+    const rx=/^Open WebUI\s*·\s*v0\.11\.3$/i;
+    const nodes=[...document.querySelectorAll('div,span,p,a')];
+    const hits=[];
+    for(const el of nodes){
+      if(!visible(el)||el.closest('#message-input-container')||el.closest('#continuity-control-host')) continue;
+      const t=norm(el.textContent);
+      if(!rx.test(t)) continue;
+      const r=el.getBoundingClientRect();
+      if(r.width>420||r.height>90) continue;
+      hits.push({el,area:r.width*r.height});
     }
+    hits.sort((a,b)=>a.area-b.area);
+    for(const {el} of hits){
+      if(norm(el.textContent)!=='Continuity Shell · Open WebUI · v0.11.3'){
+        el.textContent='Continuity Shell · Open WebUI · v0.11.3';
+      }
+      el.classList.add('custom-shell-footer','continuity-shell-footer-bound');
+      break;
+    }
+  }
+
+  function nearbyIdentityTop(composer){
+    const cr=composer.getBoundingClientRect();
+    const cx=(cr.left+cr.right)/2;
+    const minY=Math.max(0,cr.top-360);
+    let top=null;
+
+    for(const el of document.querySelectorAll('h1,h2,h3,div,p,span')){
+      if(!visible(el)||el.closest('#'+HOST_ID)||el.closest('#message-input-container')||el.closest('#continuity-control-host')) continue;
+      const text=norm(el.textContent);
+      if(text.length<3||text.length>260) continue;
+      if(/^(READY|WORLD BETWEEN WORLDS|CONTINUITY|INPUT|Open WebUI|Continuity Shell)/i.test(text)) continue;
+
+      const r=el.getBoundingClientRect();
+      if(!r.width||!r.height||r.bottom>cr.top+4||r.top<minY) continue;
+      if(Math.abs((r.left+r.right)/2-cx)>Math.max(220,cr.width*.48)) continue;
+
+      const fs=parseFloat(getComputedStyle(el).fontSize)||0;
+      if(fs<17&&r.height<34) continue;
+      if(top===null||r.top<top) top=r.top;
+    }
+    return top;
   }
 
   function positionHost(host,composer){
     const cr=composer.getBoundingClientRect();
     const vw=Math.max(320,window.innerWidth||320);
     const vh=Math.max(480,window.innerHeight||480);
-    const size=Math.max(126,Math.min(176,vw*.36));
-    const readyHeight=28;
-    const groupHeight=size+readyHeight;
-    let top=cr.top-groupHeight-28;
-    const floor=Math.max(96,Math.min(188,vh*.155));
+
+    const size=Math.max(126,Math.min(174,vw*.34));
+    const groupHeight=size+34;
+    const identityTop=nearbyIdentityTop(composer);
+    const anchorTop=identityTop===null?cr.top:Math.min(cr.top,identityTop);
+    const gap=identityTop===null?28:20;
+
+    let top=anchorTop-groupHeight-gap;
+    const floor=Math.max(86,Math.min(176,vh*.12));
     if(top<floor) top=floor;
-    const maxTop=Math.max(floor,cr.top-groupHeight-10);
-    if(top>maxTop) top=maxTop;
 
     host.style.setProperty('--continuity-hero-size',size.toFixed(1)+'px');
-    host.style.top=Math.round(top)+'px';
-    host.style.left=Math.round((cr.left+cr.right)/2)+'px';
+    host.style.setProperty('left',Math.round((cr.left+cr.right)/2)+'px','important');
+    host.style.setProperty('top',Math.round(top)+'px','important');
+    host.style.setProperty('bottom','auto','important');
+    host.style.setProperty('transform','translateX(-50%)','important');
   }
 
   function cleanup(){
@@ -249,11 +282,12 @@
       cleanup();
       return;
     }
+
     const composer=promptNode();
     if(!composer) return;
 
     supersedeExternalHero();
-    suppressExternalReady(composer);
+    suppressExternalReady();
 
     let host=document.getElementById(HOST_ID);
     if(!host){
@@ -274,12 +308,14 @@
   }
 
   const observer=new MutationObserver(schedule);
-  observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+  observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class']});
 
   for(const type of ['popstate','resize','orientationchange']){
     addEventListener(type,schedule,{passive:true});
   }
   visualViewport?.addEventListener('resize',schedule,{passive:true});
+  visualViewport?.addEventListener('scroll',schedule,{passive:true});
+  addEventListener('continuity-shell:theme',schedule);
 
   schedule();
 
@@ -289,6 +325,7 @@
     status:()=>({
       state:window.__CONTINUITY_SHELL_HERO_PRESENTER__.state,
       path:location.pathname,
+      messages:[...document.querySelectorAll('.message-listitem')].filter(visible).length,
       host:!!document.getElementById(HOST_ID),
       externalReadySuppressed:document.querySelectorAll('.'+READY_SUPPRESS).length,
       externalHeroSuppressed:document.querySelectorAll('['+LEGACY_SUPPRESS+'="1"]').length
