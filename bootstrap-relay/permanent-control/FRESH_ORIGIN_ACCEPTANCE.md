@@ -54,9 +54,11 @@ Result template:
      --context task.context.json \
      --output receipt.json
    ```
-8. Require `completion_state=COMPLETED` and a runtime receipt bound to `fasthost.powerpc`.
-9. Repeat with `read_text` against one harmless allowed file.
-10. Repeat with one bounded non-destructive `terminal_exec` under `bounded_operator`.
+8. Require a signature-verified, decryptable runtime receipt bound to `fasthost.powerpc`, with exactly one `runtime_health` local-MCP action. `completion_state=COMPLETED` means the aggregate architecture-health probe is healthy; `completion_state=FAILED` is also a valid control-transport round trip when the returned MCP result has `isError=true`. Record that live health degradation separately; do not misclassify it as transport failure.
+9. Repeat with `read_text` against one harmless allowed file and require `completion_state=COMPLETED`.
+10. Repeat with one bounded non-destructive `terminal_exec` under `bounded_operator` and require `completion_state=COMPLETED`.
+
+Invariant: `CONTROL_TRANSPORT_ACCEPTANCE != AGGREGATE_RUNTIME_HEALTH`.
 
 ## Duplicate suppression
 
