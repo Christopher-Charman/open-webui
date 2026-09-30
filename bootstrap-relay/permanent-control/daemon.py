@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -59,6 +60,9 @@ QUEUE_URL = os.environ.get(
     "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json",
 )
 POLL_SECONDS = float(os.environ.get("PPC_CONTROL_POLL_SECONDS", "7"))
+QUEUE_REFRESH_BUCKET_SECONDS = max(
+    10, int(os.environ.get("PPC_CONTROL_QUEUE_REFRESH_BUCKET_SECONDS", "30"))
+)
 HEARTBEAT_SECONDS = int(os.environ.get("PPC_CONTROL_HEARTBEAT_SECONDS", "30"))
 MAX_QUEUE_BYTES = 1024 * 1024
 MAX_TASKS = 128
@@ -220,13 +224,16 @@ def _db() -> sqlite3.Connection:
 
 
 def _fetch_queue() -> dict[str, Any] | None:
-    url = QUEUE_URL + ("&" if "?" in QUEUE_URL else "?") + "t=" + str(time.time_ns())
+    # Reuse one cache-buster for a short bucket instead of forcing a unique
+    # raw-GitHub origin request on every poll. This bounds command latency while
+    # allowing the CDN to absorb repeated polls from shared hosting.
+    bucket = int(time.time() // QUEUE_REFRESH_BUCKET_SECONDS)
+    url = QUEUE_URL + ("&" if "?" in QUEUE_URL else "?") + "b=" + str(bucket)
     req = urllib.request.Request(
         url,
         headers={
             "User-Agent": "powerpc-control-v1/1",
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache",
+            "Accept": "application/json",
         },
     )
     try:
@@ -243,6 +250,12 @@ def _fetch_queue() -> dict[str, Any] | None:
         if not isinstance(tasks, list) or len(tasks) > MAX_TASKS:
             raise ValueError("invalid_task_list")
         return obj
+    except urllib.error.HTTPError as e:
+        _log("queue_fetch_error=HTTPError status=" + str(e.code))
+        return None
+    except urllib.error.URLError as e:
+        _log("queue_fetch_error=URLError reason=" + type(e.reason).__name__)
+        return None
     except Exception as e:
         _log("queue_fetch_error=" + type(e).__name__)
         return None
