@@ -1,0 +1,27 @@
+name: Probe PowerPC Static Route
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/probe-powerpc-static-route.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Compare known static asset and control artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in             "https://www.powerpc-darwin.org/static/loader.js"             "https://www.powerpc-darwin.org/static/owui-orb-v1.js"             "https://www.powerpc-darwin.org/static/ppc-control-identity-live2.json"             "https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json"
+          do
+            code="$(curl -sS -o /tmp/body -D /tmp/h -w '%{http_code}' --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
+            ctype="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/{gsub(/\r/,""); print substr($0,index($0,":")+2)}' /tmp/h | tail -n1)"
+            size="$(wc -c </tmp/body 2>/dev/null || echo 0)"
+            echo "URL=$url HTTP=$code CONTENT_TYPE=${ctype:-none} BYTES=$size"
+            head -c 80 /tmp/body | tr '\n' ' ' || true
+            echo
+          done
