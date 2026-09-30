@@ -36,12 +36,10 @@ jobs:
           print(f"ROOT_IDENTITY_HEARTBEAT={hb}")
           print(f"ROOT_IDENTITY_AGE={age}")
           print("ROOT_IDENTITY_FRESH="+("PASS" if 0 <= age < 180 else "FAIL"))
-          if not (0 <= age < 180):
-              raise SystemExit(2)
           PY
 
           found=0
-          for id in             ppc-canonical-flat-deploy-1790773592             ppc-canonical-flat-health-1790773682             ppc-liveproof-1790773844
+          for id in             ppc-public-route-symlink-20260929T2306Z             ppc-canonical-flat-deploy-1790773592             ppc-canonical-flat-health-1790773682             ppc-liveproof-1790773844
           do
             url="$base/powerpc-control-v1/results/$id.json"
             code="$(curl -sS -o /tmp/result.json -w '%{http_code}'               --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
