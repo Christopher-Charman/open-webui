@@ -64,4 +64,6 @@ jobs:
             fi
           done
           echo "ROOT_RECEIPTS_FOUND=$found"
-          [ "$found" -ge 1 ]
+          if [ "$found" -eq 0 ]; then
+            exit 3
+          fi
