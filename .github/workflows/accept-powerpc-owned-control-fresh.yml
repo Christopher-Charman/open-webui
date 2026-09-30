@@ -1,0 +1,38 @@
+name: Accept PowerPC Owned Control Fresh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/accept-powerpc-owned-control-fresh.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: powerpc-owned-control-fresh
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install crypto dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet cryptography
+
+      - name: Run strict owned-control acceptance
+        shell: bash
+        env:
+          PPC_ACCEPT_IDENTITY_URL: https://www.powerpc-darwin.org/static/ppc-control-identity-live.json
+          PPC_ACCEPT_RESULT_BASE: https://www.powerpc-darwin.org/static/ppc-control-results
+        run: |
+          set -euo pipefail
+          chmod 700 bootstrap-relay/permanent-control/actions-accept-live.sh
+          bootstrap-relay/permanent-control/actions-accept-live.sh
