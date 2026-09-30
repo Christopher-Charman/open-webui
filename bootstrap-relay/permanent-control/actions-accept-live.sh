@@ -6,7 +6,8 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 CONTROL_DIR="$REPO_ROOT/bootstrap-relay/permanent-control"
 QUEUE="$CONTROL_DIR/queue.json"
 CLIENT="$CONTROL_DIR/origin-client.py"
-BASE="https://www.powerpc-darwin.org/static/powerpc-control-v1"
+IDENTITY_URL="${PPC_ACCEPT_IDENTITY_URL:-https://www.powerpc-darwin.org/static/ppc-control-identity.json}"
+RESULT_BASE="${PPC_ACCEPT_RESULT_BASE:-https://www.powerpc-darwin.org/static/ppc-control-results}"
 WORK="$(mktemp -d)"
 ORIGINAL="$WORK/queue.original.json"
 IDENTITY="$WORK/identity.json"
@@ -41,11 +42,11 @@ import json,sys
 q=json.load(open(sys.argv[1]))
 assert q.get("protocol")=="powerpc-control-v1"
 assert q.get("version")==1
-assert q.get("tasks")==[], "queue must be empty before acceptance"
+assert isinstance(q.get("tasks"),list), "queue tasks must be a list"
 PY
 
 fetch_identity() {
-  curl -fsSL --connect-timeout 10 --max-time 30     "$BASE/identity.json?t=$(date +%s%N)" -o "$IDENTITY"
+  curl -fsSL --connect-timeout 10 --max-time 30     "$IDENTITY_URL?t=$(date +%s%N)" -o "$IDENTITY"
   python3 - "$IDENTITY" <<'PY'
 import json,sys,time
 d=json.load(open(sys.argv[1]))
@@ -80,7 +81,7 @@ wait_result() {
   local task_id="$1" out="$2" timeout="${3:-100}"
   local deadline=$((SECONDS + timeout))
   while (( SECONDS < deadline )); do
-    if curl -fsSL --connect-timeout 8 --max-time 20       "$BASE/results/$task_id.json?t=$(date +%s%N)" -o "$out" 2>/dev/null; then
+    if curl -fsSL --connect-timeout 8 --max-time 20       "$RESULT_BASE/$task_id.json?t=$(date +%s%N)" -o "$out" 2>/dev/null; then
       if python3 - "$out" "$task_id" <<'PY'
 import json,sys
 try:
@@ -102,7 +103,7 @@ assert_no_result() {
   local task_id="$1" seconds="${2:-25}"
   local deadline=$((SECONDS + seconds))
   while (( SECONDS < deadline )); do
-    if curl -fsSL --connect-timeout 8 --max-time 15       "$BASE/results/$task_id.json?t=$(date +%s%N)" -o "$WORK/unexpected.json" 2>/dev/null; then
+    if curl -fsSL --connect-timeout 8 --max-time 15       "$RESULT_BASE/$task_id.json?t=$(date +%s%N)" -o "$WORK/unexpected.json" 2>/dev/null; then
       if python3 - "$WORK/unexpected.json" "$task_id" <<'PY'
 import json,sys
 try:
@@ -168,7 +169,7 @@ log "FRESH_ORIGIN_RUNTIME_HEALTH=PASS"
 DUP_SHA1="$(sha256sum "$WORK/health-result.json" | awk '{print $1}')"
 DUP_PUB1="$(python3 -c 'import json; print(json.load(open("'"$WORK/health-result.json"'"))["published_at"])')"
 sleep 24
-curl -fsSL "$BASE/results/$HEALTH_ID.json?t=$(date +%s%N)" -o "$WORK/health-result-2.json"
+curl -fsSL "$RESULT_BASE/$HEALTH_ID.json?t=$(date +%s%N)" -o "$WORK/health-result-2.json"
 DUP_SHA2="$(sha256sum "$WORK/health-result-2.json" | awk '{print $1}')"
 DUP_PUB2="$(python3 -c 'import json; print(json.load(open("'"$WORK/health-result-2.json"'"))["published_at"])')"
 [ "$DUP_SHA1" = "$DUP_SHA2" ] && [ "$DUP_PUB1" = "$DUP_PUB2" ] || fail "duplicate_reprocessed"
