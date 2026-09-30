@@ -1,0 +1,32 @@
+/* Continuity Shell semantic compatibility layer — 20260930.4.
+   Bridges the exact 2026-09-28 visual baseline onto the protected stock 0.11.3 DOM. */
+html.continuity-shell-lkg #owui-border-beam-v1{display:none!important}
+.continuity-shell-hide-landing-detritus{display:none!important}
+.custom-shell-footer{
+  color:var(--shell-text-muted,rgba(171,197,224,.72))!important;
+  letter-spacing:.10em!important;
+  text-shadow:0 0 14px rgb(var(--shell-accent-rgb,115 216 255)/.10);
+}
+.custom-shell-top-control{
+  border-radius:999px!important;
+  border:1px solid rgb(var(--shell-accent-rgb,115 216 255)/.18)!important;
+  background:linear-gradient(145deg,rgb(var(--shell-accent-rgb,115 216 255)/.035),transparent 50%),rgba(4,11,23,.62)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.26),inset 0 1px 0 rgba(235,249,255,.045)!important;
+  backdrop-filter:blur(14px) saturate(1.22)!important;
+  -webkit-backdrop-filter:blur(14px) saturate(1.22)!important;
+}
+.custom-shell-top-control:hover{
+  background:rgba(108,211,255,.10)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.26),0 0 16px rgba(103,211,255,.10)!important;
+}
+html.continuity-shell-lkg #message-input-container.custom-shell-prompt{
+  border-width:1px!important;
+  border-style:solid!important;
+}
+html.continuity-shell-lkg #owui-thinking-orb-v1[data-surface="chat"].orb-slot{
+  border:0!important;
+  background:transparent!important;
+}
+@media(max-width:640px){
+  .custom-shell-top-control{min-width:48px;min-height:48px}
+}
