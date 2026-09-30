@@ -1,15 +1,16 @@
 (() => {
   'use strict';
-  const VERSION='20260930.4';
+  const VERSION='20260930.5';
   if (window.__CONTINUITY_SHELL_LKG_MAPPER__) return;
   window.__CONTINUITY_SHELL_LKG_MAPPER__={version:VERSION,state:'booting'};
 
   const root=document.documentElement;
 
   function isAuthSurface(){
-    if(/^\\/auth(?:\\/|$)/.test(location.pathname)) return true;
+    const path=location.pathname || '/';
+    if(path==='/auth' || path.startsWith('/auth/')) return true;
     const t=(document.body&&document.body.innerText)||'';
-    return /Sign in to Open WebUI/i.test(t) && /Enter Your Password/i.test(t);
+    return t.includes('Sign in to Open WebUI') && t.includes('Enter Your Password');
   }
 
   function themeId(){
@@ -100,10 +101,10 @@
     while(walker.nextNode()) nodes.push(walker.currentNode);
     for(const node of nodes){
       const t=(node.nodeValue||'').trim();
-      if(/^Open WebUI\\s*·\\s*v0\\.11\\.3$/i.test(t)){
+      if(t==='Open WebUI · v0.11.3'){
         node.nodeValue='Continuity Shell · Open WebUI · v0.11.3';
         node.parentElement?.classList.add('custom-shell-footer');
-      } else if(/^Continuity Shell\\s*·\\s*Open WebUI\\s*·\\s*v0\\.11\\.3$/i.test(t)){
+      } else if(t==='Continuity Shell · Open WebUI · v0.11.3'){
         node.parentElement?.classList.add('custom-shell-footer');
       }
     }
