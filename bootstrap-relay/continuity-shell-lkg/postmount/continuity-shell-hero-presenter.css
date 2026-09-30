@@ -1,0 +1,149 @@
+/* Continuity Shell landing hero presenter v20260930.3-landing
+   Landing presentation only: one neural hero + one READY label.
+   No loader, audio, model, auth, routing, chat telemetry, or client-runtime ownership. */
+
+:root{
+  --continuity-hero-size:148px;
+}
+
+[data-continuity-hero-superseded="1"],
+.continuity-shell-landing-ready-superseded{
+  display:none!important;
+}
+
+#continuity-shell-landing-hero-presenter{
+  position:fixed;
+  z-index:18;
+  transform:translateX(-50%);
+  width:var(--continuity-hero-size);
+  height:calc(var(--continuity-hero-size) + 28px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  pointer-events:none;
+  isolation:isolate;
+  contain:layout style;
+}
+
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-sphere-wrap{
+  position:relative;
+  width:var(--continuity-hero-size);
+  height:var(--continuity-hero-size);
+  display:grid;
+  place-items:center;
+  flex:0 0 var(--continuity-hero-size);
+}
+
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-aura{
+  position:absolute;
+  z-index:0;
+  top:calc(var(--continuity-hero-size) * -.22);
+  left:calc(var(--continuity-hero-size) * -.22);
+  width:calc(var(--continuity-hero-size) * 1.44);
+  height:calc(var(--continuity-hero-size) * 1.44);
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 38% 40%,rgba(49,177,255,.20),transparent 46%),
+    radial-gradient(circle at 67% 61%,rgba(207,66,255,.17),transparent 52%);
+  filter:blur(18px) saturate(1.25);
+  opacity:.88;
+  animation:continuity-shell-hero-aura-breathe 4.8s ease-in-out infinite;
+}
+
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-svg{
+  position:relative;
+  z-index:2;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  filter:
+    brightness(1.12)
+    saturate(1.12)
+    drop-shadow(0 0 5px rgba(60,178,255,.30))
+    drop-shadow(0 0 10px rgba(191,70,255,.20));
+  animation:continuity-shell-hero-float 8s ease-in-out infinite;
+}
+
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-edge{
+  stroke-linecap:round;
+  animation:continuity-shell-hero-edge-breathe 5.2s ease-in-out infinite;
+}
+
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-node{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:continuity-shell-hero-node-pulse 3.8s ease-in-out infinite;
+}
+
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-ready{
+  position:relative;
+  z-index:3;
+  margin-left:.31em;
+  color:rgba(245,244,255,.94);
+  font:650 13px/1 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+  letter-spacing:.31em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  text-shadow:
+    0 0 9px rgba(94,190,255,.24),
+    0 0 18px rgba(192,76,255,.14);
+}
+
+/* WBW keeps the neural mesh, with only a restrained cyan/ice/orange atmosphere. */
+html.her #continuity-shell-landing-hero-presenter .continuity-shell-hero-aura{
+  background:
+    radial-gradient(circle at 38% 40%,rgba(115,216,255,.23),transparent 46%),
+    radial-gradient(circle at 67% 61%,rgba(223,106,60,.11),transparent 54%);
+  filter:blur(19px) saturate(1.18);
+}
+
+html.her #continuity-shell-landing-hero-presenter .continuity-shell-hero-svg{
+  filter:
+    brightness(1.15)
+    saturate(1.05)
+    drop-shadow(0 0 5px rgba(115,216,255,.34))
+    drop-shadow(0 0 11px rgba(223,106,60,.10));
+}
+
+html.lcars #continuity-shell-landing-hero-presenter{
+  z-index:18;
+}
+
+.continuity-shell-footer-bound{
+  letter-spacing:.08em!important;
+}
+
+@keyframes continuity-shell-hero-node-pulse{
+  0%,100%{opacity:.78;transform:scale(.94)}
+  50%{opacity:1;transform:scale(1.08)}
+}
+@keyframes continuity-shell-hero-edge-breathe{
+  0%,100%{opacity:.70}
+  50%{opacity:1}
+}
+@keyframes continuity-shell-hero-aura-breathe{
+  0%,100%{transform:scale(.97);opacity:.72}
+  50%{transform:scale(1.03);opacity:.92}
+}
+@keyframes continuity-shell-hero-float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-3px)}
+}
+
+@media(max-width:430px){
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-ready{
+    font-size:12px;
+    letter-spacing:.30em;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-aura,
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-svg,
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-edge,
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-node{
+    animation:none!important;
+  }
+}
