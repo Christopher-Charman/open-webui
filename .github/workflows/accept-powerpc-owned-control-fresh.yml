@@ -39,3 +39,4 @@ jobs:
 # acceptance trigger: concurrency-safe queue semantics 2026-10-01
 # acceptance trigger: transport-health separation 2026-10-01
 # acceptance trigger: fresh-session desktop-commander-independence 2026-10-01
+# acceptance trigger: post-pid-ownership-repair 2026-10-01
