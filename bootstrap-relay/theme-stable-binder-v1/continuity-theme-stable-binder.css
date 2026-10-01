@@ -1,0 +1,55 @@
+/* continuity-theme-stable-binder-v20261001.1
+   Stable-selector presentation binder for the protected OpenWebUI 0.11.3 shell.
+   No loader, audio, model, auth, settings-DOM, or routing ownership. */
+
+#owui-thinking-orb-v1[data-surface="landing"]::before,
+#owui-thinking-orb-v1[data-surface="landing"]::after {
+  content: none !important;
+  display: none !important;
+}
+
+#owui-thinking-orb-v1[data-surface="chat"].continuity-chat-standalone {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0 !important;
+  margin: 8px auto 12px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow:
+    0 0 12px rgba(62,183,255,.30),
+    0 0 22px rgba(193,68,255,.20) !important;
+  overflow: visible !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#owui-thinking-orb-v1[data-surface="chat"].continuity-chat-standalone canvas {
+  width: 42px !important;
+  height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
+  border-radius: 50% !important;
+}
+
+/* The neural-material overlay has its own beam. Keep only the accepted v1.4.5 Border Beam. */
+.continuity-material-composer-beam {
+  display: none !important;
+}
+
+#owui-border-beam-v1 {
+  opacity: .92 !important;
+  filter:
+    drop-shadow(0 0 5px rgba(57,180,255,.34))
+    drop-shadow(0 0 8px rgba(194,67,255,.25))
+    drop-shadow(0 0 10px rgba(255,102,145,.14)) !important;
+}
+
+/* Auth stays native and Continuity-owned controls stay out of that surface. */
+html.continuity-auth-native #continuity-control-host {
+  display: none !important;
+}
