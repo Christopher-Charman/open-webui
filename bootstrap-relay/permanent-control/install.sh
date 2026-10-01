@@ -9,7 +9,9 @@ STATE="$ACCOUNT/.powerpc-control-v1"
 BIN="$WEBAPP/bin/powerpc-control"
 DELEGATE="$WEBAPP/bin/delegate-cagent"
 VERIFY_DELEGATION="$WEBAPP/bin/verify-continuity-delegation"
-PIN="da454445db2b3706299b435a82419ac84495ccd7"
+DELEGATION_STATE="$ACCOUNT/.continuity-delegation"
+DELEGATION_ACCEPTANCE="$DELEGATION_STATE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json"
+PIN="9a443cf5ca29c2d4272cc63f501435c0e3685f91"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
@@ -24,15 +26,17 @@ done
 [ -n "$PY" ] || { echo "REFUSED Python missing" >&2; exit 2; }
 "$PY" -c 'import cryptography,sqlite3' >/dev/null 2>&1 || { echo "REFUSED cryptography/sqlite unavailable" >&2; exit 2; }
 
-mkdir -p "$STATE" "$HTDOCS/.well-known/powerpc-control-v1/results" "$WEBAPP/bin"
-chmod 700 "$STATE"
+mkdir -p "$STATE" "$DELEGATION_STATE" "$HTDOCS/.well-known/powerpc-control-v1/results" "$WEBAPP/bin"
+chmod 700 "$STATE" "$DELEGATION_STATE"
 
 curl -fsSL --retry 4 "$BASE/daemon.py" -o "$STATE/daemon.py"
 curl -fsSL --retry 4 "$BASE/local-mcp-call.mjs" -o "$STATE/local-mcp-call.mjs"
 curl -fsSL --retry 4 "$BASE/powerpc-control-service" -o "$BIN"
 curl -fsSL --retry 4 "$BASE/delegate-cagent.py" -o "$DELEGATE"
 curl -fsSL --retry 4 "$BASE/verify-continuity-delegation.py" -o "$VERIFY_DELEGATION"
+curl -fsSL --retry 4 "$BASE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json" -o "$DELEGATION_ACCEPTANCE"
 chmod 700 "$STATE/daemon.py" "$STATE/local-mcp-call.mjs" "$BIN" "$DELEGATE" "$VERIFY_DELEGATION"
+chmod 600 "$DELEGATION_ACCEPTANCE"
 
 "$PY" -m py_compile "$STATE/daemon.py" "$DELEGATE" "$VERIFY_DELEGATION"
 "$PY" "$DELEGATE" --self-test
@@ -61,6 +65,7 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
     echo "supervision=CRON_ENSURE_DETACHED"
     echo "delegation_adapter=$DELEGATE"
     echo "delegation_verifier=$VERIFY_DELEGATION"
+    echo "delegation_acceptance=$DELEGATION_ACCEPTANCE"
     exit 0
   fi
   sleep 1
