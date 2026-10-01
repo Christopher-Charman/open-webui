@@ -91,7 +91,7 @@ jobs:
           git config user.name "OpenWebUI Recovery Probe"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
           CLIENT="bootstrap-relay/permanent-control/origin-client.py"
-          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/9a13044edab68504efc8fe265d59a3bb9db9e2cf/bootstrap-relay/recovery-runtime-probe-20260930/frontier_validation.py"
+          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/bcc09104f02d487c15433370b1c1160620cef972/bootstrap-relay/recovery-runtime-probe-20260930/voice_context.py"
           TASK_ID="owui-recovery-probe-$GITHUB_RUN_ID"
 
           COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | python3"
@@ -184,7 +184,7 @@ jobs:
               x.get("text","") for x in (result.get("content") or [])
               if isinstance(x,dict) and x.get("type")=="text"
           )
-          assert '"schema":"openwebui-frontier-validation-v1"' in text, text
+          assert '"schema":"openwebui-voice-context-v1"' in text, text
           assert '"mutation":"NONE"' in text, text
           print("RECOVERY_PROBE_DECRYPTION=PASS")
           print("PROBE_OUTPUT_BEGIN")
