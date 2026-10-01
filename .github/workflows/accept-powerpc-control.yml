@@ -34,6 +34,9 @@ jobs:
 
       - name: Run end-to-end acceptance
         shell: bash
+        env:
+          PPC_ACCEPT_IDENTITY_URL: https://www.powerpc-darwin.org/static/ppc-control-identity-live.json
+          PPC_ACCEPT_RESULT_BASE: https://www.powerpc-darwin.org/static/ppc-control-results
         run: |
           set -euo pipefail
           chmod 700 bootstrap-relay/permanent-control/actions-accept-live.sh
