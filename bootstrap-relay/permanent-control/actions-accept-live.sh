@@ -229,61 +229,18 @@ PY
 
 fetch_identity
 
-# First prepare verifies the runtime identity self-signature and computes its
-# fingerprint. Pin every later task to that same identity.
-ID_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --task-id "ppc-accept-health-$(date +%s)"   --tool runtime_health   --arguments '{}'   --authority read_only   --ttl 300   --output "$WORK/health-envelope.json"   --context "$WORK/health-context.json")"
+# First positive probe verifies the runtime identity self-signature, computes
+# its fingerprint, and proves a fast bounded local-MCP round trip. Aggregate
+# runtime_health is intentionally not the transport liveness probe: it runs the
+# wider architecture-health script and may legitimately block/fail while an
+# unrelated platform service is degraded.
+ID_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --task-id "ppc-accept-read-$(date +%s)"   --tool read_text   --arguments '{"path":"CONTROL_PLANE.md","max_bytes":2048}'   --authority read_only   --ttl 300   --output "$WORK/read-envelope.json"   --context "$WORK/read-context.json")"
 FP="$(printf '%s\n' "$ID_OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n1)"
 [ -n "$FP" ] || fail "identity_fingerprint_not_verified"
 echo "::add-mask::$FP"
-HEALTH_ID="$(python3 -c 'import json; print(json.load(open("'"$WORK/health-envelope.json"'"))["task_id"])')"
+READ_ID="$(python3 -c 'import json; print(json.load(open("'"$WORK/read-envelope.json"'"))["task_id"])')"
 log "IDENTITY_SIGNATURE_AND_PIN=PASS"
 
-queue_envelope "$WORK/health-envelope.json" "$HEALTH_ID"
-wait_result "$HEALTH_ID" "$WORK/health-result.json" || fail "runtime_health_result_timeout"
-decode_to "$WORK/health-result.json" "$WORK/health-context.json" "$WORK/health-plain.json"
-HEALTH_STATE="$(python3 - "$WORK/health-plain.json" "$HEALTH_ID" <<'PY'
-import json,sys
-d=json.load(open(sys.argv[1]))
-assert d.get("task_id")==sys.argv[2]
-i=d.get("executor_identity") or {}
-assert i.get("runtime_id")=="fasthost.powerpc"
-assert i.get("user")=="csh3280350"
-assert i.get("uid")==2257347
-assert i.get("hostname")=="hp3-rr-1024747.hostingp3.local"
-rr=d.get("runtime_receipt") or {}
-assert rr.get("namespace")=="/home/storage/781/4477781/user"
-assert rr.get("webapp")=="/home/storage/781/4477781/user/webapp"
-actions=d.get("actions") or []
-assert len(actions)==1 and actions[0].get("capability")=="runtime_health"
-usage=d.get("resource_usage") or {}
-assert usage.get("local_mcp_calls")==1
-result=d.get("result")
-assert isinstance(result,dict)
-state=d.get("completion_state")
-assert state in {"COMPLETED","FAILED"}
-if state=="COMPLETED":
-    assert result.get("isError") is not True
-else:
-    assert result.get("isError") is True
-print(state)
-PY
-)"
-log "FRESH_ORIGIN_RUNTIME_HEALTH_ROUNDTRIP=PASS"
-log "RUNTIME_HEALTH_COMPLETION_STATE=$HEALTH_STATE"
-
-# Exact duplicate must not be re-executed or re-published.
-DUP_SHA1="$(sha256sum "$WORK/health-result.json" | awk '{print $1}')"
-DUP_PUB1="$(python3 -c 'import json; print(json.load(open("'"$WORK/health-result.json"'"))["published_at"])')"
-sleep 24
-curl -fsSL "$RESULT_BASE/$HEALTH_ID.json?t=$(date +%s%N)" -o "$WORK/health-result-2.json"
-DUP_SHA2="$(sha256sum "$WORK/health-result-2.json" | awk '{print $1}')"
-DUP_PUB2="$(python3 -c 'import json; print(json.load(open("'"$WORK/health-result-2.json"'"))["published_at"])')"
-[ "$DUP_SHA1" = "$DUP_SHA2" ] && [ "$DUP_PUB1" = "$DUP_PUB2" ] || fail "duplicate_reprocessed"
-log "DUPLICATE_SUPPRESSION=PASS"
-
-# Bounded read round trip.
-READ_ID="ppc-accept-read-$(date +%s)-$RANDOM"
-prepare "$READ_ID" read_text '{"path":"CONTROL_PLANE.md","max_bytes":2048}' read_only   "$WORK/read-envelope.json" "$WORK/read-context.json"
 queue_envelope "$WORK/read-envelope.json" "$READ_ID"
 wait_result "$READ_ID" "$WORK/read-result.json" || fail "read_text_result_timeout"
 decode_to "$WORK/read-result.json" "$WORK/read-context.json" "$WORK/read-plain.json"
@@ -294,9 +251,42 @@ d=json.load(open(sys.argv[1]))
 r=d.get("result") or {}
 assert r.get("isError") is not True
 content=r.get("content") or []
-assert any(isinstance(x,dict) and x.get("type")=="text" for x in content)
+assert any(isinstance(x,dict) and x.get("type")=="text" and x.get("text") for x in content)
+actions=d.get("actions") or []
+assert len(actions)==1 and actions[0].get("capability")=="read_text"
+assert (d.get("resource_usage") or {}).get("local_mcp_calls")==1
 PY
 log "FRESH_ORIGIN_READ_TEXT=PASS"
+
+# Exact duplicate must not be re-executed or re-published.
+DUP_SHA1="$(sha256sum "$WORK/read-result.json" | awk '{print $1}')"
+DUP_PUB1="$(python3 -c 'import json; print(json.load(open("'"$WORK/read-result.json"'"))["published_at"])')"
+sleep 24
+curl -fsSL "$RESULT_BASE/$READ_ID.json?t=$(date +%s%N)" -o "$WORK/read-result-2.json"
+DUP_SHA2="$(sha256sum "$WORK/read-result-2.json" | awk '{print $1}')"
+DUP_PUB2="$(python3 -c 'import json; print(json.load(open("'"$WORK/read-result-2.json"'"))["published_at"])')"
+[ "$DUP_SHA1" = "$DUP_SHA2" ] && [ "$DUP_PUB1" = "$DUP_PUB2" ] || fail "duplicate_reprocessed"
+log "DUPLICATE_SUPPRESSION=PASS"
+
+# Second read-only primitive proves the transport is not coupled to one file.
+LIST_ID="ppc-accept-list-$(date +%s)-$RANDOM"
+prepare "$LIST_ID" list_dir '{"path":"."}' read_only   "$WORK/list-envelope.json" "$WORK/list-context.json"
+queue_envelope "$WORK/list-envelope.json" "$LIST_ID"
+wait_result "$LIST_ID" "$WORK/list-result.json" || fail "list_dir_result_timeout"
+decode_to "$WORK/list-result.json" "$WORK/list-context.json" "$WORK/list-plain.json"
+assert_receipt_common "$WORK/list-plain.json" "$LIST_ID" "COMPLETED"
+python3 - "$WORK/list-plain.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+r=d.get("result") or {}
+assert r.get("isError") is not True
+content=r.get("content") or []
+assert any(isinstance(x,dict) and x.get("type")=="text" for x in content)
+actions=d.get("actions") or []
+assert len(actions)==1 and actions[0].get("capability")=="list_dir"
+PY
+log "FRESH_ORIGIN_LIST_DIR=PASS"
+log "AGGREGATE_RUNTIME_HEALTH=SEPARATE_PLATFORM_HEALTH_SIGNAL"
 
 # Expired but otherwise valid task must produce an authenticated EXPIRED receipt.
 NOW="$(date +%s)"
