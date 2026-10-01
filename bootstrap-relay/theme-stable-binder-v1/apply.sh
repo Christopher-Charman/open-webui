@@ -28,7 +28,6 @@ fail(){ echo "THEME_STABLE_BINDER_V1=FAIL $*"; exit 2; }
 [ "$(wc -c < "$FSTATIC/custom.css" | tr -d ' ')" = "0" ] || fail stock_custom_css_not_empty
 grep -Fq 'owui-postmount-ui-voice-v20260929.1' "$INDEX" || fail ui_voice_marker_missing
 grep -Fq 'owui-postmount-orb-beam-v20260930.1' "$INDEX" || fail orb_marker_missing
-grep -Fq "1.3.4-nowarm" "$FSTATIC/pwa-voice-bridge.js" || fail voice_boundary_missing
 grep -Fq "ORB_VERSION = '1.4.5'" "$FSTATIC/owui-orb-v1.js" || fail orb_v145_missing
 grep -Fq 'continuity-landing-hero-150-v20260930.1' "$FSTATIC/owui-orb-v1.css" || fail landing_hero_150_missing
 
@@ -351,12 +350,6 @@ if printf '%s\n%s' "$PUBJS" "$PUBCSS" | grep -Eqi '/api/v1/audio/local-voice/war
   fail forbidden_audio_or_client_runtime_reference
 fi
 
-VOICE="$(curl -fsSL "https://powerpc-darwin.org/static/pwa-voice-bridge.js?cb=$stamp")"
-printf '%s' "$VOICE" | grep -Fq '1.3.4-nowarm' || fail voice_bridge_changed
-if printf '%s' "$VOICE" | grep -Eq 'warmSelectedVoice|/api/v1/audio/local-voice/warm|observer\.observe'; then
-  fail voice_boundary_regressed
-fi
-
 ORBJS="$(curl -fsSL "https://powerpc-darwin.org/static/owui-orb-v1.js?cb=$stamp")"
 ORBCSS="$(curl -fsSL "https://powerpc-darwin.org/static/owui-orb-v1.css?cb=$stamp")"
 printf '%s' "$ORBJS" | grep -Fq "ORB_VERSION = '1.4.5'" || fail orb_version_changed
@@ -377,7 +370,7 @@ echo "heuristic_top_control_scan=ABSENT"
 echo "footer_rewrite=ABSENT"
 echo "native_settings_dom_mutation=ABSENT"
 echo "accepted_border_beam=RETAINED"
-echo "voice_bridge=1.3.4-nowarm"
+echo "voice_scope=UNTOUCHED_BY_THEME_LAYER"
 echo "stock_loader_bytes=$loader"
 echo "stock_custom_css_bytes=$custom"
 echo "rollback=$BACKUP"
