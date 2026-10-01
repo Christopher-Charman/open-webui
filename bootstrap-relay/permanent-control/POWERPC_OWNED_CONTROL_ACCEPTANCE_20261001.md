@@ -5,8 +5,9 @@ Status: **ACCEPTED**
 Promotion:
 - `PERMANENT_ACCESS=ACCEPTED`
 - `POWERPC_OWNED_CONTROL_ACCEPTANCE=PASS`
+- `INTER_AGENT_CONTROL_PLANE=ACCEPTED`
 
-Scope: the product-independent owned control path for `fasthost.powerpc`. This does **not** imply Gateway SSH acceptance, ChatGPT Secure-MCP tool projection, or C-Agent/inter-agent control-plane acceptance.
+Scope: the product-independent owned control path for `fasthost.powerpc`, including the accepted bounded Continuity Agent delegation chain. This does **not** imply Gateway SSH acceptance or ChatGPT Secure-MCP product/tool projection.
 
 ## Runtime binding
 
@@ -65,12 +66,43 @@ POWERPC_OWNED_CONTROL_ACCEPTANCE=PASS
 
 Conflict-safe cleanup retired only the acceptance run's own task IDs; concurrent queue entries were preserved.
 
+## Continuity Agent delegation acceptance
+
+The bounded inter-agent chain is also accepted:
+
+```text
+ChatGPT origin
+→ encrypted PowerPC control ingress
+→ continuity-agent delegation adapter
+→ model-mediated CLAIM
+→ bounded local MCP action
+→ durable nested receipt
+→ signed/encrypted outer result
+```
+
+Accepted evidence:
+- first outer task: `ppc-cagent-e2e-3d7ddcea537e4b50a346` — `COMPLETED`
+- retry outer task: `ppc-cagent-retry-cc12ef294e924e4a899f` — `COMPLETED`
+- nested task: `cagent-e2e-9e98f0faf16d4c6f80dd` — `COMPLETED`
+- agent: `continuity-agent`
+- model: `qwen2.5-coder:1.5b-instruct-q4_K_M`
+- model calls: `1`
+- local-MCP calls: `1`
+- retry without nested re-execution: `PASS`
+- evidence fingerprint: `sha256:ee13430462886036621107f85c95fd4a9d2b76066a2e9d26ae2a17b8a1ea604f`
+
+Durable machine surfaces:
+- `CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json`
+- `verify-continuity-delegation.py`
+- `powerpc-control cagent-status`
+
+The status command recomputes the live evidence and compares it with the checkpoint fingerprint. It fails closed on drift rather than silently preserving an accepted label.
+
 ## Boundary after promotion
 
 This acceptance closes the repeated human-as-transport / session-bound control gap for bounded PowerPC operations.
 
 Still separate:
-- `INTER_AGENT_CONTROL_PLANE=NOT_YET_ACCEPTED` until a delegated C-Agent receipt chain passes.
 - Gateway/Tailscale/management-SSHD remains its own ingress branch.
 - Secure MCP host connection remains distinct from ChatGPT product/tool projection.
 - aggregate platform health (for example Ollama health) is not the same condition as control-transport acceptance.
