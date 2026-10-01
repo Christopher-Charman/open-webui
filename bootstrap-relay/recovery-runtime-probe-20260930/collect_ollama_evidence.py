@@ -92,7 +92,8 @@ def log_candidates() -> list[dict[str, Any]]:
     return out
 
 
-def main() -> int:
+def collect_ollama_evidence() -> dict[str, Any]:
+    """Collect bounded read-only Ollama evidence as a Python object."""
     version_status, version_body = http_json("/api/version")
     tags_status, tags_body = http_json("/api/tags")
 
@@ -117,7 +118,11 @@ def main() -> int:
         "launcher_candidates": launcher_candidates(),
         "log_candidates": log_candidates(),
     }
-    print(json.dumps(evidence, sort_keys=True, separators=(",", ":")))
+    return evidence
+
+
+def main() -> int:
+    print(json.dumps(collect_ollama_evidence(), sort_keys=True, separators=(",", ":")))
     return 0
 
 
