@@ -58,7 +58,12 @@ QUEUE_URL = os.environ.get(
     "PPC_CONTROL_QUEUE_URL",
     "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json",
 )
+QUEUE_API_URL = os.environ.get(
+    "PPC_CONTROL_QUEUE_API_URL",
+    "https://api.github.com/repos/Christopher-Charman/open-webui/contents/bootstrap-relay/permanent-control/queue.json?ref=main",
+)
 POLL_SECONDS = float(os.environ.get("PPC_CONTROL_POLL_SECONDS", "7"))
+API_FALLBACK_SECONDS = float(os.environ.get("PPC_CONTROL_API_FALLBACK_SECONDS", "75"))
 HEARTBEAT_SECONDS = int(os.environ.get("PPC_CONTROL_HEARTBEAT_SECONDS", "30"))
 MAX_QUEUE_BYTES = 1024 * 1024
 MAX_TASKS = 128
@@ -67,6 +72,7 @@ MAX_FUTURE_SECONDS = 3600
 MAX_RESULT_PLAINTEXT = 180_000
 ALLOWED_TOOLS = {"runtime_health", "read_text", "list_dir", "terminal_exec"}
 STOP = False
+_LAST_API_FALLBACK_MONO = 0.0
 
 class TaskReject(Exception):
     def __init__(self, message: str, completion_state: str = "FAILED"):
@@ -219,7 +225,21 @@ def _db() -> sqlite3.Connection:
     return conn
 
 
-def _fetch_queue() -> dict[str, Any] | None:
+def _parse_queue_bytes(raw: bytes) -> dict[str, Any]:
+    if len(raw) > MAX_QUEUE_BYTES:
+        raise ValueError("queue_too_large")
+    obj = json.loads(raw.decode("utf-8"))
+    if not isinstance(obj, dict):
+        raise ValueError("queue_not_object")
+    if obj.get("protocol") != PROTOCOL or obj.get("version") != VERSION:
+        raise ValueError("queue_protocol_mismatch")
+    tasks = obj.get("tasks")
+    if not isinstance(tasks, list) or len(tasks) > MAX_TASKS:
+        raise ValueError("invalid_task_list")
+    return obj
+
+
+def _fetch_queue_raw() -> dict[str, Any] | None:
     url = QUEUE_URL + ("&" if "?" in QUEUE_URL else "?") + "t=" + str(time.time_ns())
     req = urllib.request.Request(
         url,
@@ -232,21 +252,52 @@ def _fetch_queue() -> dict[str, Any] | None:
     try:
         with urllib.request.urlopen(req, timeout=12) as r:
             raw = r.read(MAX_QUEUE_BYTES + 1)
-        if len(raw) > MAX_QUEUE_BYTES:
-            raise ValueError("queue_too_large")
-        obj = json.loads(raw.decode("utf-8"))
-        if not isinstance(obj, dict):
-            raise ValueError("queue_not_object")
-        if obj.get("protocol") != PROTOCOL or obj.get("version") != VERSION:
-            raise ValueError("queue_protocol_mismatch")
-        tasks = obj.get("tasks")
-        if not isinstance(tasks, list) or len(tasks) > MAX_TASKS:
-            raise ValueError("invalid_task_list")
-        return obj
+        return _parse_queue_bytes(raw)
     except Exception as e:
-        _log("queue_fetch_error=" + type(e).__name__)
+        _log("queue_raw_error=" + type(e).__name__)
         return None
 
+
+def _fetch_queue_api() -> dict[str, Any] | None:
+    req = urllib.request.Request(
+        QUEUE_API_URL,
+        headers={
+            "User-Agent": "powerpc-control-v1/1",
+            "Accept": "application/vnd.github+json",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            raw = r.read((MAX_QUEUE_BYTES * 2) + 65536)
+        wrapper = json.loads(raw.decode("utf-8"))
+        if not isinstance(wrapper, dict):
+            raise ValueError("queue_api_not_object")
+        if wrapper.get("encoding") != "base64" or not isinstance(wrapper.get("content"), str):
+            raise ValueError("queue_api_content_missing")
+        payload = base64.b64decode(wrapper["content"], validate=False)
+        return _parse_queue_bytes(payload)
+    except Exception as e:
+        _log("queue_api_error=" + type(e).__name__)
+        return None
+
+
+def _fetch_queue() -> dict[str, Any] | None:
+    global _LAST_API_FALLBACK_MONO
+    raw_obj = _fetch_queue_raw()
+    now = time.monotonic()
+    if now - _LAST_API_FALLBACK_MONO >= API_FALLBACK_SECONDS:
+        _LAST_API_FALLBACK_MONO = now
+        api_obj = _fetch_queue_api()
+        if api_obj is not None:
+            if raw_obj is not None:
+                raw_sha = hashlib.sha256(_canon(raw_obj)).hexdigest()[:16]
+                api_sha = hashlib.sha256(_canon(api_obj)).hexdigest()[:16]
+                if raw_sha != api_sha:
+                    _log("queue_branch_stale raw_sha=" + raw_sha + " api_sha=" + api_sha)
+            return api_obj
+    return raw_obj
 
 def _aad(task: dict[str, Any]) -> bytes:
     fields = {
