@@ -91,7 +91,7 @@ jobs:
           git config user.name "OpenWebUI Recovery Probe"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
           CLIENT="bootstrap-relay/permanent-control/origin-client.py"
-          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/dcb87a8cf9f57964ef8aafb22a0df3c637e4921b/bootstrap-relay/recovery-runtime-probe-20260930/startup_speech_locator.py"
+          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/77f58adf720fce24abef3574396d9d1a45bdc765/bootstrap-relay/recovery-runtime-probe-20260930/voice_route_context.py"
           TASK_ID="owui-recovery-probe-$GITHUB_RUN_ID"
 
           COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | python3"
@@ -184,7 +184,7 @@ jobs:
               x.get("text","") for x in (result.get("content") or [])
               if isinstance(x,dict) and x.get("type")=="text"
           )
-          assert '"schema":"openwebui-startup-speech-locator-v1"' in text, text
+          assert '"schema":"openwebui-voice-route-context-v1"' in text, text
           assert '"mutation":"NONE"' in text, text
           print("RECOVERY_PROBE_DECRYPTION=PASS")
           print("PROBE_OUTPUT_BEGIN")
