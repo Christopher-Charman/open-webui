@@ -110,6 +110,21 @@ jobs:
           ps -eo pid=,ppid=,stat=,comm=,args= 2>/dev/null | grep -E "[t]ailscale|[p]owerpc-control|[d]aemon.py" | head -n 80 || true
           echo PROCESS_DIAGNOSTICS_END
           echo WATCHDOG_DIAGNOSTICS_END
+          echo STALE_PID_IDENTITY_BEGIN
+          pid="$(cat "$HOME/tailscale/state/tailscaled.pid" 2>/dev/null || true)"
+          echo "PIDFILE_VALUE=$pid"
+          if [ -n "$pid" ] && [ -d "/proc/$pid" ]; then
+            if kill -0 "$pid" 2>/dev/null; then echo "KILL0=PASS"; else echo "KILL0=FAIL"; fi
+            printf "PROC_EXE="; readlink -f "/proc/$pid/exe" 2>/dev/null || true; echo
+            printf "TAILSCALED_EXE="; readlink -f "$HOME/tailscale/bin/tailscaled" 2>/dev/null || true; echo
+            printf "PROC_COMM="; cat "/proc/$pid/comm" 2>/dev/null || true
+            printf "PROC_CMDLINE="; tr "\\0" " " <"/proc/$pid/cmdline" 2>/dev/null || true; echo
+            stat -c "PROC_DIR_MTIME=%Y PROC_DIR_CTIME=%Z" "/proc/$pid" 2>/dev/null || true
+          else
+            echo "PROC_PID=MISSING"
+          fi
+          if [ -S "$HOME/tailscale/state/tailscaled.sock" ]; then echo "TAILSCALE_SOCKET=PRESENT"; else echo "TAILSCALE_SOCKET=ABSENT"; fi
+          echo STALE_PID_IDENTITY_END
           echo MANAGEMENT_SSH_KEYS_BEGIN
           for p in "$HOME/dev-ssh/management/ssh_host_ed25519_key.pub" "$HOME/dev-ssh/management/authorized_keys"; do if [ -f "$p" ]; then echo "FILE=$p"; ssh-keygen -lf "$p" 2>/dev/null || true; fi; done
           echo MANAGEMENT_SSH_KEYS_END
