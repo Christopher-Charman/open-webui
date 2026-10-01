@@ -94,6 +94,22 @@ jobs:
           find "$HOME/bin" -maxdepth 1 -type f -print 2>/dev/null | grep -Ei "tail|ssh|gateway" || true
           grep -R -n -E "tailscaled|tailscale/bin" "$HOME/bin" "$HOME"/*.sh 2>/dev/null | head -n 100 || true
           echo LIFECYCLE_REFERENCES_END
+          echo WATCHDOG_DIAGNOSTICS_BEGIN
+          echo CONTROL_HASH=$(sha256sum "/home/storage/781/4477781/user/webapp/bin/powerpc-control" | awk "{print \\$1}")
+          echo TAILSCALE_SERVICE_HASH=$(sha256sum "/home/storage/781/4477781/user/webapp/bin/tailscale-service" | awk "{print \\$1}")
+          echo CONTROL_CRON_BEGIN
+          crontab -l 2>/dev/null | grep "POWERPC_CONTROL_V1" || true
+          echo CONTROL_CRON_END
+          echo TAILSCALE_WATCH_LOG_BEGIN
+          tail -n 100 "/home/storage/781/4477781/user/.powerpc-control-v1/tailscale-watch.log" 2>/dev/null || true
+          echo TAILSCALE_WATCH_LOG_END
+          echo LOCK_TEST_BEGIN
+          if flock -n "$HOME/tailscale/state/tailscale-service.lock" -c "echo TAILSCALE_LOCK=AVAILABLE"; then :; else echo TAILSCALE_LOCK=HELD; fi
+          echo LOCK_TEST_END
+          echo PROCESS_DIAGNOSTICS_BEGIN
+          ps -eo pid=,ppid=,stat=,comm=,args= 2>/dev/null | grep -E "[t]ailscale|[p]owerpc-control|[d]aemon.py" | head -n 80 || true
+          echo PROCESS_DIAGNOSTICS_END
+          echo WATCHDOG_DIAGNOSTICS_END
           echo MANAGEMENT_SSH_KEYS_BEGIN
           for p in "$HOME/dev-ssh/management/ssh_host_ed25519_key.pub" "$HOME/dev-ssh/management/authorized_keys"; do if [ -f "$p" ]; then echo "FILE=$p"; ssh-keygen -lf "$p" 2>/dev/null || true; fi; done
           echo MANAGEMENT_SSH_KEYS_END
