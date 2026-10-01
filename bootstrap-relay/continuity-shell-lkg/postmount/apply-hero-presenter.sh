@@ -111,8 +111,8 @@ import re, sys
 p=Path(sys.argv[1]); marker=sys.argv[2]; version=sys.argv[3]
 s=p.read_text()
 pat=re.compile(
-    r'\n?<!-- continuity-shell-landing-hero-presenter-v[0-9.]+ -->.*?'
-    r'<!-- /continuity-shell-landing-hero-presenter-v[0-9.]+ -->\n?',
+    r'\\n?<!-- continuity-shell-(?:landing-hero|telemetry)-presenter-v[0-9.]+ -->.*?'
+    r'<!-- /continuity-shell-(?:landing-hero|telemetry)-presenter-v[0-9.]+ -->\\n?',
     re.S
 )
 s,n=pat.subn('\n',s)
