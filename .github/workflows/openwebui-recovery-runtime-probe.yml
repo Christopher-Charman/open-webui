@@ -91,8 +91,8 @@ jobs:
           git config user.name "OpenWebUI Recovery Probe"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
           CLIENT="bootstrap-relay/permanent-control/origin-client.py"
-          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/d70d2d480fc1972041933bdc5ec3b19e60322038/bootstrap-relay/telemetry-restoration-20261001/retire_fixed_hero.py"
-          TASK_ID="owui-retire-fixed-hero-$GITHUB_RUN_ID"
+          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/fcfcd43d2688e5cfe4baca0a93e842c0ce337e37/bootstrap-relay/recovery-runtime-probe-20260930/stock_speech_pwa_locator.py"
+          TASK_ID="owui-recovery-probe-$GITHUB_RUN_ID"
 
           COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | python3"
           ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":30000},separators=(",",":")))' "$COMMAND")"
@@ -184,7 +184,7 @@ jobs:
               x.get("text","") for x in (result.get("content") or [])
               if isinstance(x,dict) and x.get("type")=="text"
           )
-          assert '"schema":"openwebui-telemetry-retire-v1"' in text, text
+          assert '"schema":"openwebui-stock-speech-pwa-locator-v1"' in text, text
           assert '"mutation":"NONE"' in text, text
           print("RECOVERY_PROBE_DECRYPTION=PASS")
           print("PROBE_OUTPUT_BEGIN")
