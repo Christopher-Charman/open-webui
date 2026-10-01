@@ -305,6 +305,32 @@ def _build_request(
     return request
 
 
+async def _ensure_automation_model_registry(request: Request, user, model_id: str) -> None:
+    """Synchronize model registry before headless scheduled dispatch.
+
+    Custom presets can be created or rebound after app.state.MODELS was
+    populated. The normal interactive model-list path refreshes that state,
+    but the scheduler is headless and can otherwise fail with "Model not
+    found" before inference. Refresh only when the requested preset or its
+    current DB-bound base model is absent from the live registry.
+    """
+    from open_webui.models.models import Models
+    from open_webui.utils.models import get_all_models
+
+    models = getattr(request.app.state, 'MODELS', {}) or {}
+    model_info = await Models.get_model_by_id(model_id)
+    base_model_id = model_info.base_model_id if model_info else None
+    if model_id in models and (not base_model_id or base_model_id in models):
+        return
+
+    await get_all_models(request, user=user)
+    log.info(
+        'Automation model registry synchronized model_id=%s base_model_id=%s',
+        model_id,
+        base_model_id,
+    )
+
+
 async def _resolve_model_defaults(app, model_id: str) -> tuple[list[str], dict, list[str], Optional[str]]:
     models = getattr(app.state, 'MODELS', {})
     model = models.get(model_id, {})
@@ -397,8 +423,9 @@ async def _execute_channel_automation(
     if not channel_id or not await Config.get('channels.enable'):
         raise ValueError('Channel not found')
 
-    model = getattr(app.state, 'MODELS', {}).get(model_id, {})
     request = _build_request(app, token=token)
+    await _ensure_automation_model_registry(request, user, model_id)
+    model = getattr(app.state, 'MODELS', {}).get(model_id, {})
 
     from open_webui.routers.channels import new_message_handler
 
@@ -615,6 +642,12 @@ async def execute_automation(app, automation: AutomationModel) -> None:
             room=f'user:{automation.user_id}',
         )
 
+        # The frontend refreshes model state through /api/models. Scheduled
+        # execution is headless, so synchronize the requested preset/base model
+        # before resolving defaults or entering chat_completion.
+        request = _build_request(app, token=token)
+        await _ensure_automation_model_registry(request, user, model_id)
+
         # Resolve model defaults (frontend does this, backend doesn't)
         tool_ids, features, filter_ids, terminal_id = await _resolve_model_defaults(app, model_id)
 
@@ -647,7 +680,6 @@ async def execute_automation(app, automation: AutomationModel) -> None:
 
         # Call the full chat completion pipeline (same as POST /api/chat/completions).
         # The handler reference is stored on app.state to avoid circular imports.
-        request = _build_request(app, token=token)
         await app.state.CHAT_COMPLETION_HANDLER(request, form_data, user=user)
 
         # Notify user
