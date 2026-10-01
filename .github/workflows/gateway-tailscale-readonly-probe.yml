@@ -80,11 +80,11 @@ jobs:
           ps -eo pid=,ppid=,comm=,args= 2>/dev/null | grep "[t]ailscaled" | head -n 10 || true
           echo TAILSCALED_END
           echo TAILSCALE_PATHS_BEGIN
-          for p in "$HOME/webapp/tailscale" "$HOME/webapp/tailscale/state" "$HOME/webapp/dev-ssh/management"; do if [ -e "$p" ]; then stat -c "%A %U %G %s %n" "$p" 2>/dev/null || ls -ld "$p"; else echo "MISSING $p"; fi; done
-          find "$HOME/webapp/tailscale" -maxdepth 2 -type f -print 2>/dev/null | sort | head -n 40 || true
+          for p in "$HOME/tailscale" "$HOME/tailscale/state" "$HOME/dev-ssh/management"; do if [ -e "$p" ]; then stat -c "%A %U %G %s %n" "$p" 2>/dev/null || ls -ld "$p"; else echo "MISSING $p"; fi; done
+          find "$HOME/tailscale" -maxdepth 2 -type f -print 2>/dev/null | sort | head -n 40 || true
           echo TAILSCALE_PATHS_END
           echo MANAGEMENT_SSH_KEYS_BEGIN
-          for p in "$HOME/webapp/dev-ssh/management/ssh_host_ed25519_key.pub" "$HOME/webapp/dev-ssh/management/authorized_keys"; do if [ -f "$p" ]; then echo "FILE=$p"; ssh-keygen -lf "$p" 2>/dev/null || true; fi; done
+          for p in "$HOME/dev-ssh/management/ssh_host_ed25519_key.pub" "$HOME/dev-ssh/management/authorized_keys"; do if [ -f "$p" ]; then echo "FILE=$p"; ssh-keygen -lf "$p" 2>/dev/null || true; fi; done
           echo MANAGEMENT_SSH_KEYS_END
           python3 -c '"'"'import socket
           for host,port,label in [("127.0.0.1",2222,"MGMT_SSHD_LOCAL"),("100.118.16.80",22,"TAILSCALE_SELF_22")]:
@@ -119,7 +119,7 @@ jobs:
             git fetch origin main
             git checkout -B queue-main origin/main
             ENVELOPE="$(cat /tmp/envelope.json)"
-            ENVELOPE="$ENVELOPE" python3 -c 'import json,os; from pathlib import Path; p=Path("bootstrap-relay/permanent-control/queue.json"); q=json.loads(p.read_text()); t=json.loads(os.environ["ENVELOPE"]); tasks=q["tasks"]; assert q.get("protocol")=="powerpc-control-v1" and q.get("version")==1 and isinstance(tasks,list) and len(tasks)<128; tasks.append(t) if not any(isinstance(x,dict) and x.get("task_id")==t["task_id"] for x in tasks) else None; p.write_text(json.dumps(q,sort_keys=True,separators=(",",":"))+"\\n")'
+            ENVELOPE="$ENVELOPE" python3 -c 'import json,os; from pathlib import Path; p=Path("bootstrap-relay/permanent-control/queue.json"); q=json.loads(p.read_text()); t=json.loads(os.environ["ENVELOPE"]); tasks=q["tasks"]; assert q.get("protocol")=="powerpc-control-v1" and q.get("version")==1 and isinstance(tasks,list) and len(tasks)<128; tasks.append(t) if not any(isinstance(x,dict) and x.get("task_id")==t["task_id"] for x in tasks) else None; p.write_text(json.dumps(q,sort_keys=True,separators=(",",":"))+chr(10))'
             git add bootstrap-relay/permanent-control/queue.json
             git commit -m "control: queue Gateway Tailscale read-only host probe" >/dev/null
             if git push origin HEAD:main; then
