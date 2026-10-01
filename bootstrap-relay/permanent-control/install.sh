@@ -7,7 +7,7 @@ WEBAPP="$ACCOUNT/webapp"
 HTDOCS="$ACCOUNT/htdocs"
 STATE="$ACCOUNT/.powerpc-control-v1"
 BIN="$WEBAPP/bin/powerpc-control"
-PIN="c123b142b9e19f5c85e471345a1f965db1073c89"
+PIN="d0566fe455113a87065c0602974240ece5293a0b"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
