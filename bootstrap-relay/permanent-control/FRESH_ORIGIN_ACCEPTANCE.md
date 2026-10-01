@@ -35,12 +35,12 @@ Result template:
    - runtime `fasthost.powerpc`;
    - UID `2257347`;
    - signature verifies through `origin-client.py`.
-4. Generate an encrypted `runtime_health` request:
+4. Generate an encrypted, harmless `read_text` request against a bounded file such as `CONTROL_PLANE.md`:
    ```
    origin-client.py prepare \
      --identity identity.json \
-     --tool runtime_health \
-     --arguments '{}' \
+     --tool read_text \
+     --arguments '{"path":"CONTROL_PLANE.md","max_bytes":2048}' \
      --authority read_only \
      --output task.json \
      --context task.context.json
@@ -54,9 +54,11 @@ Result template:
      --context task.context.json \
      --output receipt.json
    ```
-8. Require a signature-verified, decryptable runtime receipt bound to `fasthost.powerpc`, with exactly one `runtime_health` local-MCP action. `completion_state=COMPLETED` means the aggregate architecture-health probe is healthy; `completion_state=FAILED` is also a valid control-transport round trip when the returned MCP result has `isError=true`. Record that live health degradation separately; do not misclassify it as transport failure.
-9. Repeat with `read_text` against one harmless allowed file and require `completion_state=COMPLETED`.
+8. Require `completion_state=COMPLETED`, a runtime receipt bound to `fasthost.powerpc`, and exactly one `read_text` local-MCP action.
+9. Prove duplicate suppression against that completed envelope, then repeat with another bounded read-only primitive such as `list_dir`.
 10. Repeat with one bounded non-destructive `terminal_exec` under `bounded_operator` and require `completion_state=COMPLETED`.
+
+`runtime_health` remains available as a platform-health diagnostic, but it executes the wider architecture-health script and is not the owned-transport liveness gate. A degraded or slow unrelated service must not be misclassified as communication-path failure.
 
 Invariant: `CONTROL_TRANSPORT_ACCEPTANCE != AGGREGATE_RUNTIME_HEALTH`.
 
