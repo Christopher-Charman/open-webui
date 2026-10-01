@@ -171,3 +171,5 @@ jobs:
           python3 -c 'import json; r=json.load(open("/tmp/receipt.json")); assert r.get("completion_state")=="COMPLETED",r; ex=r.get("executor_identity") or {}; assert ex.get("runtime_id")=="fasthost.powerpc" and ex.get("uid")==2257347 and ex.get("user")=="csh3280350",ex; res=r.get("result") or {}; assert res.get("isError") is not True,r; txt="\\n".join(x.get("text","") for x in (res.get("content") or []) if isinstance(x,dict) and x.get("type")=="text"); assert "PROBE_SCHEMA=gateway-tailscale-host-v1" in txt and "MUTATION=NONE" in txt,txt; print("RESULT_RECEIPT=PASS"); print("PROBE_OUTPUT_BEGIN"); print(txt); print("PROBE_OUTPUT_END")'
 
 # fresh post-restart acceptance trigger 2026-10-01
+
+# post-supervision delayed acceptance trigger
