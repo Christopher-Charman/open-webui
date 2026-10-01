@@ -86,12 +86,22 @@ def voice():
         playback = f["audio_play"] or f["new_audio"] or f["speech_synthesis"]
         if f["ready"] and f["cortana"] and playback:
             candidates.append(name)
+    contexts = {}
+    target = SSTATIC / "pwa-voice-bridge.js"
+    if target.is_file():
+        src = target.read_text(errors="replace").splitlines()
+        for lo, hi in ((1, 30), (230, 285), (415, 455), (510, 560), (760, 800), (875, 910)):
+            contexts[f"{lo}-{hi}"] = [
+                {"line": i + 1, "text": src[i][:400]}
+                for i in range(lo - 1, min(hi, len(src)))
+            ]
     return {
         "state": "CANDIDATE_FOUND" if candidates else "NO_SINGLE_FILE_CANDIDATE",
         "candidate_files": candidates,
         "warm_path_present": any(f["warm_helper"] or f["warm_endpoint"] for f in flags.values()),
         "file_flags": flags,
         "line_index": line_index,
+        "contexts": contexts,
         "mutation": "NONE",
     }
 
