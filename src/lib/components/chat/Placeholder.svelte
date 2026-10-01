@@ -27,6 +27,7 @@
 	import MessageInput from './MessageInput.svelte';
 	import FolderPlaceholder from './Placeholder/FolderPlaceholder.svelte';
 	import FolderTitle from './Placeholder/FolderTitle.svelte';
+	import HeroOrb from '$lib/custom-shell/components/HeroOrb.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -94,7 +95,7 @@
 		$selectedFolder.permission !== 'write';
 </script>
 
-<div class="m-auto w-full max-w-[58rem] px-1 @2xl:px-20 translate-y-6 py-24 text-center">
+<div class="custom-shell-landing m-auto w-full max-w-[58rem] px-1 @2xl:px-20 text-center">
 	{#if $temporaryChatEnabled}
 		<Tooltip
 			content={$i18n.t("This chat won't appear in history and your messages will not be saved.")}
@@ -123,6 +124,9 @@
 					}}
 				/>
 			{:else}
+				<div class="custom-shell-landing-hero">
+					<HeroOrb phase="ready" detail={$temporaryChatEnabled ? 'PRIVATE SESSION' : undefined} size={178} />
+				</div>
 				<div class="flex flex-row justify-center gap-2.5 @sm:gap-3 w-fit px-5 max-w-xl">
 					<div class="flex shrink-0 justify-center">
 						<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 100 }}>
@@ -180,7 +184,7 @@
 					</div>
 				</div>
 
-				<div class="flex mt-1 mb-2">
+				<div class="custom-shell-agent-description flex mt-1 mb-2">
 					<div in:fade={{ duration: 100, delay: 50 }}>
 						{#if models[selectedModelIdx]?.info?.meta?.description ?? null}
 							<Tooltip
@@ -228,7 +232,7 @@
 				</div>
 			{/if}
 
-			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
+			<div class="custom-shell-landing-prompt text-base font-normal @md:max-w-3xl w-full {atSelectedModel ? 'mt-2' : ''}">
 				{#if !($selectedFolder && folderReadOnly)}
 					<MessageInput
 						bind:this={messageInput}

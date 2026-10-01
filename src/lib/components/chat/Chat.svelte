@@ -107,6 +107,8 @@
 
 	import Banner from '../common/Banner.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
+	import ChatTelemetry from '$lib/custom-shell/components/ChatTelemetry.svelte';
+	import { deriveShellPhase } from '$lib/custom-shell/state/openWebUiState';
 	import Messages from '$lib/components/chat/Messages.svelte';
 	import Navbar from '$lib/components/chat/Navbar.svelte';
 	import ChatControls from './ChatControls.svelte';
@@ -4131,6 +4133,9 @@
 			toast.error(`${error}`);
 		}
 	};
+
+	$: shellMessage = history?.currentId ? history.messages?.[history.currentId] : null;
+	$: shellPhase = deriveShellPhase({ generating, taskCount: taskIds?.length ?? 0, message: shellMessage });
 </script>
 
 <svelte:head>
@@ -4422,6 +4427,11 @@
 									id={embedded ? messageInputDropzoneId : undefined}
 									class=" pb-2 {dragged ? 'z-0' : 'z-10'}"
 								>
+									{#if !embedded}
+										<div class="custom-shell-telemetry-lane">
+											<ChatTelemetry phase={shellPhase} showDetail={!$mobile} />
+										</div>
+									{/if}
 									<MessageInput
 										bind:this={messageInput}
 										{history}

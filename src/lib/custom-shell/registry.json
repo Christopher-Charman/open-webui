@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "branch": "custom-shell/libraries-dev-v0",
+  "components": [
+    {
+      "id": "hero-orb",
+      "file": "components/HeroOrb.svelte",
+      "surface": "landing",
+      "status": "staged-source",
+      "role": "large spatial identity and primary agent-state focal point"
+    },
+    {
+      "id": "chat-telemetry",
+      "file": "components/ChatTelemetry.svelte",
+      "surface": "active-chat",
+      "status": "staged-source",
+      "role": "compact operational state, visually subordinate to messages"
+    },
+    {
+      "id": "orb-canvas",
+      "file": "components/OrbCanvas.svelte",
+      "surface": "shared",
+      "status": "staged-source",
+      "role": "Svelte canvas binding over framework-neutral orb geometry"
+    },
+    {
+      "id": "shell-state",
+      "file": "state/shellState.ts",
+      "surface": "shared",
+      "status": "staged-source",
+      "role": "semantic state contract shared across distinct visual components"
+    },
+    {
+      "id": "prompt-shell",
+      "file": "../../components/chat/MessageInput.svelte",
+      "surface": "composer",
+      "status": "staged-source",
+      "role": "single parent prompt surface with explicit tool and model/action subregions"
+    }
+  ],
+  "upstreams": {
+    "thinking-orbs": {
+      "repo": "Christopher-Charman/thinking-orbs",
+      "commit": "de85557",
+      "usage": "vendored engine source",
+      "license": "MIT"
+    },
+    "fragments-ui": {
+      "repo": "Christopher-Charman/ui",
+      "commit": "ac7cfb6",
+      "usage": "interaction and component vocabulary reference"
+    },
+    "shadcn-ui": {
+      "repo": "Christopher-Charman/ui-shadcn",
+      "commit": "98a1fe6",
+      "usage": "open-code and registry architecture reference"
+    }
+  }
+}

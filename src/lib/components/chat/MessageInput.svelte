@@ -112,6 +112,7 @@
 	import Expand from '../icons/Expand.svelte';
 	import QueuedMessageItem from './MessageInput/QueuedMessageItem.svelte';
 	import TaskList from './Messages/ResponseMessage/TaskList.svelte';
+	import '$lib/custom-shell/styles/shell.css';
 
 	const i18n = getContext('i18n');
 
@@ -1856,7 +1857,7 @@
 
 						<div
 							id="message-input-container"
-							class="flex-1 flex flex-col relative w-full shadow-lg rounded-3xl border {$temporaryChatEnabled
+							class="custom-shell-prompt {generating ? 'shell-generating' : ''} flex-1 flex flex-col relative w-full border {$temporaryChatEnabled
 								? 'border-dashed border-gray-100 dark:border-gray-800 hover:border-gray-200 focus-within:border-gray-200 hover:dark:border-gray-700 focus-within:dark:border-gray-700'
 								: ' border-gray-100/30 dark:border-gray-850/30 hover:border-gray-200 focus-within:border-gray-100 hover:dark:border-gray-800 focus-within:dark:border-gray-800'} {($settings?.highContrastMode ??
 							false)
@@ -2178,8 +2179,8 @@
 								</div>
 							</div>
 
-							<div class=" flex justify-between mt-0.5 mb-2 mx-0.5 max-w-full" dir="ltr">
-								<div class="ml-1 self-end flex items-center flex-1 min-w-0">
+							<div class="custom-shell-prompt-toolbar flex justify-between mt-0.5 mb-2 mx-0.5 max-w-full" dir="ltr">
+								<div class="custom-shell-prompt-tools ml-1 self-end flex items-center flex-1 min-w-0">
 									<InputMenu
 										bind:files
 										selectedModels={selectedModelIds}
@@ -2519,7 +2520,7 @@
 									</div>
 								</div>
 
-								<div class="self-end flex space-x-1 mr-1 min-w-0 gap-[0.03125rem]">
+								<div class="custom-shell-prompt-actions self-end flex space-x-1 mr-1 min-w-0 gap-[0.03125rem]">
 									<div class="flex min-w-0 max-w-[10rem] items-center sm:max-w-[13rem]">
 										<ModelSelector
 											bind:this={modelSelector}
