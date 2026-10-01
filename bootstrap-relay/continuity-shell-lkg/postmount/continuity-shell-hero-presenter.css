@@ -1,162 +1,150 @@
-/* Continuity Shell telemetry presenter v20261001.1
-   Explicit #chat-pane ownership: large landing hero, compact active-chat telemetry,
-   composer-local Border Beam. No loader/audio/model/runtime ownership. */
+/* Continuity Shell landing hero presenter v20260930.4-landing
+   Landing presentation only: one neural hero + one READY label.
+   No loader, audio, model, auth, routing, chat telemetry, or client-runtime ownership. */
+
+:root{--continuity-hero-size:148px}
 
 [data-continuity-hero-superseded="1"],
 .continuity-shell-landing-ready-superseded{display:none!important}
 
-#owui-thinking-orb-v1{
-  position:relative!important;
+#continuity-shell-landing-hero-presenter{
+  position:fixed!important;
   z-index:18!important;
-  align-self:center!important;
+  width:var(--continuity-hero-size)!important;
+  height:calc(var(--continuity-hero-size) + 34px)!important;
   display:flex!important;
+  flex-direction:column!important;
   align-items:center!important;
-  justify-content:center!important;
-  flex:0 0 auto!important;
+  justify-content:flex-start!important;
+  gap:9px!important;
+  margin:0!important;
+  padding:0!important;
   pointer-events:none!important;
   isolation:isolate!important;
   contain:layout style!important;
-  border:1px solid rgba(126,210,255,.16)!important;
-  background:
-    linear-gradient(145deg,rgba(85,198,255,.055),transparent 46%),
-    rgba(4,11,23,.58)!important;
-  backdrop-filter:blur(16px) saturate(1.2)!important;
-  -webkit-backdrop-filter:blur(16px) saturate(1.2)!important;
-  transition:width .22s ease,height .22s ease,border-color .22s ease,box-shadow .22s ease!important;
 }
 
-#owui-thinking-orb-v1[data-surface="landing"]{
-  width:min(410px,calc(100vw - 48px))!important;
-  height:108px!important;
-  gap:18px!important;
-  margin:clamp(18px,5vh,54px) auto 16px!important;
-  padding:10px 26px!important;
-  border-radius:32px!important;
-  box-shadow:0 18px 50px rgba(0,0,0,.28),0 0 34px rgba(91,189,255,.10),inset 0 1px 0 rgba(235,249,255,.05)!important;
-}
-
-#owui-thinking-orb-v1[data-surface="chat"]{
-  width:190px!important;
-  height:50px!important;
-  gap:10px!important;
-  margin:6px auto 4px!important;
-  padding:5px 14px!important;
-  border-radius:22px!important;
-  box-shadow:0 8px 24px rgba(0,0,0,.20),0 0 14px rgba(91,189,255,.06)!important;
-  opacity:.94!important;
-}
-
-#owui-thinking-orb-v1 .continuity-shell-telemetry-sphere-wrap{
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-sphere-wrap{
   position:relative!important;
+  width:var(--continuity-hero-size)!important;
+  height:var(--continuity-hero-size)!important;
+  min-width:var(--continuity-hero-size)!important;
+  min-height:var(--continuity-hero-size)!important;
+  max-width:var(--continuity-hero-size)!important;
+  max-height:var(--continuity-hero-size)!important;
   display:grid!important;
   place-items:center!important;
-  flex:0 0 auto!important;
+  flex:0 0 var(--continuity-hero-size)!important;
+  margin:0!important;
+  padding:0!important;
 }
 
-#owui-thinking-orb-v1[data-surface="landing"] .continuity-shell-telemetry-sphere-wrap{
-  width:82px!important;height:82px!important;
-}
-
-#owui-thinking-orb-v1[data-surface="chat"] .continuity-shell-telemetry-sphere-wrap{
-  width:40px!important;height:40px!important;
-}
-
-#owui-thinking-orb-v1 .continuity-shell-telemetry-aura{
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-aura{
   position:absolute!important;
   z-index:0!important;
+  top:calc(var(--continuity-hero-size) * -.22)!important;
+  left:calc(var(--continuity-hero-size) * -.22)!important;
+  width:calc(var(--continuity-hero-size) * 1.44)!important;
+  height:calc(var(--continuity-hero-size) * 1.44)!important;
   border-radius:50%!important;
   background:
     radial-gradient(circle at 38% 40%,rgba(49,177,255,.20),transparent 46%),
-    radial-gradient(circle at 67% 61%,rgba(207,66,255,.16),transparent 52%)!important;
-  filter:blur(16px) saturate(1.25)!important;
-  animation:continuity-telemetry-aura 4.8s ease-in-out infinite!important;
+    radial-gradient(circle at 67% 61%,rgba(207,66,255,.17),transparent 52%)!important;
+  filter:blur(18px) saturate(1.25)!important;
+  opacity:.88!important;
+  animation:continuity-shell-hero-aura-breathe 4.8s ease-in-out infinite!important;
 }
 
-#owui-thinking-orb-v1[data-surface="landing"] .continuity-shell-telemetry-aura{
-  width:116px!important;height:116px!important;left:18px!important;top:-4px!important;opacity:.88!important;
-}
-#owui-thinking-orb-v1[data-surface="chat"] .continuity-shell-telemetry-aura{
-  width:54px!important;height:54px!important;left:9px!important;top:-2px!important;opacity:.48!important;
-}
-
-#owui-thinking-orb-v1 .continuity-shell-telemetry-svg{
-  position:relative!important;z-index:2!important;width:100%!important;height:100%!important;
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-svg{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
   overflow:visible!important;
-  filter:brightness(1.12) saturate(1.12) drop-shadow(0 0 5px rgba(60,178,255,.30)) drop-shadow(0 0 10px rgba(191,70,255,.18))!important;
-  animation:continuity-telemetry-float 8s ease-in-out infinite!important;
-}
-#owui-thinking-orb-v1[data-surface="chat"] .continuity-shell-telemetry-svg{
-  filter:brightness(1.06) saturate(1.04) drop-shadow(0 0 4px rgba(60,178,255,.20))!important;
+  filter:
+    brightness(1.12)
+    saturate(1.12)
+    drop-shadow(0 0 5px rgba(60,178,255,.30))
+    drop-shadow(0 0 10px rgba(191,70,255,.20))!important;
+  animation:continuity-shell-hero-float 8s ease-in-out infinite!important;
 }
 
-.continuity-shell-telemetry-edge{stroke-linecap:round;animation:continuity-telemetry-edge 5.2s ease-in-out infinite}
-.continuity-shell-telemetry-node{transform-box:fill-box;transform-origin:center;animation:continuity-telemetry-node 3.8s ease-in-out infinite}
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-edge{
+  stroke-linecap:round;
+  animation:continuity-shell-hero-edge-breathe 5.2s ease-in-out infinite;
+}
 
-.continuity-shell-telemetry-copy{position:relative!important;z-index:3!important;display:flex!important;flex-direction:column!important;justify-content:center!important;min-width:0!important}
-.continuity-shell-telemetry-title{color:rgba(245,244,255,.95)!important;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif!important;white-space:nowrap!important;text-shadow:0 0 12px rgba(94,190,255,.20)!important}
-#owui-thinking-orb-v1[data-surface="landing"] .continuity-shell-telemetry-title{font-size:24px!important;line-height:1.05!important;font-weight:640!important;letter-spacing:.01em!important}
-#owui-thinking-orb-v1[data-surface="chat"] .continuity-shell-telemetry-title{font-size:14px!important;line-height:1!important;font-weight:620!important}
-.continuity-shell-telemetry-detail{margin-top:6px!important;color:rgba(176,204,230,.70)!important;font:600 10px/1 ui-sans-serif,system-ui,-apple-system,sans-serif!important;letter-spacing:.24em!important;white-space:nowrap!important}
-#owui-thinking-orb-v1[data-surface="chat"] .continuity-shell-telemetry-detail{display:none!important}
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-node{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:continuity-shell-hero-node-pulse 3.8s ease-in-out infinite;
+}
 
-#owui-border-beam-v1{
-  --beam-strength:.30;
-  position:absolute!important;
-  z-index:0!important;
-  inset:-7px!important;
-  border-radius:inherit!important;
-  overflow:hidden!important;
-  pointer-events:none!important;
-  opacity:0!important;
-  transition:opacity .18s ease!important;
+#continuity-shell-landing-hero-presenter .continuity-shell-hero-ready{
+  position:relative!important;
+  z-index:3!important;
+  inset:auto!important;
+  transform:none!important;
+  margin:0 0 0 .31em!important;
+  padding:0!important;
+  color:rgba(245,244,255,.94)!important;
+  font:650 13px/1 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif!important;
+  letter-spacing:.31em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  text-shadow:
+    0 0 9px rgba(94,190,255,.24),
+    0 0 18px rgba(192,76,255,.14)!important;
 }
-#owui-border-beam-v1::before{
-  content:""!important;
-  position:absolute!important;
-  inset:-45%!important;
-  background:conic-gradient(from 0deg,transparent 0 64%,rgba(91,206,255,calc(var(--beam-strength) * .85)) 72%,rgba(206,92,255,var(--beam-strength)) 78%,transparent 86%)!important;
-  animation:continuity-border-beam-spin 3.2s linear infinite!important;
-}
-#owui-border-beam-v1::after{
-  content:""!important;
-  position:absolute!important;
-  inset:7px!important;
-  border-radius:inherit!important;
-  box-shadow:0 0 18px rgba(80,194,255,calc(var(--beam-strength) * .36))!important;
-}
-#owui-border-beam-v1[data-state="working"]{--beam-strength:.30;opacity:1!important}
-#owui-border-beam-v1[data-state="composing"]{--beam-strength:.22;opacity:1!important}
-#owui-border-beam-v1[data-state="searching"]{--beam-strength:.50;opacity:1!important}
-#owui-border-beam-v1[data-state="idle"]{opacity:0!important}
 
-html.her #owui-thinking-orb-v1{
-  border-color:rgba(115,216,255,.20)!important;
-  background:linear-gradient(145deg,rgba(115,216,255,.055),transparent 48%),rgba(5,14,25,.60)!important;
+html.her #continuity-shell-landing-hero-presenter .continuity-shell-hero-aura{
+  background:
+    radial-gradient(circle at 38% 40%,rgba(115,216,255,.23),transparent 46%),
+    radial-gradient(circle at 67% 61%,rgba(223,106,60,.11),transparent 54%)!important;
+  filter:blur(19px) saturate(1.18)!important;
 }
-html.her #owui-thinking-orb-v1 .continuity-shell-telemetry-aura{
-  background:radial-gradient(circle at 38% 40%,rgba(115,216,255,.23),transparent 46%),radial-gradient(circle at 67% 61%,rgba(223,106,60,.11),transparent 54%)!important;
+
+html.her #continuity-shell-landing-hero-presenter .continuity-shell-hero-svg{
+  filter:
+    brightness(1.15)
+    saturate(1.05)
+    drop-shadow(0 0 5px rgba(115,216,255,.34))
+    drop-shadow(0 0 11px rgba(223,106,60,.10))!important;
+}
+
+.continuity-shell-footer-bound{letter-spacing:.08em!important}
+
+@keyframes continuity-shell-hero-node-pulse{
+  0%,100%{opacity:.78;transform:scale(.94)}
+  50%{opacity:1;transform:scale(1.08)}
+}
+@keyframes continuity-shell-hero-edge-breathe{
+  0%,100%{opacity:.70}
+  50%{opacity:1}
+}
+@keyframes continuity-shell-hero-aura-breathe{
+  0%,100%{transform:scale(.97);opacity:.72}
+  50%{transform:scale(1.03);opacity:.92}
+}
+@keyframes continuity-shell-hero-float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-3px)}
 }
 
 @media(max-width:430px){
-  #owui-thinking-orb-v1[data-surface="landing"]{
-    width:min(326px,calc(100vw - 34px))!important;height:94px!important;gap:14px!important;
-    margin:clamp(12px,3.8vh,34px) auto 12px!important;padding:8px 20px!important;border-radius:28px!important;
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-ready{
+    font-size:12px!important;
+    letter-spacing:.30em!important;
   }
-  #owui-thinking-orb-v1[data-surface="landing"] .continuity-shell-telemetry-sphere-wrap{width:74px!important;height:74px!important}
-  #owui-thinking-orb-v1[data-surface="landing"] .continuity-shell-telemetry-title{font-size:21px!important}
-  #owui-thinking-orb-v1[data-surface="chat"]{width:186px!important;height:48px!important;margin:4px auto 3px!important}
-  #owui-thinking-orb-v1[data-surface="chat"] .continuity-shell-telemetry-sphere-wrap{width:38px!important;height:38px!important}
 }
 
-@keyframes continuity-telemetry-node{0%,100%{opacity:.78;transform:scale(.94)}50%{opacity:1;transform:scale(1.08)}}
-@keyframes continuity-telemetry-edge{0%,100%{opacity:.68}50%{opacity:1}}
-@keyframes continuity-telemetry-aura{0%,100%{transform:scale(.97);opacity:.70}50%{transform:scale(1.03);opacity:.92}}
-@keyframes continuity-telemetry-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@keyframes continuity-border-beam-spin{to{transform:rotate(360deg)}}
-
 @media(prefers-reduced-motion:reduce){
-  #owui-thinking-orb-v1 .continuity-shell-telemetry-aura,
-  #owui-thinking-orb-v1 .continuity-shell-telemetry-svg,
-  .continuity-shell-telemetry-edge,.continuity-shell-telemetry-node,
-  #owui-border-beam-v1::before{animation:none!important}
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-aura,
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-svg,
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-edge,
+  #continuity-shell-landing-hero-presenter .continuity-shell-hero-node{
+    animation:none!important;
+  }
 }
