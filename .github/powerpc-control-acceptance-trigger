@@ -1,3 +1,6 @@
 native-stage1-pass=36649609885
 corrected-harness=72a620bd816574a655653cf691b7740a67ac5cda
 triggered-at=2026-09-30T00:23Z
+concurrency-safe-harness=3f25e9451373deaac1b6b2293ed07ef6fe3ac82a
+runbook=72bf80d673a42e5f63ba24ab36edf55e5dbd5ffc
+triggered-at=2026-10-01T00:12Z
