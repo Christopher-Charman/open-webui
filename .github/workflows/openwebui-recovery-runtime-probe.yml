@@ -91,10 +91,10 @@ jobs:
           git config user.name "OpenWebUI Recovery Probe"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
           CLIENT="bootstrap-relay/permanent-control/origin-client.py"
-          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/8cfef618972142084235d2818e823a0228993d74/bootstrap-relay/recovery-runtime-probe-20260930/probe.sh"
+          PROBE_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/9a13044edab68504efc8fe265d59a3bb9db9e2cf/bootstrap-relay/recovery-runtime-probe-20260930/frontier_validation.py"
           TASK_ID="owui-recovery-probe-$GITHUB_RUN_ID"
 
-          COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | bash"
+          COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | python3"
           ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":90000},separators=(",",":")))' "$COMMAND")"
 
           python3 "$CLIENT" prepare \
