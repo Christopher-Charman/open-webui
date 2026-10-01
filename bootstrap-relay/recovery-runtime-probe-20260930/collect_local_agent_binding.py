@@ -20,23 +20,24 @@ def find_db() -> Path | None:
     return None
 
 
-def main() -> int:
+def collect_local_agent_binding() -> dict:
+    """Collect Local Agent workspace binding evidence without mutating the DB."""
     db = find_db()
     if db is None:
-        print(json.dumps({"state": "DB_NOT_FOUND"}, separators=(",", ":")))
-        return 2
+        return {"state": "DB_NOT_FOUND", "rows": [], "row_count": 0}
 
     con = sqlite3.connect("file:" + str(db) + "?mode=ro", uri=True)
     cur = con.cursor()
     cols = [r[1] for r in cur.execute("pragma table_info(model)").fetchall()]
     required = {"id", "name", "base_model_id"}
     if not required.issubset(cols):
-        print(json.dumps({
+        return {
             "state": "SCHEMA_MISMATCH",
             "db": str(db),
             "columns": cols,
-        }, sort_keys=True, separators=(",", ":")))
-        return 3
+            "rows": [],
+            "row_count": 0,
+        }
 
     active_expr = "is_active" if "is_active" in cols else "1"
     q = f"select id,name,base_model_id,{active_expr} from model order by lower(name),id"
@@ -52,13 +53,18 @@ def main() -> int:
             })
 
     con.close()
-    print(json.dumps({
+    return {
         "state": "OK",
         "db": str(db),
         "rows": rows,
         "row_count": len(rows),
-    }, sort_keys=True, separators=(",", ":")))
-    return 0
+    }
+
+
+def main() -> int:
+    result = collect_local_agent_binding()
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0 if result.get("state") == "OK" else 2
 
 
 if __name__ == "__main__":
