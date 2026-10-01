@@ -63,3 +63,21 @@ jobs:
           fi
           git commit -m "diagnostics(gateway): record provider SSH host keys [skip ci]"
           git push origin HEAD:main
+
+
+      - name: Probe advertised SSH authentication methods
+        shell: bash
+        run: |
+          set +e
+          out="bootstrap-relay/permanent-control/provider-ssh-auth-methods.txt"
+          ssh -vvv -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=none csh3280350@77.68.64.22 true > /tmp/ssh-auth.out 2>&1
+          {
+            echo "HOST=77.68.64.22 PORT=22 USER=csh3280350"
+            grep -E "Authentications that can continue|Next authentication method|Permission denied" /tmp/ssh-auth.out || true
+          } > "$out"
+          git add "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m "diagnostics(gateway): record provider SSH auth methods [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
