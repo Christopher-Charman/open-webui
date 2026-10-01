@@ -1,0 +1,227 @@
+name: OpenWebUI frontier validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/openwebui-frontier-validation.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: openwebui-frontier-validation
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install crypto dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet cryptography
+
+      - name: Resolve current signed PowerPC identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          rm -f /tmp/identity.json /tmp/identity-candidate.json /tmp/id-test.json /tmp/id-test.ctx
+          found=""
+
+          for url in \
+            "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json" \
+            "https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json" \
+            "https://www.powerpc-darwin.org/ppc-control-identity.json" \
+            "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/identity.json" \
+            "https://www.powerpc-darwin.org/static/identity.json"
+          do
+            code="$(curl -sS -o /tmp/identity-candidate.json -w '%{http_code}' \
+              --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
+            echo "IDENTITY_CANDIDATE_HTTP=$code URL=$url"
+            [ "$code" = "200" ] || continue
+
+            if python3 - /tmp/identity-candidate.json <<'PY'
+import json,sys,time
+d=json.load(open(sys.argv[1]))
+assert d.get("protocol")=="powerpc-control-v1"
+assert d.get("version")==1
+assert d.get("runtime_id")=="fasthost.powerpc"
+assert d.get("state")=="ready"
+assert d.get("uid")==2257347
+assert d.get("user")=="csh3280350"
+assert d.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+assert set(d.get("tool_contract",[]))=={"runtime_health","read_text","list_dir","terminal_exec"}
+age=int(time.time())-int(d.get("heartbeat_at",0))
+assert 0 <= age < 240, age
+PY
+            then
+              if python3 "$CLIENT" prepare \
+                --identity /tmp/identity-candidate.json \
+                --task-id "identity-validation-only-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+                --tool runtime_health \
+                --arguments '{}' \
+                --authority read_only \
+                --ttl 60 \
+                --output /tmp/id-test.json \
+                --context /tmp/id-test.ctx >/tmp/id-test.out 2>/tmp/id-test.err
+              then
+                cp /tmp/identity-candidate.json /tmp/identity.json
+                found="$url"
+                break
+              fi
+            fi
+          done
+
+          [ -n "$found" ] || { echo "SIGNED_RUNTIME_IDENTITY=UNAVAILABLE" >&2; exit 1; }
+          echo "SIGNED_RUNTIME_IDENTITY=PASS"
+          echo "IDENTITY_ROUTE=$found"
+
+      - name: Queue bounded frontier validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "OpenWebUI Frontier Validation"
+          git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          PIN="a5d070e7777609622a72db12e6695d68d4b36ade"
+          BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/recovery-runtime-probe-20260930"
+          TASK_ID="owui-frontier-validate-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+
+          COMMAND="set -u; d=\$(mktemp -d); trap 'rm -rf \"\$d\"' EXIT; curl -fsSL --retry 4 --connect-timeout 10 '$BASE/validate_qwen_inference.py' -o \"\$d/qwen.py\"; curl -fsSL --retry 4 --connect-timeout 10 '$BASE/locate_voice_trigger.py' -o \"\$d/voice.py\"; set +e; q=\$(python3 \"\$d/qwen.py\"); qrc=\$?; set -e; v=\$(python3 \"\$d/voice.py\"); printf 'QWEN_RESULT=%s\\nQWEN_RC=%s\\nVOICE_RESULT=%s\\n' \"\$q\" \"\$qrc\" \"\$v\""
+          ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":90000},separators=(",",":")))' "$COMMAND")"
+
+          python3 "$CLIENT" prepare \
+            --identity /tmp/identity.json \
+            --task-id "$TASK_ID" \
+            --tool terminal_exec \
+            --arguments "$ARGS" \
+            --authority bounded_operator \
+            --allowed terminal_exec \
+            --ttl 600 \
+            --output /tmp/envelope.json \
+            --context /tmp/context.json >/tmp/prepare.out
+
+          printf '%s' "$TASK_ID" >/tmp/task-id
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            python3 - <<'PY'
+import json
+from pathlib import Path
+qpath=Path("bootstrap-relay/permanent-control/queue.json")
+q=json.loads(qpath.read_text())
+task=json.loads(Path("/tmp/envelope.json").read_text())
+assert q.get("protocol")=="powerpc-control-v1" and q.get("version")==1
+tasks=q.get("tasks")
+assert isinstance(tasks,list)
+assert len(tasks) < 128
+if any(isinstance(t,dict) and int(t.get("expires_at",0)) > int(__import__("time").time()) for t in tasks):
+    raise SystemExit("QUEUE_HAS_LIVE_TASK")
+if not any(isinstance(t,dict) and t.get("task_id")==task["task_id"] for t in tasks):
+    tasks.append(task)
+qpath.write_text(json.dumps(q,sort_keys=True,separators=(",",":"))+"\n")
+PY
+            git add bootstrap-relay/permanent-control/queue.json
+            git commit -m "control: queue bounded OpenWebUI frontier validation [skip ci]" >/dev/null
+            if git push origin HEAD:main; then
+              echo "FRONTIER_TASK_QUEUE_APPEND=PASS"
+              break
+            fi
+            if [ "$attempt" = 4 ]; then
+              echo "FRONTIER_TASK_QUEUE_APPEND=FAIL" >&2
+              exit 1
+            fi
+          done
+
+      - name: Retrieve, decrypt, and persist sanitized receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          id="$(cat /tmp/task-id)"
+          found=""
+
+          for i in $(seq 1 120); do
+            for url in \
+              "https://www.powerpc-darwin.org/static/powerpc-control-result-$id.json" \
+              "https://www.powerpc-darwin.org/static/ppc-control-result-$id.json"
+            do
+              if curl -fsS --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" -o /tmp/result.json; then
+                found="$url"
+                break 2
+              fi
+            done
+            sleep 2
+          done
+          [ -n "$found" ] || { echo "FRONTIER_RECEIPT=FAIL"; exit 1; }
+
+          python3 "$CLIENT" decode \
+            --result /tmp/result.json \
+            --context /tmp/context.json \
+            --output /tmp/receipt.json
+
+          python3 - /tmp/receipt.json /tmp/sanitized.json <<'PY'
+import json,sys,time
+receipt=json.load(open(sys.argv[1]))
+assert receipt.get("completion_state")=="COMPLETED", receipt
+ex=receipt.get("executor_identity") or {}
+assert ex.get("runtime_id")=="fasthost.powerpc"
+assert ex.get("uid")==2257347
+assert ex.get("user")=="csh3280350"
+assert ex.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+result=receipt.get("result") or {}
+assert result.get("isError") is not True, receipt
+text="\n".join(
+    x.get("text","") for x in (result.get("content") or [])
+    if isinstance(x,dict) and x.get("type")=="text"
+)
+vals={}
+for line in text.splitlines():
+    if "=" in line:
+        k,v=line.split("=",1)
+        if k in {"QWEN_RESULT","QWEN_RC","VOICE_RESULT"}:
+            vals[k]=v
+assert {"QWEN_RESULT","QWEN_RC","VOICE_RESULT"} <= vals.keys(), text
+qwen=json.loads(vals["QWEN_RESULT"])
+voice=json.loads(vals["VOICE_RESULT"])
+out={
+  "schema":"openwebui-frontier-validation-v1",
+  "captured_at_unix":int(time.time()),
+  "task_id":receipt.get("task_id"),
+  "executor_identity":ex,
+  "source_pin":"a5d070e7777609622a72db12e6695d68d4b36ade",
+  "qwen":qwen,
+  "qwen_rc":int(vals["QWEN_RC"]),
+  "voice":voice,
+  "mutation":"NONE"
+}
+json.dump(out,open(sys.argv[2],"w"),sort_keys=True,indent=2)
+open(sys.argv[2],"a").write("\n")
+print("FRONTIER_RECEIPT_DECRYPTION=PASS")
+print("QWEN_STATE="+str(qwen.get("state")))
+print("VOICE_STATE="+str(voice.get("state")))
+PY
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p bootstrap-relay/permanent-control/evidence
+            cp /tmp/sanitized.json bootstrap-relay/permanent-control/evidence/OPENWEBUI_FRONTIER_VALIDATION_20261001.json
+            git add bootstrap-relay/permanent-control/evidence/OPENWEBUI_FRONTIER_VALIDATION_20261001.json
+            git commit -m "diagnostics(openwebui): persist bounded frontier validation [skip ci]" >/dev/null
+            if git push origin HEAD:main; then
+              echo "FRONTIER_EVIDENCE_COMMIT=PASS"
+              break
+            fi
+            if [ "$attempt" = 4 ]; then
+              echo "FRONTIER_EVIDENCE_COMMIT=FAIL" >&2
+              exit 1
+            fi
+          done
