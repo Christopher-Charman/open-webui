@@ -1,0 +1,235 @@
+name: Gateway Tailscale host read-only probe
+
+on:
+  push:
+    branches:
+      - gateway-tailscale-readonly-probe-20261001
+    paths:
+      - ".github/workflows/gateway-tailscale-readonly-probe.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gateway-tailscale-readonly-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install crypto dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet cryptography
+
+      - name: Resolve signed runtime identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          rm -f /tmp/identity.json /tmp/identity-candidate.json /tmp/id-test.json /tmp/id-test.ctx
+          found=""
+          for url in \
+            "https://www.powerpc-darwin.org/static/ppc-control-identity-live.json" \
+            "https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json" \
+            "https://www.powerpc-darwin.org/ppc-control-identity.json"
+          do
+            code="$(curl -sS -o /tmp/identity-candidate.json -w '%{http_code}' --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" || true)"
+            [ "$code" = "200" ] || continue
+            if python3 - /tmp/identity-candidate.json <<'PY'
+import json,sys,time
+d=json.load(open(sys.argv[1]))
+assert d.get("protocol")=="powerpc-control-v1"
+assert d.get("version")==1
+assert d.get("runtime_id")=="fasthost.powerpc"
+assert d.get("state")=="ready"
+assert d.get("uid")==2257347
+assert d.get("user")=="csh3280350"
+assert d.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+assert set(d.get("tool_contract",[]))=={"runtime_health","read_text","list_dir","terminal_exec"}
+age=int(time.time())-int(d.get("heartbeat_at",0))
+assert 0 <= age < 300, age
+PY
+            then
+              if python3 "$CLIENT" prepare \
+                --identity /tmp/identity-candidate.json \
+                --task-id "identity-validation-only-$GITHUB_RUN_ID" \
+                --tool runtime_health \
+                --arguments '{}' \
+                --authority read_only \
+                --ttl 60 \
+                --output /tmp/id-test.json \
+                --context /tmp/id-test.ctx >/tmp/id-test.out 2>/tmp/id-test.err
+              then
+                cp /tmp/identity-candidate.json /tmp/identity.json
+                found="$url"
+                break
+              fi
+            fi
+          done
+          [ -n "$found" ] || { echo "SIGNED_RUNTIME_IDENTITY=UNAVAILABLE" >&2; exit 1; }
+          echo "SIGNED_RUNTIME_IDENTITY=PASS"
+          echo "IDENTITY_ROUTE=$found"
+          sed -n 's/^IDENTITY_FINGERPRINT=/IDENTITY_FINGERPRINT=/p' /tmp/id-test.out
+
+      - name: Queue bounded host-side Gateway Tailscale probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Gateway Tailscale Probe"
+          git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          TASK_ID="gateway-tailscale-host-probe-$GITHUB_RUN_ID"
+
+          cat >/tmp/probe-command.sh <<'SH'
+set -eu
+echo PROBE_SCHEMA=gateway-tailscale-host-v1
+printf 'USER='; id -un
+printf 'UID='; id -u
+printf 'HOST='; hostname
+echo TAILSCALED_BEGIN
+ps -eo pid=,ppid=,comm=,args= 2>/dev/null | grep '[t]ailscaled' | head -n 10 || true
+echo TAILSCALED_END
+echo TAILSCALE_PATHS_BEGIN
+for p in "$HOME/webapp/tailscale" "$HOME/webapp/tailscale/state" "$HOME/webapp/dev-ssh/management"; do
+  if [ -e "$p" ]; then
+    stat -c '%A %U %G %s %n' "$p" 2>/dev/null || ls -ld "$p"
+  else
+    echo "MISSING $p"
+  fi
+done
+find "$HOME/webapp/tailscale" -maxdepth 2 -type f -print 2>/dev/null | sort | head -n 40 || true
+echo TAILSCALE_PATHS_END
+echo MANAGEMENT_SSH_KEYS_BEGIN
+for p in "$HOME/webapp/dev-ssh/management/ssh_host_ed25519_key.pub" "$HOME/webapp/dev-ssh/management/authorized_keys"; do
+  if [ -f "$p" ]; then
+    echo "FILE=$p"
+    ssh-keygen -lf "$p" 2>/dev/null || true
+  fi
+done
+echo MANAGEMENT_SSH_KEYS_END
+python3 - <<'PY'
+import socket
+for host,port,label in [
+    ("127.0.0.1",2222,"MGMT_SSHD_LOCAL"),
+    ("100.118.16.80",22,"TAILSCALE_SELF_22"),
+]:
+    s=socket.socket()
+    s.settimeout(3)
+    try:
+        s.connect((host,port))
+        try:
+            data=s.recv(128)
+        except Exception:
+            data=b""
+        banner=data.decode("ascii","replace").strip().replace("\n"," ")[:96]
+        print(f"{label}=TCP_PASS BANNER={banner}")
+    except Exception as e:
+        print(f"{label}=TCP_FAIL ERROR={type(e).__name__}:{e}")
+    finally:
+        s.close()
+if __import__("shutil").which("tailscale"):
+    print("TAILSCALE_CLI=IN_PATH")
+else:
+    print("TAILSCALE_CLI=NOT_IN_PATH")
+PY
+echo MUTATION=NONE
+SH
+
+          ARGS="$(python3 - <<'PY'
+import json
+cmd=open("/tmp/probe-command.sh").read()
+print(json.dumps({"command":cmd,"timeout_ms":30000},separators=(",",":")))
+PY
+)"
+
+          python3 "$CLIENT" prepare \
+            --identity /tmp/identity.json \
+            --task-id "$TASK_ID" \
+            --tool terminal_exec \
+            --arguments "$ARGS" \
+            --authority bounded_operator \
+            --allowed terminal_exec \
+            --ttl 600 \
+            --output /tmp/envelope.json \
+            --context /tmp/context.json >/tmp/prepare.out
+
+          printf '%s' "$TASK_ID" >/tmp/task-id
+          sed -n 's/^TASK_PREPARED=/TASK_PREPARED=/p' /tmp/prepare.out
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git checkout -B queue-main origin/main
+            python3 - <<'PY'
+import json
+from pathlib import Path
+qpath=Path("bootstrap-relay/permanent-control/queue.json")
+q=json.loads(qpath.read_text())
+task=json.loads(Path("/tmp/envelope.json").read_text())
+assert q.get("protocol")=="powerpc-control-v1" and q.get("version")==1
+tasks=q.get("tasks")
+assert isinstance(tasks,list) and len(tasks)<128
+if not any(isinstance(t,dict) and t.get("task_id")==task["task_id"] for t in tasks):
+    tasks.append(task)
+qpath.write_text(json.dumps(q,sort_keys=True,separators=(",",":"))+"\n")
+PY
+            git add bootstrap-relay/permanent-control/queue.json
+            git commit -m "control: queue Gateway Tailscale read-only host probe" >/dev/null
+            if git push origin HEAD:main; then
+              echo QUEUE_APPEND=PASS
+              break
+            fi
+            [ "$attempt" != 4 ] || { echo QUEUE_APPEND=FAIL >&2; exit 1; }
+          done
+
+      - name: Retrieve and verify signed result
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLIENT="bootstrap-relay/permanent-control/origin-client.py"
+          id="$(cat /tmp/task-id)"
+          found=""
+          for i in $(seq 1 150); do
+            for url in \
+              "https://www.powerpc-darwin.org/static/powerpc-control-v1/results/$id.json" \
+              "https://www.powerpc-darwin.org/static/powerpc-control-results/$id.json" \
+              "https://www.powerpc-darwin.org/static/powerpc-control-result-$id.json" \
+              "https://www.powerpc-darwin.org/static/ppc-control-result-$id.json"
+            do
+              if curl -fsS --connect-timeout 8 --max-time 15 "$url?t=$(date +%s%N)" -o /tmp/result.json; then
+                found="$url"
+                break 2
+              fi
+            done
+            sleep 2
+          done
+          [ -n "$found" ] || { echo RESULT_RECEIPT=UNAVAILABLE >&2; exit 1; }
+
+          python3 "$CLIENT" decode \
+            --result /tmp/result.json \
+            --context /tmp/context.json \
+            --output /tmp/receipt.json
+
+          python3 - <<'PY'
+import json
+r=json.load(open("/tmp/receipt.json"))
+assert r.get("completion_state")=="COMPLETED",r
+ex=r.get("executor_identity") or {}
+assert ex.get("runtime_id")=="fasthost.powerpc",ex
+assert ex.get("uid")==2257347,ex
+assert ex.get("user")=="csh3280350",ex
+res=r.get("result") or {}
+assert res.get("isError") is not True,r
+text="\n".join(x.get("text","") for x in (res.get("content") or []) if isinstance(x,dict) and x.get("type")=="text")
+assert "PROBE_SCHEMA=gateway-tailscale-host-v1" in text,text
+assert "MUTATION=NONE" in text,text
+print("RESULT_RECEIPT=PASS")
+print("PROBE_OUTPUT_BEGIN")
+print(text)
+print("PROBE_OUTPUT_END")
+PY
