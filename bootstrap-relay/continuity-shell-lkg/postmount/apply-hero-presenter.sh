@@ -20,11 +20,11 @@ STATIC_A="$PKG/static"
 STATIC_B="$FRONTEND/static"
 VOICE="$STATIC_A/pwa-voice-bridge.js"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-BACKUP="$BASE/runtime-domains/pwa-repair-agent/backups/pre-landing-hero-presenter-$STAMP"
+BACKUP="$BASE/runtime-domains/pwa-repair-agent/backups/pre-telemetry-presenter-$STAMP"
 
-VERSION="20260930.4"
-MARKER="continuity-shell-landing-hero-presenter-v$VERSION"
-ASSET_PIN="69b5f84de02e127efcd592bb151795493d290564"
+VERSION="20261001.1"
+MARKER="continuity-shell-telemetry-presenter-v$VERSION"
+ASSET_PIN="dfc809b13f33f88e31e2cb1c20655be2cba6a48b"
 RAW="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$ASSET_PIN/bootstrap-relay/continuity-shell-lkg/postmount"
 JS_NAME="continuity-shell-hero-presenter.js"
 CSS_NAME="continuity-shell-hero-presenter.css"
@@ -94,8 +94,8 @@ NODE="$BASE/.local/node22-glibc217/bin/node"
 [ -n "$NODE" ] || fail node_missing
 "$NODE" --check "$TMP/$JS_NAME" >/dev/null || fail presenter_js_syntax
 
-grep -Fq "const VERSION='20260930.4-landing'" "$TMP/$JS_NAME" || fail presenter_version_missing
-grep -Fq 'Landing presentation only: one neural hero + one READY label.' "$TMP/$CSS_NAME" || fail presenter_css_marker_missing
+grep -Fq "const VERSION='20261001.1-landing'" "$TMP/$JS_NAME" || fail presenter_version_missing
+grep -Fq 'Explicit #chat-pane ownership: large landing hero, compact active-chat telemetry,' "$TMP/$CSS_NAME" || fail presenter_css_marker_missing
 if grep -Eqi '/api/v1/audio/local-voice/warm|warmSelectedVoice|pwa-client-runtime|speechSynthesis|AudioContext|webkitAudioContext'   "$TMP/$JS_NAME" "$TMP/$CSS_NAME"; then
   fail forbidden_runtime_coupling
 fi
@@ -145,7 +145,7 @@ grep -Fq "$MARKER" "$PUB" || fail public_marker_missing
 
 PUBJS="$(curl -fsSL --max-time 15 "https://powerpc-darwin.org/static/$JS_NAME?cb=$(date +%s)")"
 PUBCSS="$(curl -fsSL --max-time 15 "https://powerpc-darwin.org/static/$CSS_NAME?cb=$(date +%s)")"
-printf '%s' "$PUBJS" | grep -Fq "const VERSION='20260930.4-landing'" || fail public_js_wrong
+printf '%s' "$PUBJS" | grep -Fq "const VERSION='20261001.1-landing'" || fail public_js_wrong
 printf '%s' "$PUBCSS" | grep -Fq 'Landing presentation only: one neural hero + one READY label.' || fail public_css_wrong
 
 VOICE2="$(curl -fsSL --max-time 15 "https://powerpc-darwin.org/static/pwa-voice-bridge.js?cb=$(date +%s)")"
@@ -163,12 +163,12 @@ trap - EXIT
 rm -rf "$TMP"
 
 echo "HERO_PRESENTER=PUBLIC_PASS"
-echo "scope=TRUE_LANDING_ONLY_HERO_PLUS_READY"
-echo "geometry=COMPOSER_RELATIVE_ISOLATED_IMPORTANT_NO_LAYOUT_SHIFT"
+echo "scope=EXPLICIT_LANDING_AND_CHAT_TELEMETRY"
+echo "geometry=CHAT_PANE_BOUNDED_NO_FIXED_BODY_OVERLAY"
 echo "legacy_ready=SUPPRESSED_NOT_DUPLICATED"
 echo "legacy_hero=SUPPRESSED_NOT_DUPLICATED"
 echo "footer=REWRITE_EXISTING_ONLY"
-echo "chat_telemetry=UNCHANGED"
+echo "chat_telemetry=COMPACT_SEPARATE_SURFACE"
 echo "audio_changes=NONE"
 echo "voice_bridge=1.3.4-nowarm"
 echo "client_model_runtime=ABSENT"
@@ -176,4 +176,4 @@ echo "stock_loader_bytes=$loader"
 echo "stock_custom_css_bytes=$custom"
 echo "passenger_restart=NONE"
 echo "rollback=$BACKUP"
-echo "NEXT=DEVICE_TEST_SYSTEM_WBW_LCARS_PLUS_ACTIVE_CHAT_EXCLUSION"
+echo "NEXT=DEVICE_TEST_SYSTEM_WBW_LCARS_LANDING_PLUS_ACTIVE_CHAT_COMPACT_TELEMETRY"
