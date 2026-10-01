@@ -31,9 +31,11 @@ jobs:
           out="bootstrap-relay/permanent-control/provider-ssh-hostkeys.txt"
           tmp="$(mktemp)"
           : >"$tmp"
-          for host in 77.68.64.22 213.171.193.5; do
-            echo "HOST=$host" >>"$tmp"
-            if keys="$(ssh-keyscan -T 15 -p 22 -t ed25519,ecdsa,rsa "$host" 2>/dev/null)"; then
+          for target in "77.68.64.22:22" "77.68.64.22:1022" "213.171.193.5:22"; do
+            host="${target%:*}"
+            port="${target##*:}"
+            echo "HOST=$host PORT=$port" >>"$tmp"
+            if keys="$(ssh-keyscan -T 15 -p "$port" -t ed25519,ecdsa,rsa "$host" 2>/dev/null)"; then
               if [ -n "$keys" ]; then
                 while IFS= read -r line; do
                   [ -n "$line" ] || continue
