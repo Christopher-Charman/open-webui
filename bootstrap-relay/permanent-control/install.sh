@@ -7,7 +7,9 @@ WEBAPP="$ACCOUNT/webapp"
 HTDOCS="$ACCOUNT/htdocs"
 STATE="$ACCOUNT/.powerpc-control-v1"
 BIN="$WEBAPP/bin/powerpc-control"
-PIN="d0566fe455113a87065c0602974240ece5293a0b"
+DELEGATE="$WEBAPP/bin/delegate-cagent"
+VERIFY_DELEGATION="$WEBAPP/bin/verify-continuity-delegation"
+PIN="da454445db2b3706299b435a82419ac84495ccd7"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
@@ -28,9 +30,12 @@ chmod 700 "$STATE"
 curl -fsSL --retry 4 "$BASE/daemon.py" -o "$STATE/daemon.py"
 curl -fsSL --retry 4 "$BASE/local-mcp-call.mjs" -o "$STATE/local-mcp-call.mjs"
 curl -fsSL --retry 4 "$BASE/powerpc-control-service" -o "$BIN"
-chmod 700 "$STATE/daemon.py" "$STATE/local-mcp-call.mjs" "$BIN"
+curl -fsSL --retry 4 "$BASE/delegate-cagent.py" -o "$DELEGATE"
+curl -fsSL --retry 4 "$BASE/verify-continuity-delegation.py" -o "$VERIFY_DELEGATION"
+chmod 700 "$STATE/daemon.py" "$STATE/local-mcp-call.mjs" "$BIN" "$DELEGATE" "$VERIFY_DELEGATION"
 
-"$PY" -m py_compile "$STATE/daemon.py"
+"$PY" -m py_compile "$STATE/daemon.py" "$DELEGATE" "$VERIFY_DELEGATION"
+"$PY" "$DELEGATE" --self-test
 "$WEBAPP/.local/node22-glibc217/bin/node" --check "$STATE/local-mcp-call.mjs"
 
 MARK="# POWERPC_CONTROL_V1"
@@ -54,6 +59,8 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
     echo "status_url=https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/status.json"
     echo "transport=GITHUB_ENCRYPTED_QUEUE"
     echo "supervision=CRON_ENSURE_DETACHED"
+    echo "delegation_adapter=$DELEGATE"
+    echo "delegation_verifier=$VERIFY_DELEGATION"
     exit 0
   fi
   sleep 1
