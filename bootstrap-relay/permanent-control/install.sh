@@ -11,7 +11,7 @@ DELEGATE="$WEBAPP/bin/delegate-cagent"
 VERIFY_DELEGATION="$WEBAPP/bin/verify-continuity-delegation"
 DELEGATION_STATE="$ACCOUNT/.continuity-delegation"
 DELEGATION_ACCEPTANCE="$DELEGATION_STATE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json"
-PIN="3cfb96399fa6bc6ee29f137672d4356c1f373425"
+PIN="60f89d79973f12ce77d27a55489897d6df01676a"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
