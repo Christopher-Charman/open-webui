@@ -611,8 +611,16 @@ def main() -> int:
             time.sleep(POLL_SECONDS)
     finally:
         try:
-            PIDFILE.unlink()
+            # PIDFILE is shared across replacement generations.  An older
+            # daemon may finish after a newer daemon has already published its
+            # PID, so only remove the file when we still own it.
+            owner = PIDFILE.read_text(encoding="ascii").strip()
+            if owner == str(os.getpid()):
+                PIDFILE.unlink()
         except FileNotFoundError:
+            pass
+        except (OSError, UnicodeError):
+            # Cleanup must never turn normal daemon shutdown into a failure.
             pass
         conn.close()
         _log("daemon_stop")
