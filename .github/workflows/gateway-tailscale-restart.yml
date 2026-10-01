@@ -54,8 +54,8 @@ jobs:
           git config user.name "Gateway Tailscale Repair"
           git config user.email "61332783+Christopher-Charman@users.noreply.github.com"
           CLIENT="bootstrap-relay/permanent-control/origin-client.py"
-          TASK_ID="gateway-tailscale-restart-$GITHUB_RUN_ID"
-          SCRIPT_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/ab2a9a9aaafcb64d7dbc8a0495ae336f69988442/bootstrap-relay/gateway-tailscale/restart-live.sh"
+          TASK_ID="gateway-tailscale-supervision-deploy-$GITHUB_RUN_ID"
+          SCRIPT_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/bbbd4c99762c788264233b78a4e1698b70107aae/bootstrap-relay/gateway-tailscale/deploy-live.sh"
           COMMAND="curl -fsSL --retry 4 --connect-timeout 10 '$SCRIPT_URL' | bash"
           ARGS="$(COMMAND="$COMMAND" python3 -c 'import json,os; print(json.dumps({"command":os.environ["COMMAND"],"timeout_ms":30000},separators=(",",":")))')"
           python3 "$CLIENT" prepare \
@@ -104,4 +104,4 @@ jobs:
           done
           [ -n "$found" ] || { echo RESULT_RECEIPT=UNAVAILABLE >&2; exit 1; }
           python3 "$CLIENT" decode --result /tmp/result.json --context /tmp/context.json --output /tmp/receipt.json
-          python3 -c 'import json; r=json.load(open("/tmp/receipt.json")); assert r.get("completion_state")=="COMPLETED",r; ex=r.get("executor_identity") or {}; assert ex.get("runtime_id")=="fasthost.powerpc" and ex.get("uid")==2257347 and ex.get("user")=="csh3280350",ex; res=r.get("result") or {}; assert res.get("isError") is not True,r; txt="\n".join(x.get("text","") for x in (res.get("content") or []) if isinstance(x,dict) and x.get("type")=="text"); assert "GATEWAY_TAILSCALE_HOST_RESTORE=PASS" in txt and "MUTATION=TAILSCALED_RESTART_ONLY" in txt,txt; print("RESULT_RECEIPT=PASS"); print("REPAIR_OUTPUT_BEGIN"); print(txt); print("REPAIR_OUTPUT_END")'
+          python3 -c 'import json; r=json.load(open("/tmp/receipt.json")); assert r.get("completion_state")=="COMPLETED",r; ex=r.get("executor_identity") or {}; assert ex.get("runtime_id")=="fasthost.powerpc" and ex.get("uid")==2257347 and ex.get("user")=="csh3280350",ex; res=r.get("result") or {}; assert res.get("isError") is not True,r; txt="\n".join(x.get("text","") for x in (res.get("content") or []) if isinstance(x,dict) and x.get("type")=="text"); assert "TAILSCALE_SUPERVISION_DEPLOY=PASS" in txt and "MUTATION=CONTROL_WATCHDOG_HOOK_PLUS_TAILSCALE_SERVICE" in txt,txt; print("RESULT_RECEIPT=PASS"); print("DEPLOY_OUTPUT_BEGIN"); print(txt); print("DEPLOY_OUTPUT_END")'
