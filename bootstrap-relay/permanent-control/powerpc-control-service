@@ -123,6 +123,72 @@ do_ensure() {
   start_one
 }
 
+diagnose_task() {
+  task_id="${1:-}"
+  [ -n "$task_id" ] || { echo "diagnose requires task_id" >&2; return 2; }
+  "$PY" - "$STATE" "$task_id" <<'PY'
+import json,sqlite3,sys
+from pathlib import Path
+state=Path(sys.argv[1]); task_id=sys.argv[2]
+db=state/"state.sqlite3"; log=state/"daemon.log"
+row=None
+if db.exists():
+    con=sqlite3.connect(f"file:{db}?mode=ro",uri=True)
+    row=con.execute(
+        "SELECT task_id,envelope_sha256,state,received_at,completed_at,result_path "
+        "FROM tasks WHERE task_id=?",(task_id,)
+    ).fetchone()
+    con.close()
+events=[]
+if log.exists():
+    for line in log.read_text(errors="replace").splitlines():
+        if task_id in line:
+            events.append(line)
+events=events[-20:]
+result=state.parent/"htdocs"/".well-known"/"powerpc-control-v1"/"results"/(task_id+".json")
+if row:
+    st=str(row[2] or "").lower()
+    if st=="publish_failed":
+        classification="PUBLISH_FAILED"
+    elif st=="claimed":
+        classification="CLAIMED_STALLED"
+    elif st=="completed":
+        classification="COMPLETED"
+    elif st=="failed":
+        classification="EXECUTION_FAILED"
+    elif st=="expired":
+        classification="EXPIRED"
+    elif st=="needs_authority":
+        classification="NEEDS_AUTHORITY"
+    else:
+        classification="ADMITTED_"+st.upper()
+elif any("decrypt_reject="+task_id+":" in x for x in events):
+    classification="DECRYPT_REJECT"
+elif any("task_conflict="+task_id in x for x in events):
+    classification="TASK_CONFLICT"
+elif any("publish_error="+task_id+":" in x for x in events):
+    classification="PUBLISH_FAILED_LOG_ONLY"
+elif result.exists():
+    classification="RESULT_WITHOUT_DB_ROW"
+else:
+    classification="NOT_OBSERVED"
+out={
+    "task_id":task_id,
+    "classification":classification,
+    "db":None if row is None else {
+        "envelope_sha256":row[1],
+        "state":row[2],
+        "received_at":row[3],
+        "completed_at":row[4],
+        "result_path":row[5],
+    },
+    "local_result_exists":result.exists(),
+    "log_events":events,
+}
+print(json.dumps(out,sort_keys=True,separators=(",",":")))
+PY
+}
+
 case "${1:-ensure}" in
   ensure)
     do_ensure
@@ -150,6 +216,9 @@ case "${1:-ensure}" in
     echo "POWERPC_CONTROL=STOPPED"
     exit 1
     ;;
+  diagnose)
+    diagnose_task "${2:-}"
+    ;;
   restart)
     mkdir -p "$STATE"
     chmod 700 "$STATE"
@@ -169,7 +238,7 @@ case "${1:-ensure}" in
     stop_one
     ;;
   *)
-    echo "usage: $0 [ensure|start|enable|status|restart|stop|disable]" >&2
+    echo "usage: $0 [ensure|start|enable|status|diagnose <task_id>|restart|stop|disable]" >&2
     exit 2
     ;;
 esac
