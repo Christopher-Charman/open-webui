@@ -39,6 +39,20 @@ def collect_local_agent_binding() -> dict:
             "row_count": 0,
         }
 
+    ollama_base_urls = None
+    try:
+        row = cur.execute("select value from config where key=?", ("ollama.base_urls",)).fetchone()
+        if row:
+            raw = row[0]
+            if isinstance(raw, (bytes, bytearray)):
+                raw = raw.decode("utf-8", "replace")
+            try:
+                ollama_base_urls = json.loads(raw) if isinstance(raw, str) else raw
+            except Exception:
+                ollama_base_urls = raw
+    except Exception:
+        ollama_base_urls = None
+
     active_expr = "is_active" if "is_active" in cols else "1"
     q = f"select id,name,base_model_id,{active_expr} from model order by lower(name),id"
     rows = []
@@ -58,6 +72,7 @@ def collect_local_agent_binding() -> dict:
         "db": str(db),
         "rows": rows,
         "row_count": len(rows),
+        "ollama_base_urls": ollama_base_urls,
     }
 
 
