@@ -35,28 +35,17 @@ Result template:
    - runtime `fasthost.powerpc`;
    - UID `2257347`;
    - signature verifies through `origin-client.py`.
-4. Generate an encrypted, harmless `read_text` request against a bounded file such as `CONTROL_PLANE.md`:
-   ```
-   origin-client.py prepare \
-     --identity identity.json \
-     --tool read_text \
-     --arguments '{"path":"CONTROL_PLANE.md","max_bytes":2048}' \
-     --authority read_only \
-     --output task.json \
-     --context task.context.json
-   ```
+4. Generate an encrypted, harmless `list_dir` request for the bounded webapp root. This is the primary transport-liveness probe because it does not depend on unrelated platform-health checks or a guessed file name.
 5. Fetch current `queue.json` through GitHub, append the generated task object without altering unrelated live tasks, and commit it.
-6. Poll only the expected result path. Do not treat heartbeat or queue observation as execution success.
-7. Decode/verify:
-   ```
-   origin-client.py decode \
-     --result result.json \
-     --context task.context.json \
-     --output receipt.json
-   ```
-8. Require `completion_state=COMPLETED`, a runtime receipt bound to `fasthost.powerpc`, and exactly one `read_text` local-MCP action.
-9. Prove duplicate suppression against that completed envelope, then repeat with another bounded read-only primitive such as `list_dir`.
-10. Repeat with one bounded non-destructive `terminal_exec` under `bounded_operator` and require `completion_state=COMPLETED`.
+6. Poll only the expected result path. Allow up to 240 seconds for the current public-static receipt path; observed receipt publication can exceed 100 seconds. Do not treat heartbeat or queue observation as execution success.
+7. Decode/verify the signed encrypted result and require:
+   - `completion_state=COMPLETED`;
+   - executor/runtime identity bound to `fasthost.powerpc`;
+   - exactly one `list_dir` local-MCP action;
+   - non-empty bounded text result.
+8. Prove duplicate suppression against that completed envelope by checking the result bytes and `published_at` remain unchanged after additional receiver polling cycles.
+9. Repeat with `read_text` against the long-established live controller `passenger_wsgi.py`, requiring `completion_state=COMPLETED` and non-empty text.
+10. Repeat with one bounded non-destructive `terminal_exec` under `bounded_operator`, requiring `completion_state=COMPLETED`.
 
 `runtime_health` remains available as a platform-health diagnostic, but it executes the wider architecture-health script and is not the owned-transport liveness gate. A degraded or slow unrelated service must not be misclassified as communication-path failure.
 
