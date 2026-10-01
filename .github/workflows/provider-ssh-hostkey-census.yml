@@ -33,7 +33,7 @@ jobs:
           : >"$tmp"
           for host in 77.68.64.22 213.171.193.5; do
             echo "HOST=$host" >>"$tmp"
-            if keys="$(ssh-keyscan -T 15 -p 22 -t ed25519,rsa "$host" 2>/dev/null)"; then
+            if keys="$(ssh-keyscan -T 15 -p 22 -t ed25519,ecdsa,rsa "$host" 2>/dev/null)"; then
               if [ -n "$keys" ]; then
                 while IFS= read -r line; do
                   [ -n "$line" ] || continue
