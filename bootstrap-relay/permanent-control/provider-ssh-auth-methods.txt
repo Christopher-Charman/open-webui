@@ -1,0 +1,3 @@
+HOST=77.68.64.22 PORT=22 USER=csh3280350
+debug1: Authentications that can continue: publickey,password
+csh3280350@77.68.64.22: Permission denied (publickey,password).
