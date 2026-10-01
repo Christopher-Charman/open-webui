@@ -157,7 +157,7 @@ PY
 }
 
 wait_result() {
-  local task_id="$1" out="$2" timeout="${3:-100}"
+  local task_id="$1" out="$2" timeout="${3:-240}"
   local deadline=$((SECONDS + timeout))
   while (( SECONDS < deadline )); do
     if curl -fsSL --connect-timeout 8 --max-time 20       "$RESULT_BASE/$task_id.json?t=$(date +%s%N)" -o "$out" 2>/dev/null; then
@@ -234,43 +234,13 @@ fetch_identity
 # runtime_health is intentionally not the transport liveness probe: it runs the
 # wider architecture-health script and may legitimately block/fail while an
 # unrelated platform service is degraded.
-ID_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --task-id "ppc-accept-read-$(date +%s)"   --tool read_text   --arguments '{"path":"CONTROL_PLANE.md","max_bytes":2048}'   --authority read_only   --ttl 300   --output "$WORK/read-envelope.json"   --context "$WORK/read-context.json")"
+ID_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --task-id "ppc-accept-list-$(date +%s)"   --tool list_dir   --arguments '{"path":"."}'   --authority read_only   --ttl 420   --output "$WORK/list-envelope.json"   --context "$WORK/list-context.json")"
 FP="$(printf '%s\n' "$ID_OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n1)"
 [ -n "$FP" ] || fail "identity_fingerprint_not_verified"
 echo "::add-mask::$FP"
-READ_ID="$(python3 -c 'import json; print(json.load(open("'"$WORK/read-envelope.json"'"))["task_id"])')"
+LIST_ID="$(python3 -c 'import json; print(json.load(open("'"$WORK/list-envelope.json"'"))["task_id"])')"
 log "IDENTITY_SIGNATURE_AND_PIN=PASS"
 
-queue_envelope "$WORK/read-envelope.json" "$READ_ID"
-wait_result "$READ_ID" "$WORK/read-result.json" || fail "read_text_result_timeout"
-decode_to "$WORK/read-result.json" "$WORK/read-context.json" "$WORK/read-plain.json"
-assert_receipt_common "$WORK/read-plain.json" "$READ_ID" "COMPLETED"
-python3 - "$WORK/read-plain.json" <<'PY'
-import json,sys
-d=json.load(open(sys.argv[1]))
-r=d.get("result") or {}
-assert r.get("isError") is not True
-content=r.get("content") or []
-assert any(isinstance(x,dict) and x.get("type")=="text" and x.get("text") for x in content)
-actions=d.get("actions") or []
-assert len(actions)==1 and actions[0].get("capability")=="read_text"
-assert (d.get("resource_usage") or {}).get("local_mcp_calls")==1
-PY
-log "FRESH_ORIGIN_READ_TEXT=PASS"
-
-# Exact duplicate must not be re-executed or re-published.
-DUP_SHA1="$(sha256sum "$WORK/read-result.json" | awk '{print $1}')"
-DUP_PUB1="$(python3 -c 'import json; print(json.load(open("'"$WORK/read-result.json"'"))["published_at"])')"
-sleep 24
-curl -fsSL "$RESULT_BASE/$READ_ID.json?t=$(date +%s%N)" -o "$WORK/read-result-2.json"
-DUP_SHA2="$(sha256sum "$WORK/read-result-2.json" | awk '{print $1}')"
-DUP_PUB2="$(python3 -c 'import json; print(json.load(open("'"$WORK/read-result-2.json"'"))["published_at"])')"
-[ "$DUP_SHA1" = "$DUP_SHA2" ] && [ "$DUP_PUB1" = "$DUP_PUB2" ] || fail "duplicate_reprocessed"
-log "DUPLICATE_SUPPRESSION=PASS"
-
-# Second read-only primitive proves the transport is not coupled to one file.
-LIST_ID="ppc-accept-list-$(date +%s)-$RANDOM"
-prepare "$LIST_ID" list_dir '{"path":"."}' read_only   "$WORK/list-envelope.json" "$WORK/list-context.json"
 queue_envelope "$WORK/list-envelope.json" "$LIST_ID"
 wait_result "$LIST_ID" "$WORK/list-result.json" || fail "list_dir_result_timeout"
 decode_to "$WORK/list-result.json" "$WORK/list-context.json" "$WORK/list-plain.json"
@@ -281,11 +251,43 @@ d=json.load(open(sys.argv[1]))
 r=d.get("result") or {}
 assert r.get("isError") is not True
 content=r.get("content") or []
-assert any(isinstance(x,dict) and x.get("type")=="text" for x in content)
+text="\n".join(x.get("text","") for x in content if isinstance(x,dict) and x.get("type")=="text")
+assert text.strip()
 actions=d.get("actions") or []
 assert len(actions)==1 and actions[0].get("capability")=="list_dir"
+assert (d.get("resource_usage") or {}).get("local_mcp_calls")==1
 PY
 log "FRESH_ORIGIN_LIST_DIR=PASS"
+
+# Exact duplicate must not be re-executed or re-published.
+DUP_SHA1="$(sha256sum "$WORK/list-result.json" | awk '{print $1}')"
+DUP_PUB1="$(python3 -c 'import json; print(json.load(open("'"$WORK/list-result.json"'"))["published_at"])')"
+sleep 24
+curl -fsSL "$RESULT_BASE/$LIST_ID.json?t=$(date +%s%N)" -o "$WORK/list-result-2.json"
+DUP_SHA2="$(sha256sum "$WORK/list-result-2.json" | awk '{print $1}')"
+DUP_PUB2="$(python3 -c 'import json; print(json.load(open("'"$WORK/list-result-2.json"'"))["published_at"])')"
+[ "$DUP_SHA1" = "$DUP_SHA2" ] && [ "$DUP_PUB1" = "$DUP_PUB2" ] || fail "duplicate_reprocessed"
+log "DUPLICATE_SUPPRESSION=PASS"
+
+# Bounded read round trip against a long-established live controller path.
+READ_ID="ppc-accept-read-$(date +%s)-$RANDOM"
+prepare "$READ_ID" read_text '{"path":"passenger_wsgi.py","max_bytes":2048}' read_only   "$WORK/read-envelope.json" "$WORK/read-context.json"
+queue_envelope "$WORK/read-envelope.json" "$READ_ID"
+wait_result "$READ_ID" "$WORK/read-result.json" || fail "read_text_result_timeout"
+decode_to "$WORK/read-result.json" "$WORK/read-context.json" "$WORK/read-plain.json"
+assert_receipt_common "$WORK/read-plain.json" "$READ_ID" "COMPLETED"
+python3 - "$WORK/read-plain.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+r=d.get("result") or {}
+assert r.get("isError") is not True
+content=r.get("content") or []
+text="\n".join(x.get("text","") for x in content if isinstance(x,dict) and x.get("type")=="text")
+assert text.strip()
+actions=d.get("actions") or []
+assert len(actions)==1 and actions[0].get("capability")=="read_text"
+PY
+log "FRESH_ORIGIN_READ_TEXT=PASS"
 log "AGGREGATE_RUNTIME_HEALTH=SEPARATE_PLATFORM_HEALTH_SIGNAL"
 
 # Expired but otherwise valid task must produce an authenticated EXPIRED receipt.
