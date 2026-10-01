@@ -184,9 +184,8 @@ jobs:
               x.get("text","") for x in (result.get("content") or [])
               if isinstance(x,dict) and x.get("type")=="text"
           )
-          assert "probe=OPENWEBUI_RECOVERY_READONLY_V1" in text
-          assert "rule=NO_REPAIR_PERFORMED" in text
-          assert "OPENWEBUI_RECOVERY_READONLY_V1=END" in text
+          assert '"schema":"openwebui-frontier-validation-v1"' in text, text
+          assert '"mutation":"NONE"' in text, text
           print("RECOVERY_PROBE_DECRYPTION=PASS")
           print("PROBE_OUTPUT_BEGIN")
           print(text)
