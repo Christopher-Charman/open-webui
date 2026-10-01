@@ -95,7 +95,7 @@ jobs:
           TASK_ID="owui-recovery-probe-$GITHUB_RUN_ID"
 
           COMMAND="set -eu; curl -fsSL --retry 4 --connect-timeout 10 '$PROBE_URL' | python3"
-          ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":90000},separators=(",",":")))' "$COMMAND")"
+          ARGS="$(python3 -c 'import json,sys; print(json.dumps({"command":sys.argv[1],"timeout_ms":30000},separators=(",",":")))' "$COMMAND")"
 
           python3 "$CLIENT" prepare \
             --identity /tmp/identity.json \
