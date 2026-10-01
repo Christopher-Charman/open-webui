@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WEBAPP_ROOT="/home/storage/781/4477781/user/webapp"
+TS="$WEBAPP_ROOT/tailscale"
+BIN="$TS/bin"
+STATE="$TS/state"
+SOCK="$STATE/tailscaled.sock"
+PIDFILE="$STATE/tailscaled.pid"
+LOG="$STATE/tailscaled.log"
+LOCK="$STATE/tailscale-service.lock"
+
+mkdir -p "$STATE"
+chmod 700 "$TS" "$STATE" 2>/dev/null || true
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+is_live() {
+  local pid=""
+  [ -s "$PIDFILE" ] || return 1
+  pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+  [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -Fq "$BIN/tailscaled"
+}
+
+start_daemon() {
+  if is_live; then
+    echo "TAILSCALE_SERVICE=ALREADY_LIVE PID=$(cat "$PIDFILE")"
+    return 0
+  fi
+
+  test -x "$BIN/tailscaled"
+  test -x "$BIN/tailscale"
+  test -s "$STATE/tailscaled.state"
+  command -v setsid >/dev/null 2>&1
+
+  rm -f "$SOCK" "$PIDFILE"
+  if [ -f "$LOG" ] && [ "$(wc -c <"$LOG")" -gt 5242880 ]; then
+    mv -f "$LOG" "$LOG.1"
+  fi
+  printf '\n[%s] tailscale-service start\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$LOG"
+
+  setsid "$BIN/tailscaled" \
+    --tun=userspace-networking \
+    --state="$STATE/tailscaled.state" \
+    --socket="$SOCK" \
+    >>"$LOG" 2>&1 </dev/null &
+  local pid="$!"
+  printf '%s\n' "$pid" >"$PIDFILE"
+
+  for _ in $(seq 1 80); do
+    if [ -S "$SOCK" ] && kill -0 "$pid" 2>/dev/null; then
+      echo "TAILSCALE_SERVICE=STARTED PID=$pid"
+      return 0
+    fi
+    sleep 0.25
+  done
+
+  echo "TAILSCALE_SERVICE=START_FAILED PID=$pid" >&2
+  tail -n 40 "$LOG" >&2 || true
+  return 1
+}
+
+stop_daemon() {
+  if ! is_live; then
+    rm -f "$SOCK" "$PIDFILE"
+    echo "TAILSCALE_SERVICE=ALREADY_STOPPED"
+    return 0
+  fi
+  local pid
+  pid="$(cat "$PIDFILE")"
+  kill "$pid"
+  for _ in $(seq 1 40); do
+    kill -0 "$pid" 2>/dev/null || break
+    sleep 0.25
+  done
+  kill -0 "$pid" 2>/dev/null && { echo "TAILSCALE_SERVICE=STOP_TIMEOUT PID=$pid" >&2; return 1; }
+  rm -f "$SOCK" "$PIDFILE"
+  echo "TAILSCALE_SERVICE=STOPPED PID=$pid"
+}
+
+status_daemon() {
+  if ! is_live; then
+    echo "TAILSCALE_SERVICE=DOWN"
+    return 1
+  fi
+  local pid ip4
+  pid="$(cat "$PIDFILE")"
+  echo "TAILSCALE_SERVICE=LIVE PID=$pid"
+  "$BIN/tailscale" --socket="$SOCK" status --peers=false
+  ip4="$("$BIN/tailscale" --socket="$SOCK" ip -4 | head -n 1)"
+  echo "TAILSCALE_IPV4=$ip4"
+  "$BIN/tailscale" --socket="$SOCK" serve status
+}
+
+case "${1:-status}" in
+  start|ensure)
+    start_daemon
+    ;;
+  status)
+    status_daemon
+    ;;
+  stop)
+    stop_daemon
+    ;;
+  restart)
+    stop_daemon
+    start_daemon
+    ;;
+  *)
+    echo "usage: $0 {start|ensure|status|stop|restart}" >&2
+    exit 64
+    ;;
+esac
