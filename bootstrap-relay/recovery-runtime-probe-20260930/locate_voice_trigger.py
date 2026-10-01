@@ -83,8 +83,25 @@ def locate_voice_triggers(
     }
 
 
+def compact_voice_trigger_summary(out: dict[str, Any]) -> dict[str, Any]:
+    line_index: dict[str, dict[str, list[int]]] = {}
+    for hit in out.get("hits") or []:
+        name = str(hit.get("file") or "")
+        line = int(hit.get("line") or 0)
+        for kind in hit.get("kinds") or []:
+            line_index.setdefault(name, {}).setdefault(str(kind), []).append(line)
+    return {
+        "state": out.get("state"),
+        "candidate_files": out.get("candidate_files") or [],
+        "warm_path_present": bool(out.get("warm_path_present")),
+        "file_flags": out.get("file_flags") or {},
+        "line_index": line_index,
+        "mutation": "NONE",
+    }
+
+
 def main() -> int:
-    out = locate_voice_triggers()
+    out = compact_voice_trigger_summary(locate_voice_triggers())
     print(json.dumps(out, sort_keys=True, separators=(",", ":")))
     return 0
 
