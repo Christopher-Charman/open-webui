@@ -57,7 +57,7 @@ jobs:
           TASK_ID="gateway-tailscale-restart-$GITHUB_RUN_ID"
           SCRIPT_URL="https://raw.githubusercontent.com/Christopher-Charman/open-webui/ab2a9a9aaafcb64d7dbc8a0495ae336f69988442/bootstrap-relay/gateway-tailscale/restart-live.sh"
           COMMAND="curl -fsSL --retry 4 --connect-timeout 10 '$SCRIPT_URL' | bash"
-          ARGS="$(COMMAND="$COMMAND" python3 -c 'import json,os; print(json.dumps({"command":os.environ["COMMAND"],"timeout_ms":60000},separators=(",",":")))')"
+          ARGS="$(COMMAND="$COMMAND" python3 -c 'import json,os; print(json.dumps({"command":os.environ["COMMAND"],"timeout_ms":30000},separators=(",",":")))')"
           python3 "$CLIENT" prepare \
             --identity /tmp/identity.json \
             --task-id "$TASK_ID" \
