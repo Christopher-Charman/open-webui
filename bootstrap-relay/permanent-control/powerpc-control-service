@@ -14,6 +14,8 @@ LOG="$STATE/service.log"
 DELEGATION_STATE="$ACCOUNT/.continuity-delegation"
 DELEGATION_ACCEPTANCE="$DELEGATION_STATE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json"
 DELEGATION_VERIFY="$WEBAPP/bin/verify-continuity-delegation"
+CAGENT_WATCH_STATE="$STATE/cagent-watch.state"
+CAGENT_WATCH_INTERVAL="${PPC_CONTROL_CAGENT_WATCH_SECONDS:-300}"
 
 PY=""
 for p in \
@@ -118,12 +120,16 @@ do_ensure() {
   if command -v flock >/dev/null 2>&1; then
     flock -n 9 || return 0
   fi
-  if healthy; then return 0; fi
+  if healthy; then
+    cagent_watch || true
+    return 0
+  fi
   if alive; then
     echo "POWERPC_CONTROL=STALE_RECOVERY heartbeat_age=$(heartbeat_age)" >>"$LOG"
     stop_one
   fi
   start_one
+  cagent_watch || true
 }
 
 diagnose_task() {
@@ -261,6 +267,63 @@ except Exception as e:
 PY
 }
 
+cagent_watch() {
+  force="${1:-0}"
+  now="$(date +%s)"
+  case "$CAGENT_WATCH_INTERVAL" in
+    ''|*[!0-9]*) interval=300 ;;
+    *) interval="$CAGENT_WATCH_INTERVAL" ;;
+  esac
+
+  if [ "$force" != "1" ] && [ -s "$CAGENT_WATCH_STATE" ]; then
+    last="$("$PY" - "$CAGENT_WATCH_STATE" <<'PY'
+import sys
+try:
+    for line in open(sys.argv[1],encoding="utf-8"):
+        if line.startswith("checked_at="):
+            print(int(line.split("=",1)[1].strip()))
+            break
+    else:
+        print(0)
+except Exception:
+    print(0)
+PY
+)"
+    case "$last" in ''|*[!0-9]*) last=0 ;; esac
+    [ $((now-last)) -ge "$interval" ] || return 0
+  fi
+
+  if output="$(cagent_status 2>&1)"; then
+    rc=0
+  else
+    rc=$?
+  fi
+  state="$(printf '%s\n' "$output" | sed -n 's/^INTER_AGENT_CONTROL_PLANE=//p' | head -n 1)"
+  [ -n "$state" ] || state="UNVERIFIED"
+  fingerprint="$(printf '%s\n' "$output" | sed -n 's/^EVIDENCE_FINGERPRINT=//p' | head -n 1)"
+
+  previous=""
+  if [ -s "$CAGENT_WATCH_STATE" ]; then
+    previous="$(sed -n 's/^state=//p' "$CAGENT_WATCH_STATE" | head -n 1)"
+  fi
+
+  tmp="$CAGENT_WATCH_STATE.$"
+  {
+    echo "checked_at=$now"
+    echo "state=$state"
+    echo "rc=$rc"
+    echo "fingerprint=$fingerprint"
+  } >"$tmp"
+  chmod 600 "$tmp"
+  mv "$tmp" "$CAGENT_WATCH_STATE"
+
+  if [ "$state" != "$previous" ]; then
+    printf '%s CAGENT_CONTROL=%s rc=%s fingerprint=%s\n'       "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$state" "$rc" "$fingerprint" >>"$LOG"
+  fi
+
+  [ "$rc" -eq 0 ]
+}
+
 case "${1:-ensure}" in
   ensure)
     do_ensure
@@ -294,6 +357,10 @@ case "${1:-ensure}" in
   cagent-status)
     cagent_status
     ;;
+  cagent-watch)
+    cagent_watch 1
+    cat "$CAGENT_WATCH_STATE"
+    ;;
   restart)
     mkdir -p "$STATE"
     chmod 700 "$STATE"
@@ -313,7 +380,7 @@ case "${1:-ensure}" in
     stop_one
     ;;
   *)
-    echo "usage: $0 [ensure|start|enable|status|diagnose <task_id>|cagent-status|restart|stop|disable]" >&2
+    echo "usage: $0 [ensure|start|enable|status|diagnose <task_id>|cagent-status|cagent-watch|restart|stop|disable]" >&2
     exit 2
     ;;
 esac
