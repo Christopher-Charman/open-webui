@@ -16,7 +16,7 @@ Canonical queue:
 
 Runtime identity:
 
-`https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/identity.json`
+`https://www.powerpc-darwin.org/static/ppc-control-identity-live.json`
 
 Runtime status:
 
@@ -24,7 +24,7 @@ Runtime status:
 
 Result template:
 
-`https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/results/<task_id>.json`
+`https://www.powerpc-darwin.org/static/ppc-control-results/<task_id>.json`
 
 ## Fresh-origin positive acceptance
 
