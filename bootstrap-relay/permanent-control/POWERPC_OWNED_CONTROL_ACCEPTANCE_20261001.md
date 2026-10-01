@@ -95,8 +95,16 @@ Durable machine surfaces:
 - `CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json`
 - `verify-continuity-delegation.py`
 - `powerpc-control cagent-status`
+- `powerpc-control cagent-watch`
 
-The status command recomputes the live evidence and compares it with the checkpoint fingerprint. It fails closed on drift rather than silently preserving an accepted label.
+The status command recomputes the live evidence and compares it with the checkpoint fingerprint. It fails closed on drift rather than silently preserving an accepted label. The existing cron-driven `powerpc-control ensure` path runs the watcher at a bounded interval (default 300 seconds); it records only state transitions and does not auto-repair ambiguous evidence drift.
+
+Automation commits:
+- `de39e6f125ce84c006528ad3c2c22a342472ad0f` — deterministic acceptance verifier.
+- `da454445db2b3706299b435a82419ac84495ccd7` — durable machine-readable acceptance checkpoint.
+- `9a443cf5ca29c2d4272cc63f501435c0e3685f91` — machine-verifiable `cagent-status`.
+- `3cfb96399fa6bc6ee29f137672d4356c1f373425` — bounded transition-only drift watcher.
+- `94f898abd9563be12b3ad70a276a60e80647225e` — installer pin advanced to the watcher build.
 
 ## Boundary after promotion
 
