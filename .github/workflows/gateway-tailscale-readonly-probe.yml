@@ -83,6 +83,17 @@ jobs:
           for p in "$HOME/tailscale" "$HOME/tailscale/state" "$HOME/dev-ssh/management"; do if [ -e "$p" ]; then stat -c "%A %U %G %s %n" "$p" 2>/dev/null || ls -ld "$p"; else echo "MISSING $p"; fi; done
           find "$HOME/tailscale" -maxdepth 2 -type f -print 2>/dev/null | sort | head -n 40 || true
           echo TAILSCALE_PATHS_END
+          echo TAILSCALE_STATE_BEGIN
+          printf "PID_FILE="; cat "$HOME/tailscale/state/tailscaled.pid" 2>/dev/null || echo MISSING
+          ls -la "$HOME/tailscale/state" 2>/dev/null | sed -n "1,60p" || true
+          echo TAILSCALE_LOG_TAIL_BEGIN
+          tail -n 80 "$HOME/tailscale/state/tailscaled.log" 2>/dev/null | sed -E "s/((auth|api|access|refresh)?token|authkey|key)=[^ ]+/\\1=[REDACTED]/Ig" || true
+          echo TAILSCALE_LOG_TAIL_END
+          echo LIFECYCLE_REFERENCES_BEGIN
+          crontab -l 2>/dev/null | grep -Ei "tailscale|tailscaled|dev-ssh|management" || true
+          find "$HOME/bin" -maxdepth 1 -type f -print 2>/dev/null | grep -Ei "tail|ssh|gateway" || true
+          grep -R -n -E "tailscaled|tailscale/bin" "$HOME/bin" "$HOME"/*.sh 2>/dev/null | head -n 100 || true
+          echo LIFECYCLE_REFERENCES_END
           echo MANAGEMENT_SSH_KEYS_BEGIN
           for p in "$HOME/dev-ssh/management/ssh_host_ed25519_key.pub" "$HOME/dev-ssh/management/authorized_keys"; do if [ -f "$p" ]; then echo "FILE=$p"; ssh-keygen -lf "$p" 2>/dev/null || true; fi; done
           echo MANAGEMENT_SSH_KEYS_END
