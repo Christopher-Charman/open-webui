@@ -1,9 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-route-rootfix-health-01",
+  "request_id": "cg-20261002-ollama-owui-layout-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "runtime_health",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "set -eu; echo '=== identity ==='; id; pwd; echo '=== processes ==='; ps -eo pid,ppid,lstart,args | grep -E '[o]llama|[o]pen-webui' || true; echo '=== executable resolution ==='; command -v ollama || true; readlink -f \"$(command -v ollama)\" 2>/dev/null || true; echo '=== relevant paths ==='; for p in /home/storage/781/4477781/user/webapp/envs/openwebui /home/storage/781/4477781/user/webapp/runtime-domains /home/storage/781/4477781/user/webapp/bin /home/storage/781/4477781/user/.ollama /home/storage/781/4477781/user/webapp/.ollama; do if [ -e \"$p\" ]; then ls -ld \"$p\"; fi; done; echo '=== ollama process environment names ==='; pid=$(ps -eo pid,args | awk '/[o]llama serve/{print $1; exit}'); if [ -n \"${pid:-}\" ] && [ -r \"/proc/$pid/environ\" ]; then tr '\\0' '\\n' < \"/proc/$pid/environ\" | grep -E '^(HOME|OLLAMA_HOST|OLLAMA_MODELS|PATH)=' || true; fi; echo '=== endpoints ==='; curl -fsS --max-time 3 http://127.0.0.1:11434/api/version; echo; curl -fsS --max-time 3 http://127.0.0.1:18080/health; echo"
+  },
+  "authority_ceiling": "bounded_operator",
   "ttl": 300
 }
