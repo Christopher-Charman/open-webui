@@ -19,11 +19,11 @@ jobs:
         shell: bash
         run: |
           set -eu
-          url="https://www.powerpc-darwin.org/static/powerpc-control-v1/results/ppc-evenio-sshnet-2f0c74b44e9bb941.json"
+          url="https://www.powerpc-darwin.org/static/powerpc-control-v1/results/ppc-evenio-sshnet-c659a96da80abaad.json"
           ok=0
           for i in $(seq 1 72); do
             if curl -fsSL --connect-timeout 8 --max-time 20 "$url?t=$(date +%s%N)" -o result.json; then
-              if grep -q '"task_id":"ppc-evenio-sshnet-2f0c74b44e9bb941"' result.json && grep -q '"kind":"result"' result.json; then
+              if grep -q '"task_id":"ppc-evenio-sshnet-c659a96da80abaad"' result.json && grep -q '"kind":"result"' result.json; then
                 ok=1
                 break
               fi
@@ -34,7 +34,7 @@ jobs:
       - name: Upload encrypted result
         uses: actions/upload-artifact@v4
         with:
-          name: ppc-evenio-sshnet-2f0c74b44e9bb941
+          name: ppc-evenio-sshnet-c659a96da80abaad
           path: result.json
           if-no-files-found: error
           retention-days: 1
