@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-owui-ollama-safe-audit-06",
+  "request_id": "cg-20261002-webapp-list-08",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "terminal_exec",
+  "tool": "list_dir",
   "arguments": {
-    "command": "set -eu; W=/home/storage/781/4477781/user/webapp; DB=$W/openwebui-data/webui.db; echo '--- ollama env nonsecret ---'; pid=$(ps -eo pid,args | awk '/\\/781\\/4477781\\/user\\/webapp\\/miniconda\\/bin\\/ollama serve/{print $1; exit}'); if [ -n \"${pid:-}\" ] && [ -r /proc/$pid/environ ]; then tr '\\0' '\\n' < /proc/$pid/environ | grep -E '^(HOME|OLLAMA_(HOST|CONTEXT_LENGTH|KEEP_ALIVE|MAX_LOADED_MODELS|NUM_PARALLEL|FLASH_ATTENTION|KV_CACHE_TYPE|MAX_QUEUE|LOAD_TIMEOUT))=' | sort || true; fi; echo '--- openwebui env nonsecret ---'; pid=$(ps -eo pid,args | awk '/\\/781\\/4477781\\/user\\/webapp\\/envs\\/openwebui\\/bin\\/open-webui serve/{print $1; exit}'); if [ -n \"${pid:-}\" ] && [ -r /proc/$pid/environ ]; then tr '\\0' '\\n' < /proc/$pid/environ | grep -E '^(DATA_DIR|HF_HOME|OLLAMA_(BASE_URL|API_BASE_URL|CONTEXT_LENGTH|KEEP_ALIVE|MAX_LOADED_MODELS|NUM_PARALLEL)|AIOHTTP_CLIENT_TIMEOUT|OPENWEBUI_(TOOL_RESULT_MODEL_CHAR_CAP|TOOL_RESULT_MODEL_TURN_CHAR_CAP|TOOL_RESULT_MODEL_MIN_CHAR_CAP|TOOL_CALL_REPLAY_CAP|CONTINUITY_EXTRACTIVE_ONLY|CONTINUITY_REDUCER_TARGET_CHARS|CONTINUITY_REDUCER_RECENT_CHARS|CONTINUITY_REDUCER_EMBED_CHARS|CONTINUITY_REDUCER_ITEM_CHARS))=' | sort || true; fi; echo '--- ollama api ps ---'; curl -fsS --max-time 4 http://127.0.0.1:11434/api/ps || true; echo; echo '--- db relevant schema only ---'; if [ -r \"$DB\" ]; then $W/envs/openwebui/bin/python - \"$DB\" <<'PY'\nimport sqlite3,sys\nc=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro',uri=True)\nfor name,sql in c.execute(\"select name,sql from sqlite_master where type='table' order by name\"):\n if any(x in name.lower() for x in ('config','model','setting','function','tool')):\n  print(name, (sql or '')[:1200])\nPY\nfi"
+    "path": "/home/storage/781/4477781/user/webapp"
   },
-  "authority_ceiling": "bounded_operator",
+  "authority_ceiling": "read_only",
   "ttl": 300
 }
