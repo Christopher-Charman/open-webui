@@ -1,0 +1,36 @@
+name: Evenio ChatGPT Owned Control Request
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bootstrap-relay/evenio-control/chatgpt-request.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: evenio-chatgpt-owned-control
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Install crypto dependency
+        run: python3 -m pip install --disable-pip-version-check --quiet cryptography
+
+      - name: Execute bounded owned-control request
+        shell: bash
+        env:
+          EVENIO_CHATGPT_IDENTITY_URL: https://evenio.online/.well-known/evenio-control-v1/identity.json
+          EVENIO_CHATGPT_RESULT_BASE: https://evenio.online/.well-known/evenio-control-v1/results
+        run: |
+          chmod 700 bootstrap-relay/evenio-control/chatgpt-owned-control-run.sh
+          bootstrap-relay/evenio-control/chatgpt-owned-control-run.sh
