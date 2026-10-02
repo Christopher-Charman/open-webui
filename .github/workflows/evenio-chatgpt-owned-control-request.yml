@@ -29,8 +29,8 @@ jobs:
       - name: Execute bounded owned-control request
         shell: bash
         env:
-          EVENIO_CHATGPT_IDENTITY_URL: https://evenio.online/.well-known/evenio-control-v1/identity.json
-          EVENIO_CHATGPT_RESULT_BASE: https://evenio.online/.well-known/evenio-control-v1/results
+          EVENIO_CHATGPT_IDENTITY_URL: https://evenio.online/evenio-control-v1/identity.json
+          EVENIO_CHATGPT_RESULT_BASE: https://evenio.online/evenio-control-v1/results
         run: |
           chmod 700 bootstrap-relay/evenio-control/chatgpt-owned-control-run.sh
           bootstrap-relay/evenio-control/chatgpt-owned-control-run.sh
