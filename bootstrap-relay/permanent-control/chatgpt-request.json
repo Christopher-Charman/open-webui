@@ -1,12 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-evenio-ollama-powerpc-topology-02",
+  "request_id": "cg-20261002-ollama-openwebui-effective-config-04",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "printf '%s\\n' '--- processes ---'; ps -efww | grep -E '[o]pen-webui|[o]llama serve|[p]assenger_wsgi|[o]pen-terminal' | sed -E 's/(--api-key|--token|--password)(=| )[[:graph:]]+/\\1\\2<redacted>/g'; printf '%s\\n' '--- listeners ---'; (ss -ltn 2>/dev/null || netstat -ltn 2>/dev/null) | grep -E ':(18080|11434|11435|9900|19900)[[:space:]]' || true; printf '%s\\n' '--- webui db candidates ---'; find /home/storage/781/4477781/user/webapp -maxdepth 5 -type f \\( -name 'webui.db' -o -name '*.sqlite' \\) -print 2>/dev/null | head -20",
-    "timeout": 20
+    "command": "set -eu; W=/home/storage/781/4477781/user/webapp; DB=$W/openwebui-data/webui.db; echo '--- ollama env ---'; pid=$(ps -eo pid,args | awk '/\/781\/4477781\/user\/webapp\/miniconda\/bin\/ollama serve/{print $1; exit}'); if [ -n \"${pid:-}\" ] && [ -r /proc/$pid/environ ]; then tr '\\0' '\\n' < /proc/$pid/environ | grep -E '^(HOME|PATH|OLLAMA_[A-Z0-9_]+)=' | sort; fi; echo '--- openwebui env relevant ---'; pid=$(ps -eo pid,args | awk '/\/781\/4477781\/user\/webapp\/envs\/openwebui\/bin\/open-webui serve/{print $1; exit}'); if [ -n \"${pid:-}\" ] && [ -r /proc/$pid/environ ]; then tr '\\0' '\\n' < /proc/$pid/environ | grep -E '^(DATA_DIR|HF_HOME|OLLAMA_[A-Z0-9_]+|OPENWEBUI_[A-Z0-9_]+|AIOHTTP_CLIENT_TIMEOUT)=' | sort; fi; echo '--- db schema ---'; $W/envs/openwebui/bin/python - \"$DB\" <<'PY'\nimport sqlite3,sys\np=sys.argv[1]\nc=sqlite3.connect('file:'+p+'?mode=ro',uri=True)\nfor name,sql in c.execute(\"select name,sql from sqlite_master where type='table' order by name\"):\n    if name in ('config','model','function','tool','user','chat') or any(x in name.lower() for x in ('config','model','setting')):\n        print(name, (sql or '')[:1000])\nPY\n"
   },
-  "authority_ceiling": "bounded_operator",
+  "authority_ceiling": "read_only",
   "ttl": 300
 }
