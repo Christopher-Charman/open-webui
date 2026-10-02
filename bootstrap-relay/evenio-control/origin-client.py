@@ -21,7 +21,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 PROTOCOL = "evenio-control-v1"
 VERSION = 1
 RUNTIME_ID = "fasthost.evenio"
-ALLOWED_TOOLS = {"runtime_health", "control_state", "runtime_audit"}
+ALLOWED_TOOLS = {"runtime_health", "control_state", "runtime_audit", "delegation_probe"}
 
 
 def b64e(data: bytes) -> str:
