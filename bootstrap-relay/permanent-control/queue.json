@@ -869,17 +869,6 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "gateway-tailscale-host-probe-36895469768",
       "version": 1
-    },
-    {
-      "ciphertext_b64": "G5lpzsOISU-RUXQWdWoG8GL-HZoP2ZNQHLsIZHAWKBLvZbb2oPTfWmem5SUiWrvNi-qBMiMeb-dhZ2wz2ebCBdyx5-3wyFWtDwQvBGefOasnUgtPpYcf6sqsJ3D6CdIv8je2KqUkMAZjFjR76IyOL6-W0-RifTJhz_rmnIK6jxIZeO7rpCfN37znBQtC11ndGkErL_sdav_TMVkHZItvxwWrIBp7y-lcg1fnMrV6oDAmumtu5bl54ucvohkDvCTEATKLPfjL4AEHFSnSNKj9I4bMxIiHzO-9vvUrl7btnd5y1i9d8Id2U2LH4ar93kjmGHkoT6cAuAy2PauXy3tKlbPNUvxPV6w5tWLbbnpzBNNLcfpz6w1s105PW_8rLOaiiweXG3r3GjIoDMxxJ71uF4-BPA",
-      "created_at": 1790904380,
-      "expires_at": 1790904980,
-      "nonce_b64": "UjRj2mKop-I-68G1",
-      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAqeoIZ12LO0d-e0aWJ33yHQK1BAQuOiGQ3C1DFbYZm1U",
-      "protocol": "powerpc-control-v1",
-      "target_runtime_id": "fasthost.powerpc",
-      "task_id": "ios-private-check-2ab5a3ec",
-      "version": 1
     }
   ],
   "version": 1
