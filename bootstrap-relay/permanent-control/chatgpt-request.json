@@ -1,12 +1,9 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-owned-exec-01",
+  "request_id": "cg-20261002-ios-health-2ab5a3ec",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "terminal_exec",
-  "arguments": {
-    "command": "printf 'CHATGPT_OWNED_CONTROL_EXEC_PASS\\n'; id -u; pwd",
-    "timeout_ms": 5000
-  },
-  "authority_ceiling": "bounded_operator",
+  "tool": "runtime_health",
+  "arguments": {},
+  "authority_ceiling": "read_only",
   "ttl": 300
 }
