@@ -20,21 +20,17 @@ jobs:
         run: |
           set -eu
           url="https://www.powerpc-darwin.org/static/powerpc-control-v1/results/ppc-evenio-sshnet-2f0c74b44e9bb941.json"
+          ok=0
           for i in $(seq 1 72); do
             if curl -fsSL --connect-timeout 8 --max-time 20 "$url?t=$(date +%s%N)" -o result.json; then
-              python3 - <<'PY'
-import json
-d=json.load(open("result.json",encoding="utf-8"))
-assert d.get("protocol")=="powerpc-control-v1"
-assert d.get("task_id")=="ppc-evenio-sshnet-2f0c74b44e9bb941"
-assert d.get("kind")=="result"
-PY
-              exit 0
+              if grep -q '"task_id":"ppc-evenio-sshnet-2f0c74b44e9bb941"' result.json && grep -q '"kind":"result"' result.json; then
+                ok=1
+                break
+              fi
             fi
             sleep 5
           done
-          echo "result timeout" >&2
-          exit 1
+          [ "$ok" = "1" ] || { echo "result timeout" >&2; exit 1; }
       - name: Upload encrypted result
         uses: actions/upload-artifact@v4
         with:
