@@ -1,0 +1,9 @@
+{
+  "schema": "chatgpt-owned-control-request-v1",
+  "request_id": "evenio-bootstrap-placeholder",
+  "target_runtime_id": "fasthost.evenio",
+  "tool": "runtime_health",
+  "arguments": {},
+  "authority_ceiling": "read_only",
+  "ttl": 300
+}
