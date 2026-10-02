@@ -1,8 +1,8 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261002-health-01",
+  "request_id": "cg-evenio-20261002-control-02",
   "target_runtime_id": "fasthost.evenio",
-  "tool": "runtime_health",
+  "tool": "control_state",
   "arguments": {},
   "authority_ceiling": "read_only",
   "ttl": 300
