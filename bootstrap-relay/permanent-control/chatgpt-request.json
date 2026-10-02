@@ -1,10 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-owned-list-01",
+  "request_id": "cg-20261002-owned-read-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "list_dir",
+  "tool": "read_text",
   "arguments": {
-    "path": "."
+    "path": "passenger_wsgi.py",
+    "max_bytes": 1024
   },
   "authority_ceiling": "read_only",
   "ttl": 300
