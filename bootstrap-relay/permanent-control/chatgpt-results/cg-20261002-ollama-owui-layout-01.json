@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261002-ollama-owui-layout-01",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261002-ollama-owui-layout-01",
+  "tool": "terminal_exec",
+  "verified_at": 1790912667,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "1888a1913898c7211bed3b26acbe810a044a7d20daa8cb0a6106caa697f94a9a",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "=== identity ===\nuid=2257347(csh3280350) gid=500(linuxgroup500) groups=500(linuxgroup500) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023\n/home/storage/781/4477781/user/webapp\n=== processes ===\n  1058      1 Fri Oct  2 02:06:10 2026 /home/storage/368/4910368/user/webapp/runtime/ollama/bin/ollama serve\n  1155      1 Fri Oct  2 02:06:10 2026 /home/storage/781/4477781/user/webapp/miniconda/bin/ollama serve\n  4540      1 Fri Oct  2 02:07:56 2026 /home/storage/781/4477781/user/webapp/envs/openwebui/bin/python /home/storage/781/4477781/user/webapp/envs/openwebui/bin/open-webui serve --host 127.0.0.1 --port 18080\n  6379   1155 Fri Oct  2 02:10:02 2026 /home/storage/781/4477781/user/webapp/miniconda/lib/ollama/llama-server --model /home/storage/781/4477781/user/webapp/.ollama/models/blobs/sha256-29d8c98fa6b098e200069bfb88b9508dc3e85586d20cba59f8dda9a808165104 --port 32874 --host 127.0.0.1 --no-webui --offline -c 4096 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --load-mode none --cache-type-k f16 --cache-type-v f16 --flash-attn off -b 512 -ub 512 --context-shift --keep 4\n 74186  74175 Fri Oct  2 04:44:25 2026 /bin/bash -lc set -eu; echo '=== identity ==='; id; pwd; echo '=== processes ==='; ps -eo pid,ppid,lstart,args | grep -E '[o]llama|[o]pen-webui' || true; echo '=== executable resolution ==='; command -v ollama || true; readlink -f \"$(command -v ollama)\" 2>/dev/null || true; echo '=== relevant paths ==='; for p in /home/storage/781/4477781/user/webapp/envs/openwebui /home/storage/781/4477781/user/webapp/runtime-domains /home/storage/781/4477781/user/webapp/bin /home/storage/781/4477781/user/.ollama /home/storage/781/4477781/user/webapp/.ollama; do if [ -e \"$p\" ]; then ls -ld \"$p\"; fi; done; echo '=== ollama process environment names ==='; pid=$(ps -eo pid,args | awk '/[o]llama serve/{print $1; exit}'); if [ -n \"${pid:-}\" ] && [ -r \"/proc/$pid/environ\" ]; then tr '\\0' '\\n' < \"/proc/$pid/environ\" | grep -E '^(HOME|OLLAMA_HOST|OLLAMA_MODELS|PATH)=' || true; fi; echo '=== endpoints ==='; curl -fsS --max-time 3 http://127.0.0.1:11434/api/version; echo; curl -fsS --max-time 3 http://127.0.0.1:18080/health; echo\n=== executable resolution ===\n/home/storage/781/4477781/user/webapp/miniconda/bin/ollama\n/home/storage/781/4477781/user/webapp/miniconda/bin/ollama\n=== relevant paths ===\ndrwxr-xr-x. 12 csh3280350 linuxgroup500 4096 Sep  9 03:58 /home/storage/781/4477781/user/webapp/envs/openwebui\ndrwx------. 8 csh3280350 linuxgroup500 4096 Sep 30 17:39 /home/storage/781/4477781/user/webapp/runtime-domains\ndrwx------. 3 csh3280350 linuxgroup500 4096 Oct  1 21:51 /home/storage/781/4477781/user/webapp/bin\ndrwxr-xr-x. 5 csh3280350 linuxgroup500 4096 Sep 21 00:52 /home/storage/781/4477781/user/webapp/.ollama\n=== ollama process environment names ===\n=== endpoints ===\n{\"version\":\"0.32.15\"}\n{\"status\":true}\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261002-ollama-owui-layout-01",
+    "unresolved": []
+  }
+}
