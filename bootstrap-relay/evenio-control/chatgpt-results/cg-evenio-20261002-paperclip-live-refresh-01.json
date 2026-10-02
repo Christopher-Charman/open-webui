@@ -1,0 +1,47 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:TDeOHYs1mVRxfoEyJrpF4ng4QUqsMx/vABzIxe85opY",
+  "request_id": "cg-evenio-20261002-paperclip-live-refresh-01",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.evenio",
+  "task_id": "chatgpt-cg-evenio-20261002-paperclip-live-refresh-01",
+  "tool": "runtime_audit",
+  "verified_at": 1790980034,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "capability": "runtime_audit"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.evenio",
+      "uid": 2283676,
+      "user": "csh3461042"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "{\"stable_runtime_id\":\"fasthost.evenio\",\"audit\":{\"ok\":true,\"issues\":[],\"sqlite_integrity\":\"ok\",\"foreign_keys\":1,\"schema_version\":3,\"alembic_revision\":\"20260925_v3_job_input\",\"control\":{\"environment\":\"test\",\"operator_mode\":\"RED\",\"automation_enabled\":0,\"public_mutation_enabled\":0,\"stop_all\":1},\"receipt_count\":0,\"receipt_hash_mismatches\":[],\"artifact_count\":7,\"artifact_missing\":[],\"artifact_hash_mismatches\":[],\"expired_running_jobs\":0,\"expired_pending_approvals\":0}}",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/368/4910368/user/webapp/bin/evenio-local-mcp",
+      "namespace": "/home/storage/368/4910368/user",
+      "webapp": "/home/storage/368/4910368/user/webapp"
+    },
+    "task_id": "chatgpt-cg-evenio-20261002-paperclip-live-refresh-01",
+    "unresolved": []
+  }
+}
