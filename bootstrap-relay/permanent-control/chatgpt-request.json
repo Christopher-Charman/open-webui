@@ -1,11 +1,9 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-runtime-domains-list-03",
+  "request_id": "cg-20261002-evenio-ollama-powerpc-health-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "list_dir",
-  "arguments": {
-    "path": "/home/storage/781/4477781/user/webapp/runtime-domains"
-  },
+  "tool": "runtime_health",
+  "arguments": {},
   "authority_ceiling": "read_only",
   "ttl": 300
 }
