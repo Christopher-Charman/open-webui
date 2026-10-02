@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: evenio-chatgpt-owned-control
+  group: evenio-chatgpt-owned-control-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
