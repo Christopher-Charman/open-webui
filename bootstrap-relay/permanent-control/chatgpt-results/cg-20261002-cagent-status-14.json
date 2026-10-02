@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261002-cagent-status-14",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261002-cagent-status-14",
+  "tool": "terminal_exec",
+  "verified_at": 1790981301,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "e8ef948b7e4cc99ec558395aa405a38fd1ab0086e6f13f7cffeb8f729b89b4e8",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "INTER_AGENT_CONTROL_PLANE=ACCEPTED\nCONTINUITY_AGENT_DELEGATION_ACCEPTANCE=PASS\nMODEL_ID=qwen2.5-coder:1.5b-instruct-q4_K_M\nEVIDENCE_FINGERPRINT=sha256:ee13430462886036621107f85c95fd4a9d2b76066a2e9d26ae2a17b8a1ea604f\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261002-cagent-status-14",
+    "unresolved": []
+  }
+}
