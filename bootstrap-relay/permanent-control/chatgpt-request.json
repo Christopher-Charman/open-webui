@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-ollama-slot-baseline-17",
+  "request_id": "cg-20261002-ollama-event-window-18",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu\necho '--- PS ---'\nps -eo pid,pcpu,pmem,rss,etime,args | grep -E '/webapp/miniconda/bin/ollama( |$)' | grep -v grep || true\necho '--- API_PS ---'\ncurl -fsS --max-time 4 http://127.0.0.1:11434/api/ps || true\necho\necho '--- TAGS_NAMES ---'\ncurl -fsS --max-time 4 http://127.0.0.1:11434/api/tags | /home/storage/781/4477781/user/webapp/envs/openwebui/bin/python -c 'import sys,json; d=json.load(sys.stdin); [print(m.get(\"name\"),m.get(\"size\"),m.get(\"details\",{}).get(\"parameter_size\"),m.get(\"details\",{}).get(\"quantization_level\")) for m in d.get(\"models\",[])]' || true\necho '--- OLLAMA_LOG_TAIL ---'\ntail -n 120 /home/storage/781/4477781/user/webapp/ollama-runtime.log 2>/dev/null | grep -E -i 'load|unload|runner|memory|model|sched|request|generate' | tail -n 80 || true"
+    "command": "set -eu\nLOG=/home/storage/781/4477781/user/webapp/ollama-runtime.log\necho '--- OCT2 EVENT WINDOW 07:00-10:30 LOCAL ---'\nawk '\n/2026-10-02T(0[7-9]|10):/ || /\\[GIN\\] 2026\\/10\\/02 - (0[7-9]|10):/ {\n  if (tolower($0) ~ /(load|runner|memory|model|sched|generate|chat|completion|post|unload|evict)/) print\n}' \"$LOG\" 2>/dev/null | tail -n 240\necho '--- NEARBY MODEL LOAD LINES OCT2 ---'\ngrep '2026-10-02' \"$LOG\" 2>/dev/null | grep -E -i 'loading model|load request|runner|offload|memory|unload|expired|evict|model=' | head -n 240 || true"
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300
