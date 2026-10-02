@@ -15,9 +15,9 @@ jobs:
       - name: Fetch queue
         run: |
           set -euo pipefail
+          echo "TRIGGER_SHA=$GITHUB_SHA"
           curl -fsSL --retry 4 \
-            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
-            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json?t=$(date +%s%N)" \
+            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/$GITHUB_SHA/bootstrap-relay/permanent-control/queue.json" \
             -o /tmp/queue.json
           python3 - <<'PY' >/tmp/task-id
           import json
