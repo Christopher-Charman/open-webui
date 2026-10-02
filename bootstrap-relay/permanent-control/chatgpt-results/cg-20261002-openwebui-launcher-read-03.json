@@ -1,0 +1,47 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261002-openwebui-launcher-read-03",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261002-openwebui-launcher-read-03",
+  "tool": "read_text",
+  "verified_at": 1790908541,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "460304e72f055d925fa98b0a4d379c32813158264b6eca399c873939b6beca4b",
+        "capability": "read_text"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "#!/bin/bash\nset -u\n\nBASE=\"/home/storage/781/4477781/user/webapp\"\nENV_DIR=\"$BASE/envs/openwebui\"\nPY=\"$ENV_DIR/bin/python\"\nCLI=\"$ENV_DIR/bin/open-webui\"\nDATA_DIR=\"$BASE/openwebui-data\"\nHF_HOME=\"$BASE/huggingface\"\nLOG=\"$BASE/openwebui-runtime.log\"\nSECRET_FILE=\"$BASE/.webui_secret_key\"\n\nexport HOME=\"$BASE\"\nexport DATA_DIR=\"$DATA_DIR\"\nexport HF_HOME=\"$HF_HOME\"\nexport SENTENCE_TRANSFORMERS_HOME=\"$HF_HOME\"\nexport USE_CUDA_DOCKER=false\nexport ENABLE_WEBSOCKET_SUPPORT=false\nexport UVICORN_WORKERS=1\nexport ENV=prod\nexport GLOBAL_LOG_LEVEL=INFO\nexport CORS_ALLOW_ORIGIN=\"https://powerpc-darwin.org;https://www.powerpc-darwin.org\"\nexport ENABLE_VERSION_UPDATE_CHECK=false\nexport WEBUI_AUTH=True\n# Public OpenWebUI traffic terminates TLS at the Fasthosts reverse proxy.\n# Mark all OpenWebUI session/auth cookies Secure at the application layer.\nexport WEBUI_SESSION_COOKIE_SECURE=true\nexport WEBUI_AUTH_COOKIE_SECURE=true\nexport WEBUI_SESSION_COOKIE_SAME_SITE=lax\nexport WEBUI_AUTH_COOKIE_SAME_SITE=lax\nexport PATH=\"$ENV_DIR/bin:$BASE/miniconda/bin:/usr/local/bin:/usr/bin:/bin\"\nexport LANG=C\nexport LC_ALL=C\nexport OLLAMA_BASE_URL=http://127.0.0.1:11434\nexport OLLAMA_API_BASE_URL=http://127.0.0.1:11434/api\n# DeepSeek-R1 is a thinking-capable Ollama model. Keep the UI on the native\n# Ollama chat path; model-level think=false is applied in the model settings.\nexport OLLAMA_CONTEXT_LENGTH=4096\nexport AIOHTTP_CLIENT_TIMEOUT=300\nexport OPENWEBUI_TOOL_RESULT_MODEL_CHAR_CAP=16384\nexport OPENWEBUI_TOOL_RESULT_MODEL_TURN_CHAR_CAP=32768\nexport OPENWEBUI_TOOL_RESULT_MODEL_MIN_CHAR_CAP=2048\nexport OPENWEBUI_TOOL_CALL_REPLAY_CAP=96\n# Continuity compaction narrow-node pipeline: local embeddings + deterministic\n# extractive classification. Generative compaction is retained only as fallback.\nexport OPENWEBUI_CONTINUITY_EXTRACTIVE_ONLY=1\nexport OPENWEBUI_CONTINUITY_REDUCER_TARGET_CHARS=16000\nexport OPENWEBUI_CONTINUITY_REDUCER_RECENT_CHARS=6000\nexport OPENWEBUI_CONTINUITY_REDUCER_EMBED_CHARS=2200\nexport OPENWEBUI_CONTINUITY_REDUCER_ITEM_CHARS=2400\nexport AUDIO_TTS_ENGINE=openai\nexport AUDIO_TTS_MODEL=kokoro\nexport AUDIO_TTS_VOICE=ahsoka\nexport AUDIO_TTS_SPLIT_ON=punctuation\nexport AUDIO_TTS_OPENAI_API_BASE_URL=http://127.0.0.1:18082/v1\nexport AUDIO_TTS_OPENAI_API_KEY=local-kokoro\n\numask 077\nmkdir -p \"$DATA_DIR\" \"$HF_HOME\"\n\nif [ ! -x \"$PY\" ]; then\n    echo \"FATAL: Python runtime missing: $PY\"\n    exit 20\nfi\n\nif [ ! -x \"$CLI\" ]; then\n    echo \"FATAL: Open WebUI CLI missing: $CLI\"\n    exit 21\nfi\n\nif [ ! -s \"$SECRET_FILE\" ]; then\n    \"$PY\" - \"$SECRET_FILE\" <<'PY'\nimport secrets, sys\npath = sys.argv[1]\nwith open(path, \"w\") as f:\n    f.write(secrets.token_urlsafe(48))\nPY\n    chmod 600 \"$SECRET_FILE\"\nfi\n\nexport WEBUI_SECRET_KEY=\"$(cat \"$SECRET_FILE\")\"\n\n# Ensure the local OpenAI broker is present before OpenWebUI starts.\n# Failure remains fail-closed for OpenAI, but does not take local models/UI offline.\nBROKER_RUN=\"$BASE/openai-token-broker/run-broker.sh\"\nBROKER_HEALTH=\"http://127.0.0.1:18081/__broker/health\"\nBROKER_STATE=\"PASS\"\nBROKER_RC=0\nif ! curl -fsS --max-time 1 \"$BROKER_HEALTH\" >/dev/null 2>&1; then\n    BROKER_STATE=\"STARTING\"\n    if [ -x \"$BROKER_RUN\" ]; then\n        \"$BROKER_RUN\" || BROKER_RC=$?\n    else\n        BROKER_RC=127\n    fi\n    for _ in $(seq 1 20); do\n        curl -fsS --max-time 1 \"$BROKER_HEALTH\" >/dev/null 2>&1 && { BROKER_STATE=\"PASS\"; break; }\n        sleep .25\n    done\n    if [ \"$BROKER_STATE\" != \"PASS\" ]; then BROKER_STATE=\"FAIL_CLOSED\"; fi\nfi\n\n# Kokoro TTS is optional and independently supervised. OpenWebUI startup may\n# request a bounded health ensure, but an explicit operator disable is authoritative.\nKOKORO_CTL=\"$BASE/bin/kokoro-service\"\nKOKORO_HEALTH=\"http://127.0.0.1:18082/health\"\nKOKORO_STATE=\"PASS\"\nif [ -e \"$BASE/.kokoro-service/disabled\" ]; then\n    KOKORO_STATE=\"DISABLED\"\nelif ! curl -fsS --max-time 1 \"$KOKORO_HEALTH\" >/dev/null 2>&1; then\n    KOKORO_STATE=\"STARTING\"\n    if [ -x \"$KOKORO_CTL\" ]; then\n        \"$KOKORO_CTL\" ensure >>\"$LOG\" 2>&1 &\n    else\n        KOKORO_STATE=\"UNAVAILABLE\"\n    fi\nfi\n\necho \"=== OPENWEBUI_RUNTIME_START_PROXY_V1 ===\"\ndate -u '+%Y-%m-%dT%H:%M:%SZ'\necho \"pid=$$\"\necho \"python=$(\"$PY\" --version 2>&1)\"\necho \"cli=$CLI\"\necho \"data_dir=$DATA_DIR\"\necho \"hf_home=$HF_HOME\"\necho \"bind=127.0.0.1:18080\"\necho \"websocket_support=$ENABLE_WEBSOCKET_SUPPORT\"\necho \"uvicorn_workers=$UVICORN_WORKERS\"\necho \"cuda=$USE_CUDA_DOCKER\"\necho \"secret_file=$SECRET_FILE\"\necho \"secret_file_mode=$(stat -c '%a' \"$SECRET_FILE\" 2>/dev/null || echo UNKNOWN)\"\necho \"openai_broker_state=$BROKER_STATE\"\necho \"openai_broker_start_rc=$BROKER_RC\"\necho \"kokoro_tts_state=$KOKORO_STATE\"\necho\n\nexec \"$CLI\" serve --host 127.0.0.1 --port 18080\n",
+          "type": "text"
+        }
+      ]
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261002-openwebui-launcher-read-03",
+    "unresolved": []
+  }
+}
