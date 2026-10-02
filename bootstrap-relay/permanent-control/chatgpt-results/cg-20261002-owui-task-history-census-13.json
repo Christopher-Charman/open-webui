@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261002-owui-task-history-census-13",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261002-owui-task-history-census-13",
+  "tool": "terminal_exec",
+  "verified_at": 1790981222,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "8ad6fbaa6412878f5a58347e88de9ae0e48ab499174c3f391537ce6fcfc13ee3",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "DB rollback-openai-broker-20260922T220328Z/webui.db\ntask.model.default = \"continuity-agent\"\ntask.model.external = \"continuity-agent\"\ntask.model.params = {\"reasoning_effort\": \"none\", \"max_tokens\": 8192, \"top_p\": 0.95, \"think\": true, \"num_gpu\": 0, \"temperature\": 0.6}\nollama.base_urls = [\"http://localhost:11434\"]\nDB rollback-openai-containment-20260922T220537Z/webui.db\ntask.model.default = \"continuity-agent\"\ntask.model.external = \"continuity-agent\"\ntask.model.params = {\"reasoning_effort\": \"none\", \"max_tokens\": 8192, \"top_p\": 0.95, \"think\": true, \"num_gpu\": 0, \"temperature\": 0.6}\nollama.base_urls = [\"http://localhost:11434\"]\nDB backups/granite-optimum-20260924T053453Z/webui.db\ntask.model.default = \"granite4.1:3b\"\ntask.model.external = \"granite4.1:3b\"\ntask.model.params = {\"top_p\":0.95,\"temperature\":0.6,\"num_ctx\":4096,\"max_tokens\":1024,\"keep_alive\":\"2m\"}\nollama.base_urls = [\"http://127.0.0.1:11434\"]\nDB backups/granite-fixes-20260924T054930Z/webui.db\ntask.model.default = \"granite4.1:3b\"\ntask.model.external = \"granite4.1:3b\"\ntask.model.params = {\"top_p\":0.9,\"temperature\":0.6,\"num_ctx\":4096,\"max_tokens\":1024,\"keep_alive\":\"2m\"}\nollama.base_urls = [\"http://127.0.0.1:11434\"]\nDB backups/granite-fix-20260924T202141Z/webui.db\ntask.model.default = \"granite4.1:3b\"\ntask.model.external = \"granite4.1:3b\"\ntask.model.params = {\"top_p\":0.9,\"temperature\":0.6,\"num_ctx\":4096,\"max_tokens\":1024,\"keep_alive\":\"2m\"}\nollama.base_urls = [\"http://127.0.0.1:11434\"]\nDB openwebui-data/webui.db\ntask.model.default = \"local-agent-mini-c-agent\"\ntask.model.external = \"local-agent-mini-c-agent\"\ntask.model.params = {\"top_p\": 0.8, \"temperature\": 0.7, \"num_ctx\": 32768, \"max_tokens\": 32768, \"keep_alive\": \"30m\", \"stream_response\": false, \"top_k\": 20, \"min_p\": 0.1, \"frequency_penalty\": 1.05, \"compact_token_threshold\": 80000, \"function_calling\": \"native\", \"reasoning_effort\": \"none\", \"use_mlock\": true, \"use_mmap\": true, \"think\": true, \"format\": \"json\", \"num_keep\": 2, \"num_thread\": 6, \"num_gpu\": 0}\nollama.base_urls = [\"http://127.0.0.1:11434\"]\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261002-owui-task-history-census-13",
+    "unresolved": []
+  }
+}
