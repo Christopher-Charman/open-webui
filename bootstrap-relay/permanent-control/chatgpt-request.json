@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-ollama-launcher-effective-08",
+  "request_id": "cg-20261002-ollama-runtime-env-read-09",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "terminal_exec",
+  "tool": "read_text",
   "arguments": {
-    "command": "set -eu; W=/home/storage/781/4477781/user/webapp; echo '--- run-ollama.sh ---'; sed -n '1,260p' \"$W/run-ollama.sh\"; echo '--- ollama-runtime.env (OLLAMA only) ---'; grep -E '^OLLAMA_[A-Z0-9_]+=' \"$W/ollama-runtime.env\" | sort || true; echo '--- keepalive state names ---'; if [ -d \"$W/.ollama-keepalive\" ]; then find \"$W/.ollama-keepalive\" -maxdepth 2 -type f -printf '%P\\n' | sort | head -100; fi; echo '--- ollama profiles ---'; if [ -d \"$W/ollama-profiles\" ]; then find \"$W/ollama-profiles\" -maxdepth 2 -type f -printf '%P\\n' | sort | head -100; fi"
+    "path": "/home/storage/781/4477781/user/webapp/ollama-runtime.env"
   },
-  "authority_ceiling": "bounded_operator",
+  "authority_ceiling": "read_only",
   "ttl": 300
 }
