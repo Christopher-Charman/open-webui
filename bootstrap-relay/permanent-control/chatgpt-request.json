@@ -1,12 +1,12 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-owned-read-01",
+  "request_id": "cg-20261002-owned-exec-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "read_text",
+  "tool": "terminal_exec",
   "arguments": {
-    "path": "passenger_wsgi.py",
-    "max_bytes": 1024
+    "command": "printf 'CHATGPT_OWNED_CONTROL_EXEC_PASS\\n'; id -u; pwd",
+    "timeout_ms": 5000
   },
-  "authority_ceiling": "read_only",
+  "authority_ceiling": "bounded_operator",
   "ttl": 300
 }
