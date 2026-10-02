@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261002-ollama-launcher-effective-08",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261002-ollama-launcher-effective-08",
+  "tool": "terminal_exec",
+  "verified_at": 1790980750,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "4e7cc9b6b8ee6f1194c7832e24d1907ce49de9d04b23ab39478de10b51b9d96d",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "--- run-ollama.sh ---\n#!/bin/bash\nset -Eeuo pipefail\nBASE='/home/storage/781/4477781/user/webapp'\nexport HOME=\"$BASE\"\nexport PATH=\"$BASE/envs/open-terminal/bin:$BASE/miniconda/bin:/usr/local/bin:/usr/bin:/bin\"\nexport LANG=C\nexport LC_ALL=C\numask 077\n# shellcheck disable=SC1091\nsource \"$BASE/ollama-runtime.env\"\nexec \"$BASE/miniconda/bin/ollama\" serve\n--- ollama-runtime.env (OLLAMA only) ---\n--- keepalive state names ---\nensure.lock\nensure-v2.lock\nkeepalive.log\n--- ollama profiles ---\nconfigure-openwebui-gemma3-270m.py\ndisable-gemma3-270m-auto-tools.py\ngemma3-270m-local.Modelfile\ngemma3-270m-local.Modelfile.pre-numeric-20260928\ngemma3-270m-local.Modelfile.pre-starfleet-20260927.bak\ngemma3-270m-starfleet-test.Modelfile\ninstall-gemma3-270m-local-openwebui.py\ninstall-starfleet-computer-openwebui.py\n__pycache__/starfleet_computer_commands.cpython-310.pyc\n__pycache__/starfleet_computer_commands.cpython-311.pyc\n__pycache__/starfleet_computer_guard.cpython-310.pyc\n__pycache__/starfleet_computer_guard.cpython-311.pyc\n__pycache__/starfleet_computer_guard.cpython-312.pyc\n__pycache__/starfleet_computer_pipe.cpython-310.pyc\nstarfleet_computer_commands.py\nstarfleet_computer_commands.py.pre-tools-v121-20260927.bak\nstarfleet_computer_commands.py.pre-warm-actions-20260927.bak\nstarfleet_computer_guard.py\nstarfleet_computer_guard.py.pre-numeric-20260928\nstarfleet_computer_guard.py.v02.bak\nstarfleet_computer_pipe.py\nstarfleet_computer_pipe.py.pre-live-env-report-20260927.bak\nstarfleet_computer_pipe.py.pre-tools-v121-20260927.bak\nstarfleet_computer_pipe.py.pre-warm-actions-20260927.bak\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261002-ollama-launcher-effective-08",
+    "unresolved": []
+  }
+}
