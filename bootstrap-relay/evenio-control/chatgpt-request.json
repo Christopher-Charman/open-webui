@@ -1,6 +1,6 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261002-delegation-06",
+  "request_id": "cg-evenio-20261002-replay-07",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_probe",
   "arguments": {
