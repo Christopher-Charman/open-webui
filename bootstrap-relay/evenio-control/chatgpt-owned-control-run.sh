@@ -62,7 +62,7 @@ rid=d.get("request_id")
 assert isinstance(rid,str) and re.fullmatch(r"[A-Za-z0-9._-]{8,80}",rid)
 assert d.get("target_runtime_id")=="fasthost.evenio"
 tool=d.get("tool")
-assert tool in {"runtime_health","control_state","runtime_audit"}
+assert tool in {"runtime_health","control_state","runtime_audit","delegation_probe"}
 args=d.get("arguments")
 assert isinstance(args,dict)
 auth=d.get("authority_ceiling","read_only")
