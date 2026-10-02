@@ -1,39 +1,9 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261002-expired-10",
+  "request_id": "cg-evenio-20261002-final-control-11",
   "target_runtime_id": "fasthost.evenio",
-  "tool": "delegation_probe",
-  "arguments": {
-    "envelope": {
-      "task_id": "evenio-delegation-expired-20261002",
-      "origin_runtime_identity": "chatgpt.ios",
-      "target_runtime_identity": "fasthost.evenio",
-      "target_agent_identity": "evenio-control-agent",
-      "objective": "Read Evenio runtime health through the bounded local MCP and return a runtime-bound receipt.",
-      "evidence_refs": [
-        "evenio-control-v1-live-acceptance"
-      ],
-      "authority_ceiling": [
-        "read_only",
-        "write"
-      ],
-      "allowed_capability_profile": [
-        "runtime_health",
-        "terminal_exec"
-      ],
-      "resource_budget": {
-        "max_local_mcp_calls": 1
-      },
-      "deadline": "2026-10-02T04:00:00+01:00",
-      "expected_result_schema": {
-        "type": "object"
-      },
-      "return_route": "owned-control:github",
-      "recursion_depth": 0
-    },
-    "action_tool": "runtime_health",
-    "action_arguments": {}
-  },
+  "tool": "control_state",
+  "arguments": {},
   "authority_ceiling": "read_only",
   "ttl": 300
 }
