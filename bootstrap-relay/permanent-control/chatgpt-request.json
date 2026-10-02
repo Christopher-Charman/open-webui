@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261002-owui-routing-values-12",
+  "request_id": "cg-20261002-owui-task-history-census-13",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "/home/storage/781/4477781/user/webapp/envs/openwebui/bin/python -c 'import sqlite3; p=\"/home/storage/781/4477781/user/webapp/openwebui-data/webui.db\"; c=sqlite3.connect(\"file:\"+p+\"?mode=ro\",uri=True); c.execute(\"PRAGMA query_only=ON\"); ks=(\"ollama.enable\",\"ollama.base_urls\",\"task.model.default\",\"task.model.external\"); [(print(k,\"=\",(c.execute(\"select value from config where key=?\",(k,)).fetchone() or (\"<MISSING>\",))[0])) for k in ks]; c.close()'"
+    "command": "/home/storage/781/4477781/user/webapp/envs/openwebui/bin/python - <<'PY'\nimport os,sqlite3\nroot=\"/home/storage/781/4477781/user/webapp\"\npaths=[\n\"rollback-openai-broker-20260922T220328Z/webui.db\",\n\"rollback-openai-containment-20260922T220537Z/webui.db\",\n\"backups/granite-optimum-20260924T053453Z/webui.db\",\n\"backups/granite-fixes-20260924T054930Z/webui.db\",\n\"backups/granite-fix-20260924T202141Z/webui.db\",\n\"openwebui-data/webui.db\",\n]\nkeys=(\"task.model.default\",\"task.model.external\",\"task.model.params\",\"ollama.base_urls\")\nfor rel in paths:\n p=os.path.join(root,rel)\n print(\"DB\",rel)\n if not os.path.isfile(p):\n  print(\"MISSING\"); continue\n c=sqlite3.connect(\"file:\"+p+\"?mode=ro\",uri=True); c.execute(\"PRAGMA query_only=ON\")\n for k in keys:\n  r=c.execute('select value from config where key=?',(k,)).fetchone()\n  print(k,\"=\",r[0] if r else \"<MISSING>\")\n c.close()\nPY"
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300
