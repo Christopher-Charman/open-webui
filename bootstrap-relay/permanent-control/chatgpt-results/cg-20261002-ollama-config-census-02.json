@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261002-ollama-config-census-02",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261002-ollama-config-census-02",
+  "tool": "terminal_exec",
+  "verified_at": 1790908153,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "d50b96383b8d37e54df691531ed2acc32df159d3d63b2fab38f4a0ad10a92d8e",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "ollama version is 0.32.15\nNAME                                  ID              SIZE      MODIFIED     \ngranite4.2:3b                         40577dc168a3    2.2 GB    11 hours ago    \ngpt-oss:20b                           17052f91a42e    13 GB     11 hours ago    \nqwen2.5:7b                            845dbda0ea48    4.7 GB    11 hours ago    \nbge-m3:latest                         790764642607    1.2 GB    2 days ago      \nqwen2.5-coder:1.5b-instruct-q4_K_M    d7372fd82851    986 MB    2 days ago      \nqwen3:4b-instruct                     0edcdef34593    2.5 GB    2 days ago      \ngemma3:270m-local                     03927f35f923    291 MB    3 days ago      \ngemma3:270m-core                      abf1bf67de46    471 MB    4 days ago      \ngemma3:1b                             8648f39daa8f    815 MB    6 days ago      \ngemma3:270m                           e7d36fb2c3b3    291 MB    6 days ago      \nllama3.2:3b-text-q4_K_M               632997a5a262    2.0 GB    6 days ago      \nqwen2.5-coder:7b                      dae161e27b0e    4.7 GB    8 days ago      \nqwen3:4b                              359d7dd4bcda    2.5 GB    8 days ago      \ndeepseek-r1:1.5b-qwen-distill-q8_0    21c9dbd320fa    1.9 GB    11 days ago     \ndeepseek-r1:1.5b                      e0979632db5a    1.1 GB    11 days ago     \nlfm2.5:8b-a1b-q4_K_M                  9cf756159fc2    5.2 GB    11 days ago     \nNAME                                  ID              SIZE      PROCESSOR    CONTEXT    UNTIL   \nqwen2.5-coder:1.5b-instruct-q4_K_M    d7372fd82851    1.2 GB    100% CPU     4096       Forever    \n6\n              total        used        free      shared  buff/cache   available\nMem:            11G        4.5G        1.1G        270M        5.9G        6.4G\nSwap:          2.0G          0B        2.0G\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261002-ollama-config-census-02",
+    "unresolved": []
+  }
+}
