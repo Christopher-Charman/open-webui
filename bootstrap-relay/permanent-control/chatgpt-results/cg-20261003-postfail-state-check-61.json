@@ -1,0 +1,68 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 2721,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261003-postfail-state-check-61.json",
+    "envelope": {
+      "ciphertext_b64": "D-H2UdDwb4d3eKVHF96fdOFo-VUhNszuyytlWTc_kQdUivVsbojMudI6PdoIRDUcR2SQ6MwIarOxryl9gZkvdIIx89v7_LEXz0m0TNsilGLIk2ZNf1em1KFDUBzaYvk1oTi0pVOTJeUSl961bTq9NP_R4JH73aPYI0Rv8ELBKvS6hkCPjEQdIUPrxKHm2A8LdIs-eFuyE6D2t4UyqaEXY8G3WwFQ2oEksWqTfvA_PlxQLmjUnJJaIYQzQQTya-dW_Rii3ruZ36-7RfKY_mGhNPM4vJ24jQq-Qb8hMRDSKDiiJemt44yrgbrjTLVSxTb7IMOQRyDL12p_VOzKJJgggbBbYCpkkuDZGxAA8vkrGeekZYSNbIIDQ0WU9j_d61rOeSH25-cO4gHYY3fLRo1Rs3HBwS9BAxEPuFhWG2K6mzqVNrROX4eZH1nN4K2beUIDuxL2eU0MsBJzf_9bcGANXzwXGYwkht5TvzuBawd0Ansyg0LN38wZ-pKOSgEeP9u3VG4fh4JZaUMd7xRFjyoH0w8EO9SfuabIpNiJd92S6Kja1ppf9O-Sh_MXfu_jiSSjS-_k8Uayur7U9feMXPNLZtduDaqylF56gj-mIAo_eiW6irKhEsHiCejLSa5fScGZvvsAFCSkYhsVG1yOTnfAU9b3S3GpnbzR5yLg3hCRrmuo_8xOZ330-jDdHThjcrPbRZQKrDvFdcXX1YY8PXS4sB8Ya3Zc45lNs7VaSw3FFEVJT0HdlUJe0qt1vpwsHv5un6FthmpSd7zzZcfcW-n63bc-gbWMC4vxXwo_2W-JC8uBLQEldlGx_fY_r1Rc63rkQ5C9RecY3K-JePRc_sb1QbsD3_zc0VvFi-L0RgDvA0UqW7Bg02AKLwisggvXhutGypnxAYzNPJJEY-7VvAKnnGFa_s2egwOY-LN7rUuGhFwz_40t-ezcE9WOfM-ZPypynxeqxz4s2G6er5pZ-1TU4aOIkCZYBaEqnI8NY_JJi0aegYV7H0AnFGcMirHeXpZS1ohQhox1K9n0ttP-tH88cWXrKrIFqtt-hOXSdRj2v5y8A5FZxO5deQgOuUz55zZf092txbyjRX-2GQ1G0s9ZHdAaSfUBbhnXJ94doHDH0RJnTA2fLbiXcw0smWvRbd2-JZMJ6J4ympDaMm6WTmi9QxdlIbZD7CexDvhxQCM5l1FPutR2RNQTUFzwI6MVFuYONK06n8k7833-TyI7yCc-mxdqZ9PMWsF_RAQ7nMmMM1_kqqH9cKNOPVt4wb4t7czCHx_rfA4ulpFXb1gqge2hBkYrr8bAGq6HjzsYn9RTSoLkzO1UggmbcF7tR3eE76mh56Z6M_dzdODQl7SgcvSAxOkAcgwqUDDY_Bz5RVmzU5vrG9l7HMycGd5Shr-kvyFg1SWUVQHAJ0a28oG_gG01vsdAdhrCk5dL4qUiKaf0SBMPuMfCPITFZqqBRuil6ZcuX6a773lbsLX50AGGwGf54nzI-pIe_-TdH4oqMs-Tk9aarikG3BerWMn7Kk_ZdL1x_WW_QwAL6nTrGy8pbMlyr5WJpHvPbA1wfqY0cx2dEHs57emTAQSUDVysMxP_OUjDXrmMKAJo5arnG8vlBYjpLWmQgLxW5y_392Nablhu5D2IdMkyzrVY1nR8me8vpXpHwj_gAwFw8ko6YUOAvI28rpMB3742LmiUH46A7OFVKZj-IyOq3B2041Hz-Z8IXpAfJEZ_T5tY63GlO8i-gS7sDYHeFazYwY8m56V8AEz_iT5icPWKGEozrVN19q_8x5ozB3wsmZkNwyZofbWKVCIeOE04RLJQajugGwAFUsc9nRrV2LqJauw9RZYhJJvgnCcrQZa0pUfh386aypUgyJT-7ucyHBXOZepdyBgoqrv3BQp_gNNLbC3W28iIQTS8HksbLB5Cf8rXfH74JKYz3645gQsA7wCZWU2g7AbvBKjxhoYP8HFZOuDxmtXLx-Y1NAHebVfUc7a2SJnVPIhAfUv6VdPy6bFfS9JADer31omPJbktmgq5x-4PYPqlx_ZJvc8qPkqj7Y1LcNpikp5oV0rCvF9QzihRZ_OYOsoa1nZLBgIJd6_W5SSV_e8Zn48_Cj12e7xn7-qwuBtWY2CkaMa0hfy9QWaMqZWiTkNcAlKP4Vyf0TwPtRikx4glhZ54Nv2V4Bbo4M-YnIy5xE71xez15PV4GkHVmqcbXVgLT3VmVEA1KYW_khepgQVJFq35yDRWUyo6YtiOhZ1lmcM8jtNYCf751WVnzahQCLQ4V8PM9fiyrDUcp92p7_hJVTxG96dwNS826Jh9sL7UCKUBDUYXEDHMtf-qvlGEmRjYQqA5hccCQN7djHi-3MEwg5NGkDgXawVdlpv6xf9KJQ",
+      "kind": "result",
+      "nonce_b64": "mgUSlhOSDWSAqwGM",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791006797,
+      "signature_b64": "uYSrCkKqwoCnYLKbBIJgs_jURRz0E352C_LwJ5Nk5y-5pjShn1G1ahGdhE2_kAaSipVex2vlfpUWzEaqBe1gAQ",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261003-postfail-state-check-61",
+      "version": 1
+    },
+    "sha256": "dfe4865a0033c2a06cfea5e8a1b647696223f27c284b075f60f56cea8ad7dfe8"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "redactions": [
+    "plaintext result content",
+    "host-local runtime receipt values",
+    "evidence reference values"
+  ],
+  "request_id": "cg-20261003-postfail-state-check-61",
+  "result_visibility": "summary",
+  "schema": "chatgpt-owned-control-result-summary-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-postfail-state-check-61",
+  "tool": "terminal_exec",
+  "verified_at": 1791006799,
+  "verified_receipt_summary": {
+    "actions": [
+      {
+        "arguments_sha256": "65b7a7192bd51cbaffa6ffff6ffeb7a61aa2162db1807da8fb3f5e147c050de1",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_ref_count": 0,
+    "executor_identity": {
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1
+    },
+    "result_summary": {
+      "content_block_count": 1,
+      "is_error": false,
+      "result_sha256": "172cfc5ac2a83a916d962a8dee44b7272be2a81c5503383599df5a7bdf57c5fa",
+      "text_bytes": 964,
+      "text_sha256": "f11790b1213781d461fcb6191c1b0741cce5c18cbea5eba4706c4b164580b019"
+    },
+    "runtime_receipt_redaction": {
+      "fields": [
+        "local_mcp",
+        "namespace",
+        "webapp"
+      ],
+      "values_omitted": true
+    },
+    "task_id": "chatgpt-cg-20261003-postfail-state-check-61",
+    "unresolved_count": 0
+  }
+}
