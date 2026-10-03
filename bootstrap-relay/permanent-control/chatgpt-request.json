@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-live-model-census-30",
+  "request_id": "cg-20261003-owui-restart-after-task-repair-31",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu\necho '--- OLLAMA_API_PS ---'\ncurl -fsS http://127.0.0.1:11434/api/ps\necho\necho '--- OLLAMA_PROCESSES ---'\nps -eo pid,ppid,etime,%cpu,%mem,rss,vsz,args | grep -E '[o]llama( serve| runner)|[l]lama-server' || true\necho '--- OLLAMA_DAEMON_ENV ---'\npid=\"$(pgrep -f '/home/storage/781/4477781/user/webapp/miniconda/bin/ollama serve' | head -n1 || true)\"\nif [ -n \"$pid\" ] && [ -r \"/proc/$pid/environ\" ]; then tr '\\0' '\\n' < \"/proc/$pid/environ\" | grep '^OLLAMA_' | sort || true; else echo 'OLLAMA_DAEMON_PID_NOT_FOUND'; fi\necho '--- OPENWEBUI_TASK_BINDING ---'\n/home/storage/781/4477781/user/webapp/envs/openwebui/bin/python - <<'PY'\nimport sqlite3, json\np=\"/home/storage/781/4477781/user/webapp/openwebui-data/webui.db\"\nc=sqlite3.connect(\"file:\"+p+\"?mode=ro\",uri=True)\nc.execute(\"PRAGMA query_only=ON\")\nfor k in (\"task.model.default\",\"task.model.external\",\"task.model.params\"):\n    r=c.execute('select value,updated_at from config where \"key\"=?',(k,)).fetchone()\n    print(k,\"=\",r)\nids=[]\nfor k in (\"task.model.default\",\"task.model.external\"):\n    r=c.execute('select value from config where \"key\"=?',(k,)).fetchone()\n    if r:\n        try: ids.append(json.loads(r[0]))\n        except Exception: pass\nfor i in sorted(set(x for x in ids if isinstance(x,str))):\n    r=c.execute('select id,name,base_model_id,is_active,updated_at from model where id=?',(i,)).fetchone()\n    print(\"binding_model\",i,\"=\",r)\nc.close()\nPY"
+    "command": "/home/storage/781/4477781/user/webapp/restart-openwebui-via-passenger.sh"
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300
