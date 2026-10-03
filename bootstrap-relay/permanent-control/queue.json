@@ -946,6 +946,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "chatgpt-cg-20261003-qwen-reload-after-aux-52",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "zFX8z5qxv2ML1gjFfJMCCHtWnPAAT4emF_9jzkVBqOnOW7R2cFCmg2whxogX82s0yAc4SWfEGNcTbyBvpWhRe80fBOHNMAyuv6hIxgzs6xYc1e4VnBwTv83wd10uDtLP2eSLV6w0OggJlbhYO8ZrZtUvTyOg_Iomaf8B4RgSBTvIr2BS9XHp9l30WA17wcmztET8uWVax-MsabrG-V91mNjH_khgxHtIm5hXifigWA9R5MdoYC1lJDzkAX9buHpxRtVDg-KFOW_Tz1FkZqfEGfQBMKJ7j092ye0YjDHkxd8b2H5U_jGUFZJ2ClwP4FTEun8vdHeoOH1P90E9dXGTrJ9v3hQXmoXin6KRueCPamAlttey1tM1nKRTvPRX",
+      "created_at": 1791004972,
+      "expires_at": 1791005572,
+      "nonce_b64": "DLs0ooW8OWd6Lo6n",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAxdZeM7ito9yWvgaaj47OvJ6g7Emr4Jv-pZofBc4UB1A",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261003-concurrency-ledger-list-dir-01",
+      "version": 1
     }
   ],
   "version": 1
