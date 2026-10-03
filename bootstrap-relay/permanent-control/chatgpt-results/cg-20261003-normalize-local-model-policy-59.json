@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "FAILED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-normalize-local-model-policy-59",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-normalize-local-model-policy-59",
+  "tool": "terminal_exec",
+  "verified_at": 1791006401,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "dacfbb5847b296548c367fe1d1254364cfa8e1b45986058c63f501d752d92ea9",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "FAILED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "{\"completed_at\":\"2026-10-03T05:46:40.793518Z\",\"error\":null,\"evidence_refs\":[],\"idempotency_replayed\":false,\"ledger_seq\":null,\"ok\":true,\"operation\":\"ledger_session_heartbeat\",\"protocol\":\"concurrency-ledger/1\",\"receipt_ref\":null,\"request_id\":\"owui-runtime-clearance-heartbeat2-20261003\",\"result\":{\"heartbeat_at\":\"2026-10-03T05:46:40.793745Z\",\"session_id\":\"01a10046-e1dc-7b5f-a3dc-c547c7987523\"},\"retry_after_ms\":null,\"schema_version\":1,\"server_instance_id\":\"fasthost.powerpc_darwin_org:concurrency-ledger\",\"status\":\"OK\"}\nDB_PREFLIGHT=PASS\nTraceback (most recent call last):\n  File \"<stdin>\", line 26, in <module>\nAttributeError: 'sqlite3.Connection' object has no attribute 'rowcount'\n",
+          "type": "text"
+        }
+      ],
+      "isError": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-normalize-local-model-policy-59",
+    "unresolved": []
+  }
+}
