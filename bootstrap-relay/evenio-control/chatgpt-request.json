@@ -1,16 +1,18 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-reject-traversal-01",
+  "request_id": "cg-evenio-20261003-paperclip-reject-task-conflict-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "paperclip-reject-traversal-20261003-01",
-      "origin_runtime_identity": "chatgpt-session",
+      "task_id": "EVN-PAPERCLIP-ACCEPT-20261003-01",
+      "origin_runtime_identity": "chatgpt.control",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "Fail-closed acceptance test for path traversal.",
-      "evidence_refs": [],
+      "objective": "Deliberately alter an already-completed delegation while reusing its task_id to prove conflict rejection.",
+      "evidence_refs": [
+        "git:Christopher-Charman/evenio-online@main"
+      ],
       "authority_ceiling": [
         "write_runtime"
       ],
@@ -18,16 +20,19 @@
         "workspace_write"
       ],
       "resource_budget": {
-        "max_write_bytes": 64
+        "max_write_bytes": 4096
       },
-      "expected_result_schema": {},
-      "return_route": "evenio-control-v1",
+      "deadline": "2026-10-03T05:30:00+00:00",
+      "expected_result_schema": {
+        "type": "object"
+      },
+      "return_route": "owned:chatgpt-session",
       "recursion_depth": 0
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "../should-not-exist.txt",
-      "content": "reject\n",
+      "path": "acceptance/SHOULD-NOT-EXIST-task-conflict.txt",
+      "content": "must not be created\n",
       "expected_sha256": "absent"
     }
   },
