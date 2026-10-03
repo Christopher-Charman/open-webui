@@ -935,6 +935,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ollama-event-540a0812c04545db",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "iM8HbxvTLKvl4y97O3WOBjmKDIkDOD2TDvDyyY9VdcvhSi9Ir2KNmmZrvR0RQgGJHlDk_p5gw4WMCq8TFNXRdyIWWvxgtJLKQ3nPWOUZxGKtqGsW8vw2uBWJC2BCnjQ9P5cHYNAdM6QXLMr1uigkFQDUKEikGcc3XF20bXHvTDgzm15OvkFk_uWePq5-MKtsQpYdoIIhKNxUcNIWENVTjvg9uXxtnIrahK5t62cZPsVv1AZ6GQJT58LVoVQbNzX-ijovNRmT2AaQkRnM5tBVUDS4f0_9xB1Cb0YgceIDjY9LFX3hJOnxBppajkQ8zQPMnCgAbM2o-5zzsR0Ka5TiG4rUFTLRWZWi7-a7-ml8MMO_B-U0BNATHPWQ28Ay5COcztm4CncZN1fnJkzXgyJKZzX1PKL0ozrfPsqf6TEp_3-gwBPpkx7q4-nU9vAnHmNWoru-m83_yOj4i4GBETmA9GizUMpbgnsv5USByKzd0JDdhBh10Ok08kQLb39fOoo8ad8w2CybJ5OYiqPpD5noPDWA9xjtOLnTFt7cBi14JzdTnxeTlHj1_1k8i7k_XaSNS7faQhTZbsoChu3HwiaN5lg305rBzDbdRj51Bb2kP-PkHMMCX9bD5qqoB14Zb2Qp5TUNdR2xOYWUfpM6uw43Ma97LCAhBxu2akkBgWjq2gUhL0HaoumY0-nxm6A_WT7RAbWJzOGt606l4GwbMrL-HVjCWHfVfdvYyxK_cyicetnzO4Xa9CA-OZM7rONRrJHZMYAOJCms3GA8_xFFsaaBfkbidfTDmKNPhvUpx_HfQGS_-0YIvjwEA-96TawIw8yOkVwCA_L61HbqR4hI7t769f9agpQ2kLNq0jpjW6koo9uCZXK_QNzp9P-9ikdT9Ryc03kSdP2K36kY7zR1uhFUNrbq73PJWYHEI81_tEDmwH-VUxCv4AbqVkJ7La03dR3rZ3c0Xa0rNq_1e5RCrCHvUz0dDd1jbUpO2hciICRxnXGpNcseH6nUQsq1oWM2jye_POO1MzY",
+      "created_at": 1791049378,
+      "expires_at": 1791049978,
+      "nonce_b64": "w7y4FNG8iGJufDjC",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAbRDYFVzWWcNkFKwBaVrbBDM0a0QOmUeUizSgeBHEp0o",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "cg-20261003-gate-metadata-musok10mcfzrnn4q",
+      "version": 1
     }
   ],
   "version": 1
