@@ -1,20 +1,20 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-cas-01",
+  "request_id": "cg-evenio-20261003-paperclip-reject-auth-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "EVN-PAPERCLIP-ACCEPT-20261003-02",
+      "task_id": "EVN-PAPERCLIP-REJECT-AUTH-20261003-01",
       "origin_runtime_identity": "chatgpt.control",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "CAS-update the bounded private-workspace acceptance artifact for PR #9 live acceptance.",
+      "objective": "Prove bounded workspace mutation rejects an inner delegation without write_runtime authority.",
       "evidence_refs": [
         "git:Christopher-Charman/evenio-online@main"
       ],
       "authority_ceiling": [
-        "write_runtime"
+        "read_runtime"
       ],
       "allowed_capability_profile": [
         "workspace_write"
@@ -31,9 +31,9 @@
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/pr9-owned-control-20261003.txt",
-      "content": "Evenio PR #9 bounded workspace acceptance: CAS update.\n",
-      "expected_sha256": "179a0ee04df3657353d33905d891d6266340e7bd04bfdc99550735fbc994c85d"
+      "path": "acceptance/SHOULD-NOT-EXIST-wrong-authority.txt",
+      "content": "must not be created\n",
+      "expected_sha256": "absent"
     }
   },
   "authority_ceiling": "write_runtime",
