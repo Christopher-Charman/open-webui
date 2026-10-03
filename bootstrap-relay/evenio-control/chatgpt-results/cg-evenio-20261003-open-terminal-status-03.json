@@ -1,0 +1,52 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:TDeOHYs1mVRxfoEyJrpF4ng4QUqsMx/vABzIxe85opY",
+  "request_id": "cg-evenio-20261003-open-terminal-status-03",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.evenio",
+  "task_id": "chatgpt-cg-evenio-20261003-open-terminal-status-03",
+  "tool": "open_terminal_status",
+  "verified_at": 1791002128,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "capability": "open_terminal_status"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.evenio",
+      "uid": 2283676,
+      "user": "csh3461042"
+    },
+    "resource_usage": {
+      "bounded_actions": 0,
+      "local_mcp_calls": 0,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "api_key_present": true,
+      "capability": "open_terminal_status",
+      "config": "/home/storage/368/4910368/user/webapp/open-terminal/config-evenio.toml",
+      "healthy": true,
+      "host": "127.0.0.1",
+      "pid": 116874,
+      "port": 9901,
+      "running": true,
+      "runtime_config": "/home/storage/368/4910368/user/.evenio-open-terminal/runtime-config.toml",
+      "runtime_id": "fasthost.evenio",
+      "staged": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/368/4910368/user/webapp/bin/evenio-local-mcp",
+      "namespace": "/home/storage/368/4910368/user",
+      "webapp": "/home/storage/368/4910368/user/webapp"
+    },
+    "task_id": "chatgpt-cg-evenio-20261003-open-terminal-status-03",
+    "unresolved": []
+  }
+}
