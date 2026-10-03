@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-final-policy-readback-40",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-final-policy-readback-40",
+  "tool": "terminal_exec",
+  "verified_at": 1791001147,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "ca460f6a32aacef6da077eabcb51774b352a756f17ad0275fcb0553eef00046b",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "task.model.default = ('\"local-agent-mini-c-agent\"', 1790663796)\ntask.model.external = ('\"local-agent-mini-c-agent\"', 1790663796)\ntask.model.params = ('{\"top_p\":0.9,\"temperature\":0.6,\"num_ctx\":4096,\"max_tokens\":1024,\"keep_alive\":\"2m\"}', 1790999480)\nintegrity= ok\n--- OLLAMA_EFFECTIVE ---\nOLLAMA_CONTEXT_LENGTH=4096\nOLLAMA_KEEP_ALIVE=10m\nOLLAMA_MAX_LOADED_MODELS=1\nOLLAMA_NUM_PARALLEL=1\n--- API_PS ---\n{\"models\":[]}\n--- WARM_CRON_COUNT ---\n0\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-final-policy-readback-40",
+    "unresolved": []
+  }
+}
