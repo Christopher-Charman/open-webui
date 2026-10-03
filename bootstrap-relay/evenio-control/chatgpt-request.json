@@ -1,8 +1,8 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-resume-audit-01",
+  "request_id": "cg-evenio-20261003-open-terminal-preflight-01",
   "target_runtime_id": "fasthost.evenio",
-  "tool": "runtime_audit",
+  "tool": "runtime_health",
   "arguments": {},
   "authority_ceiling": "read_only",
   "ttl": 300
