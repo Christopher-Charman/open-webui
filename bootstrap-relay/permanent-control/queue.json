@@ -935,17 +935,6 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ollama-event-540a0812c04545db",
       "version": 1
-    },
-    {
-      "ciphertext_b64": "C4ehhVIQWA-iPGYu7VIgcA8FeF7mF00ZyskUuiElyxSnq5kM0hDjrsUfqMk9ZD1krU5X9MprHVxfGmQWMiefPfCaDTtlZMqF8vAo2FyIOcwK8e3JN9UfUjd2SmbOiJyM2jn4NUPa3WrA-BMPEHAoElfLleJ5PgAiHuaQ3poZfHquvypDjwZwvst-Gtuqf7Elzze8pNIr0nGxWRNpyjKfV5l4B8twkf3AdU58tR6E-iWES9S6sIIfmF-p4lznc3BHMVZBfzpyA28rrd0PurJF2AJLwpEh9uOdcuX9fz6W2K30zh98FMBXmVeQXVm2Q9Et3-WUTvuDcByIzTfxmu_AsLbToko11KRfarxx3YrpM3sEB4UR7vgFcXRN1UPKGUJcvV9Xen107ScEjEGpf1Xy6l7hC757sYKzJDQCQJdXhYwpD_d0vtt7kdWzeEP1Phy9BONrWm-aXWA",
-      "created_at": 1791048920,
-      "expires_at": 1791049520,
-      "nonce_b64": "2o1pVOdJwI3GxKzi",
-      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAoATFbKZF_446efYBTQfgo2GhIGeVzOBPlJx6CoOr83A",
-      "protocol": "powerpc-control-v1",
-      "target_runtime_id": "fasthost.powerpc",
-      "task_id": "cg-20261003-read-gate-script-musoa7ei05ufoyct",
-      "version": 1
     }
   ],
   "version": 1
