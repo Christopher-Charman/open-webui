@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-active-local-model-policy-census-55",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-active-local-model-policy-census-55",
+  "tool": "terminal_exec",
+  "verified_at": 1791005853,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "6ccf7d1047929f16c9bcf3d64960d7b5c29aa2a5d53a08db3161e4aa6b4c54de",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "[{\"base_model_id\":\"llama3.2:3b-text-q4_K_M\",\"id\":\"ahsoka-tano\",\"name\":\"Ahsoka Tano\",\"policy\":{\"keep_alive\":\"24h\",\"max_tokens\":4096,\"num_ctx\":1024,\"num_gpu\":0,\"num_thread\":6,\"think\":false,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790891358},{\"base_model_id\":null,\"id\":\"deepseek-r1:1.5b\",\"name\":\"deepseek-r1:1.5b\",\"policy\":{\"keep_alive\":\"30m\",\"max_tokens\":1024,\"num_ctx\":4096,\"num_gpu\":0,\"num_thread\":6,\"think\":false,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790670387},{\"base_model_id\":null,\"id\":\"deepseek-r1:1.5b-qwen-distill-q8_0\",\"name\":\"DeepSeek Q8\",\"policy\":{\"keep_alive\":\"1m\",\"max_tokens\":512,\"num_ctx\":4096,\"num_gpu\":0,\"num_thread\":6,\"think\":true,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790203095},{\"base_model_id\":null,\"id\":\"gemma3:1b\",\"name\":\"gemma3:1b\",\"policy\":{\"keep_alive\":null,\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":null,\"num_thread\":null,\"think\":null,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790331956},{\"base_model_id\":null,\"id\":\"gemma3:270m\",\"name\":\"gemma3:270m\",\"policy\":{\"keep_alive\":\"24h\",\"max_tokens\":2048,\"num_ctx\":4096,\"num_gpu\":0,\"num_thread\":6,\"think\":false,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790725389},{\"base_model_id\":null,\"id\":\"gemma3:270m-core\",\"name\":\"Gemma 3 270M Core\",\"policy\":{\"keep_alive\":null,\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":null,\"num_thread\":null,\"think\":null,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790866189},{\"base_model_id\":\"starfleet_computer\",\"id\":\"gemma3:270m-local\",\"name\":\"Starfleet Computer\",\"policy\":{\"keep_alive\":null,\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":null,\"num_thread\":null,\"think\":null,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790612103},{\"base_model_id\":null,\"id\":\"granite4.2:3b\",\"name\":\"granite4.2:3b\",\"policy\":{\"keep_alive\":null,\"max_tokens\":8192,\"num_ctx\":8192,\"num_gpu\":0,\"num_thread\":8,\"think\":false,\"use_mlock\":false,\"use_mmap\":false},\"updated_at\":1790923606},{\"base_model_id\":null,\"id\":\"lfm2.5:8b-a1b-q4_K_M\",\"name\":\"lfm2.5:8b-a1b-q4_K_M\",\"policy\":{\"keep_alive\":\"30m\",\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":0,\"num_thread\":6,\"think\":false,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790669079},{\"base_model_id\":null,\"id\":\"llama3.2:3b-text-q4_K_M\",\"name\":\"llama3.2:3b-text-q4_K_M\",\"policy\":{\"keep_alive\":null,\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":null,\"num_thread\":null,\"think\":null,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790331001},{\"base_model_id\":\"llama3.2:3b-text-q4_K_M\",\"id\":\"local-agent-mini-c-agent\",\"name\":\"Local Agent (Mini C-Agent)\",\"policy\":{\"keep_alive\":null,\"max_tokens\":2048,\"num_ctx\":8192,\"num_gpu\":0,\"num_thread\":6,\"think\":false,\"use_mlock\":null,\"use_mmap\":false},\"updated_at\":1790893112},{\"base_model_id\":null,\"id\":\"ornith:latest\",\"name\":\"ornith:latest\",\"policy\":{\"keep_alive\":\"30m\",\"max_tokens\":4096,\"num_ctx\":4096,\"num_gpu\":0,\"num_thread\":8,\"think\":false,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790927363},{\"base_model_id\":null,\"id\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"name\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"policy\":{\"keep_alive\":\"24h\",\"max_tokens\":1024,\"num_ctx\":4096,\"num_gpu\":0,\"num_thread\":6,\"think\":null,\"use_mlock\":true,\"use_mmap\":true},\"updated_at\":1790721923},{\"base_model_id\":null,\"id\":\"qwen2.5-coder:7b\",\"name\":\"qwen2.5-coder:7b\",\"policy\":{\"keep_alive\":null,\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":null,\"num_thread\":null,\"think\":null,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790197201},{\"base_model_id\":null,\"id\":\"qwen3:4b\",\"name\":\"qwen3:4b\",\"policy\":{\"keep_alive\":null,\"max_tokens\":null,\"num_ctx\":null,\"num_gpu\":null,\"num_thread\":null,\"think\":null,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790659749},{\"base_model_id\":null,\"id\":\"qwen3:4b-instruct\",\"name\":\"qwen3:4b-instruct\",\"policy\":{\"keep_alive\":\"30m\",\"max_tokens\":1024,\"num_ctx\":8192,\"num_gpu\":0,\"num_thread\":6,\"think\":false,\"use_mlock\":null,\"use_mmap\":null},\"updated_at\":1790866194}]\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-active-local-model-policy-census-55",
+    "unresolved": []
+  }
+}
