@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-ollama-finite-policy-proof-34",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-ollama-finite-policy-proof-34",
+  "tool": "terminal_exec",
+  "verified_at": 1791000033,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "04b2fe56d601109d867d8165121feba45d194f019ba5e5e869e58c7dda39e389",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "--- POLICY_LEDGER_CONTEXT ---\n- Kept AHSOKA_PHONEME_OVERRIDES={} and the Markdown/TTS markup sanitizer.\n- Restored the last measured fan-fiction acoustic profile:\n  max phoneme IDs 240; length scale 1.28; noise scale 0.667; noise_w 0.68; phrase pause 0.10 s; paragraph pause 0.22 s; edge fade 0.008 s; volume 1.10.\n- Bumped the Ahsoka local-ready marker to v2 so previously cached/local-active state is ignored after the next client reload. This deliberately returns Ahsoka to the verified server/Piper baseline until Test voice explicitly re-enables local WASM inference.\n- Ahsoka direct regression remains HTTP 200 / X-TTS-Provider=piper.\n\nClient Audio panel:\n- pwa-voice-bridge v1.1.7.\n- Piper worker v0.1.1.\n- Panel title changed from Client voice to Voice route because Cortana is server-backed.\n- Test local renamed Test voice.\n- Opening the panel remains passive; no model/GPU probe is required.\n- Cortana Test voice performs only a lightweight server/Pocket health/warm check.\n- Ahsoka local inference is WASM-safe; worker also includes execution-time WebGPU->WASM recovery for INT64 GatherND failures.\n- External HTTPS serving verified for bridge v1.1.7, worker v0.1.1 and loader; package/frontend static copies are synchronized.\n\nMemory recovery:\n- Primary voice server changed to lazy-load Kokoro and legacy RVC dependencies. Only Ahsoka/Piper is kept hot.\n- Removed top-level Kokoro, scipy-signal, soundfile and legacy RVC runtime imports from the hot path; they load only if actually needed.\n- Primary voice RSS dropped from ~3.87 GB to ~136 MB after restart.\n- Host available memory rose from ~2.8 GB to ~6.9 GB immediately after the voice cleanup; with two small Ollama models resident it remains ~5.2 GB available.\n\nOllama:\n- OLLAMA_KEEP_ALIVE increased 10m -> 30m.\n- OLLAMA_MAX_LOADED_MODELS increased 1 -> 2.\n- NUM_PARALLEL remains 1 and context remains 4096.\n- Verified gemma3:270m and gemma3:1b can coexist resident.\n- gemma3:270m cold: load ~4.003 s, total ~4.059 s.\n- gemma3:270m warm after hot-set retention: load ~0.0014 s, total ~0.0618 s.\n- gemma3:1b cold: load ~11.521 s, total ~11.799 s.\n- This confirms the perceived wait is cold model I/O/loading, not inference latency.\n\nFinal hashes:\n- kokoro-openai-server.py 6ce44a43b9c67d9a73e58add83a8b123caee0bedec986030ce97d798dd7c0adb\n- pwa-voice-bridge.js 85fbbb7fa1b7a194cde0f6f5f774f11d0a927e47f2ff8332931115789b2f9674\n- piper-core.worker.mjs f0768058ec2bcce992113f5f00f90b075b7d53e0ab5a3fba17cd78624d7a5b10\n- loader.js de704c5d68e5f0fb756968119628f08b456b1479c64adec9e055149dcade414b\n- ollama-runtime.env bd3dc41e5f4b26d72a280afc1f7a59376883de464e7f7d6cd0748b07bed28734\n\nRollback:\n- kokoro-openai-server.py.pre-resource-recovery-gpt56sol.bak\n- pwa-voice-bridge.js.pre-resource-recovery-gpt56sol.bak\n- ollama-runtime.env.pre-hotset-gpt56sol.bak\n\n## 2026-09-26 \u2014 Cortana RVC fully retired\nAttribution: GPT-5.6 Sol.\n\nUser decision:\n- Cortana RVC never worked in the actual user path and is not to remain as a fallback or candidate. Remove it completely from the active architecture.\n\nProduction changes:\n--- CURRENT_PS ---\n{\"models\":[{\"name\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"model\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"size\":1223981792,\"digest\":\"d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"qwen2\",\"families\":[\"qwen2\"],\"parameter_size\":\"1.5B\",\"quantization_level\":\"Q4_K_M\"},\"expires_at\":\"2319-01-13T03:47:33.730994451Z\",\"size_vram\":0,\"context_length\":4096}]}\n--- CURRENT_ENV_LINE ---\n9:export OLLAMA_KEEP_ALIVE=-1\n--- FINITE_CHECKPOINT_LINES ---\n/home/storage/781/4477781/user/webapp/checkpoints/warm-residency-20260928-1915/ollama-runtime.env: export OLLAMA_KEEP_ALIVE=10m\n/home/storage/781/4477781/user/webapp/backups/ollama-openwebui-optimization-20260926T210103Z/ollama-runtime.env: export OLLAMA_KEEP_ALIVE=10m\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-ollama-finite-policy-proof-34",
+    "unresolved": []
+  }
+}
