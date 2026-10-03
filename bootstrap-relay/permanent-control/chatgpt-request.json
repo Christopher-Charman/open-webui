@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-postrestart-model-census-34",
+  "request_id": "cg-20261003-ollama-keepalive-policy-trace-34",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\necho '--- OLLAMA_API_PS_POST_RESTART ---'\ncurl -fsS --max-time 5 http://127.0.0.1:11434/api/ps\necho\necho '--- OLLAMA_KEEPALIVE_SCRIPT ---'\nstat -c '%n size=%s mtime=%y mode=%a' \"$BASE/bin/ollama-keepalive\"\nsed -n '1,260p' \"$BASE/bin/ollama-keepalive\"\necho '--- WARM_RESIDENCY_SCRIPT ---'\nstat -c '%n size=%s mtime=%y mode=%a' \"$BASE/runtime-domains/automation/warm-residency.sh\"\nsed -n '1,220p' \"$BASE/runtime-domains/automation/warm-residency.sh\"\necho '--- RELEVANT_CRON_FULL_LINES ---'\n(crontab -l 2>/dev/null || true) | grep -nE 'OLLAMA_KEEPALIVE|ollama-keepalive|warm-residency' || true"
+    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\necho '--- API_PS ---'\ncurl -fsS http://127.0.0.1:11434/api/ps; echo\necho '--- OLLAMA_KEEPALIVE_SCRIPT ---'\nsed -n '1,280p' \"$BASE/bin/ollama-keepalive\" 2>/dev/null || echo MISSING\necho '--- WARM_RESIDENCY_SCRIPT ---'\nsed -n '1,260p' \"$BASE/runtime-domains/automation/warm-residency.sh\" 2>/dev/null || echo MISSING\necho '--- OPERATING_STATE_RESIDENCY_SECTION ---'\nsed -n '990,1045p' \"$BASE/openai-token-broker/OPERATING_STATE.md\" 2>/dev/null || true\necho '--- KEEPALIVE_CHECKPOINT_FILES ---'\nfind \"$BASE/checkpoints/ollama-keepalive-20261001T010221+0100\" -maxdepth 2 -type f -printf '%p\\n' 2>/dev/null | sort\necho '--- KEEPALIVE_CHECKPOINT_ENV ---'\nsed -n '1,220p' \"$BASE/checkpoints/ollama-keepalive-20261001T010221+0100/ollama-runtime.env\" 2>/dev/null || true\necho '--- WARM_RESIDENCY_CHECKPOINT_ENV ---'\nsed -n '1,220p' \"$BASE/checkpoints/warm-residency-20260928-1915/ollama-runtime.env\" 2>/dev/null || true"
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300
