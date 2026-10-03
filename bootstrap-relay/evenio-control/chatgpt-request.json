@@ -1,18 +1,16 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-cas-update-01",
+  "request_id": "cg-evenio-20261003-paperclip-positive-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "paperclip-live-acceptance-20261003-update-01",
-      "origin_runtime_identity": "chatgpt.ios.owned-control",
+      "task_id": "paperclip-accept-20261003-01",
+      "origin_runtime_identity": "chatgpt-session",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "CAS-update the bounded private Paperclip workspace acceptance artifact.",
-      "evidence_refs": [
-        "receipt:cg-evenio-20261003-paperclip-create-01"
-      ],
+      "objective": "Bounded private workspace acceptance test.",
+      "evidence_refs": [],
       "authority_ceiling": [
         "write_runtime"
       ],
@@ -22,16 +20,15 @@
       "resource_budget": {
         "max_write_bytes": 4096
       },
-      "deadline": null,
       "expected_result_schema": {},
       "return_route": "evenio-control-v1",
       "recursion_depth": 0
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/live-control-plane.txt",
-      "content": "Evenio Paperclip bounded execution live acceptance 2026-10-03\\nCAS update accepted\\n",
-      "expected_sha256": "e3c672665e0248515e83fd574e1b60e10301bb3592179acf98e5004e7b4a98b4"
+      "path": "acceptance/20261003/delegation-execute.txt",
+      "content": "Evenio bounded delegation acceptance.\\n",
+      "expected_sha256": "absent"
     }
   },
   "authority_ceiling": "write_runtime",
