@@ -935,6 +935,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ollama-event-540a0812c04545db",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "eX2Do2aMFlDcenmBtMBLjEK3CmiL7YBd2V7Y0silPhKuhRj_UM1No99I_10915B99kFHTzoo2_27YJ7LkBvDjomAq2EHPT2V-kzP-6SUcTDKuQotPIm1Tn798AcIpRBBfBlUxB_632uYzaPn7pNErD7Z9YlmoKW8ahII6RfR1yvaJ3_ngHGIBdbuqpi2QmiNTggzZV3umIDS9J7yTMnFJ49G3BIkdxcHZs57k2f7dkFX2oiJFNCyLuymPyrJ_m5rzirJaq2Lx37q_NCXfXAXaerpXDCsIjOgisHmsrV9T14Gcib35g-7PcNZ5diP2kEJo3PtdNVZtuKNGkP34VClDTcQC1tD8IC58uOrw0AOFjZOn0esx9FMQ8s",
+      "created_at": 1791048684,
+      "expires_at": 1791049284,
+      "nonce_b64": "CvrbJJ_VuFpy8p7Z",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAVsI9MLkz0CYcdup8xB58vaQKtq965ikxM_8zh3w33y4",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "cg-20261003-listdir-muso55qwybwq7ay7",
+      "version": 1
     }
   ],
   "version": 1
