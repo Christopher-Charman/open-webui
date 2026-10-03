@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-qwen-reload-after-aux-52",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-qwen-reload-after-aux-52",
+  "tool": "terminal_exec",
+  "verified_at": 1791005112,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "6e8efaf3ab640080b262ebba10881243657aad2e63da9ac57149146d5c6c8c6d",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "PHASE=qwen_reload_after_aux\nPS_BEFORE={\"models\":[]}\nQWEN_RELOAD={\"model\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"wall_ms\":9683.849,\"total_duration_ms\":9682.614,\"load_duration_ms\":8890.826,\"prompt_eval_duration_ms\":787.909,\"eval_duration_ms\":0.001,\"prompt_eval_count\":32,\"eval_count\":1}\nPS_AFTER={\"models\":[{\"name\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"model\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"size\":1223981792,\"digest\":\"d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"qwen2\",\"families\":[\"qwen2\"],\"parameter_size\":\"1.5B\",\"quantization_level\":\"Q4_K_M\"},\"expires_at\":\"2026-10-03T06:35:10.392294208+01:00\",\"size_vram\":0,\"context_length\":4096}]}\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-qwen-reload-after-aux-52",
+    "unresolved": []
+  }
+}
