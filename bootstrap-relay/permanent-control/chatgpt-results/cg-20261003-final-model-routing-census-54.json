@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-final-model-routing-census-54",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-final-model-routing-census-54",
+  "tool": "terminal_exec",
+  "verified_at": 1791005710,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "303d56f0273eb21e922c22e2aeecd4b939c7e92725fe076ea85be1146a1d8e92",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "TASK_CONFIG={\"task.model.default\":{\"value\":\"\\\"local-agent-mini-c-agent\\\"\",\"updated_at\":1790663796},\"task.model.external\":{\"value\":\"\\\"local-agent-mini-c-agent\\\"\",\"updated_at\":1790663796},\"task.model.params\":{\"value\":\"{\\\"top_p\\\":0.9,\\\"temperature\\\":0.6,\\\"num_ctx\\\":4096,\\\"max_tokens\\\":1024,\\\"keep_alive\\\":\\\"2m\\\"}\",\"updated_at\":1790999480},\"models.default_params\":{\"value\":\"{\\\"reasoning_effort\\\":\\\"none\\\",\\\"custom_params\\\":{},\\\"max_tokens\\\":768,\\\"temperature\\\":0.45,\\\"top_p\\\":0.9}\",\"updated_at\":1790660774}}\nBOUND_MODEL={\"id\":\"local-agent-mini-c-agent\",\"name\":\"Local Agent (Mini C-Agent)\",\"base_model_id\":\"llama3.2:3b-text-q4_K_M\",\"params\":\"{\\\"reasoning_effort\\\": \\\"none\\\", \\\"num_gpu\\\": 0, \\\"num_thread\\\": 6, \\\"temperature\\\": 0.1, \\\"stream_response\\\": false, \\\"num_ctx\\\": 8192, \\\"num_keep\\\": 1, \\\"max_tokens\\\": 2048, \\\"use_mmap\\\": false, \\\"think\\\": false, \\\"top_k\\\": 20, \\\"top_p\\\": 0.9, \\\"min_p\\\": 0, \\\"repeat_penalty\\\": 1.5, \\\"format\\\": \\\"json\\\", \\\"function_calling\\\": \\\"native\\\"}\",\"is_active\":1,\"updated_at\":1790893112}\nACTIVE_DERIVED_MODELS=[{\"id\":\"ahsoka-tano\",\"name\":\"Ahsoka Tano\",\"base_model_id\":\"llama3.2:3b-text-q4_K_M\",\"params\":\"{\\\"system\\\": \\\"<start_of_turn>user\\\\nUser request:\\\\n[user message]\\\\n<end_of_turn>\\\\n<start_of_turn>model\\\", \\\"stream_response\\\": false, \\\"use_mlock\\\": true, \\\"use_mmap\\\": true, \\\"keep_alive\\\": \\\"24h\\\", \\\"num_gpu\\\": 0, \\\"function_calling\\\": \\\"legacy\\\", \\\"temperature\\\": 0.1, \\\"num_thread\\\": 6, \\\"reasoning_effort\\\": \\\"none\\\", \\\"max_tokens\\\": 4096, \\\"think\\\": false, \\\"num_keep\\\": 1, \\\"num_ctx\\\": 1024, \\\"repeat_penalty\\\": 1.5}\",\"is_active\":1,\"updated_at\":1790891358},{\"id\":\"gemma3:270m-local\",\"name\":\"Starfleet Computer\",\"base_model_id\":\"starfleet_computer\",\"params\":\"{\\\"stream_response\\\": false}\",\"is_active\":1,\"updated_at\":1790612103},{\"id\":\"local-agent-mini-c-agent\",\"name\":\"Local Agent (Mini C-Agent)\",\"base_model_id\":\"llama3.2:3b-text-q4_K_M\",\"params\":\"{\\\"reasoning_effort\\\": \\\"none\\\", \\\"num_gpu\\\": 0, \\\"num_thread\\\": 6, \\\"temperature\\\": 0.1, \\\"stream_response\\\": false, \\\"num_ctx\\\": 8192, \\\"num_keep\\\": 1, \\\"max_tokens\\\": 2048, \\\"use_mmap\\\": false, \\\"think\\\": false, \\\"top_k\\\": 20, \\\"top_p\\\": 0.9, \\\"min_p\\\": 0, \\\"repeat_penalty\\\": 1.5, \\\"format\\\": \\\"json\\\", \\\"function_calling\\\": \\\"native\\\"}\",\"is_active\":1,\"updated_at\":1790893112}]\nDB_INTEGRITY=ok\nOLLAMA_TAG_NAMES=[\"ornith:latest\",\"granite4.2:3b\",\"gpt-oss:20b\",\"qwen2.5:7b\",\"bge-m3:latest\",\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"qwen3:4b-instruct\",\"gemma3:270m-local\",\"gemma3:270m-core\",\"gemma3:1b\",\"gemma3:270m\",\"llama3.2:3b-text-q4_K_M\",\"qwen2.5-coder:7b\",\"qwen3:4b\",\"deepseek-r1:1.5b-qwen-distill-q8_0\",\"deepseek-r1:1.5b\",\"lfm2.5:8b-a1b-q4_K_M\"]\nOLLAMA_PS={\"models\":[{\"name\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"model\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"size\":1223981792,\"digest\":\"d7372fd828518a4d38b1eb196c673c31a85f2ed302b3d1e406c4c2d1b64a0668\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"qwen2\",\"families\":[\"qwen2\"],\"parameter_size\":\"1.5B\",\"quantization_level\":\"Q4_K_M\"},\"expires_at\":\"2026-10-03T06:35:10.392294208+01:00\",\"size_vram\":0,\"context_length\":4096}]}\nOLLAMA_ENV=[\"OLLAMA_CONTEXT_LENGTH=4096\",\"OLLAMA_KEEP_ALIVE=10m\",\"OLLAMA_MAX_LOADED_MODELS=1\",\"OLLAMA_MAX_QUEUE=2\",\"OLLAMA_NUM_PARALLEL=1\",\"OLLAMA_NUM_THREAD=6\"]\nWARM_CRON_COUNT=0\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-final-model-routing-census-54",
+    "unresolved": []
+  }
+}
