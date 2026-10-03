@@ -1,0 +1,47 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-local-mcp-server-contract-48",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-local-mcp-server-contract-48",
+  "tool": "read_text",
+  "verified_at": 1791004187,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "b6586e293cc0bb78432366945af69de915bbe2c41515a894b722155367144dfc",
+        "capability": "read_text"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';\nimport { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';\nimport { z } from 'zod';\nimport { spawn } from 'node:child_process';\nimport fs from 'node:fs/promises';\nimport { createBoundedPathResolver } from './path-policy.mjs';\n\nconst ROOT='/home/storage/781/4477781/user/webapp';\nconst safeExistingPath=await createBoundedPathResolver(ROOT);\nconst server=new McpServer({name:'chris-fasthosts-local',version:'1.0.0'});\nconst appendBounded=(current,chunk,max)=>current.length>=max?current:(current+chunk).slice(0,max);\n\nserver.tool('runtime_health','Run the canonical architecture health check',{},async()=>new Promise((resolve)=>{\n  const p=spawn(ROOT+'/runtime-domains/tools/architecture-health.sh',[],{cwd:ROOT,env:{...process.env,HOME:ROOT},detached:true});\n  let o='',e='',done=false,t;\n  const finish=(c,why='')=>{\n    if(done)return;\n    done=true;\n    if(t)clearTimeout(t);\n    resolve({content:[{type:'text',text:(o+e+(why?'\\n'+why:'')).slice(-30000)}],isError:c!==0});\n  };\n  p.stdout.on('data',d=>{o=appendBounded(o,d.toString(),30000)});\n  p.stderr.on('data',d=>{e=appendBounded(e,d.toString(),15000)});\n  p.on('error',err=>finish(1,'SPAWN_ERROR: '+err.message));\n  p.on('close',c=>finish(c??1));\n  t=setTimeout(()=>{try{process.kill(-p.pid,'SIGTERM')}catch{};finish(124,'TIMEOUT')},30000);\n}));\n\nserver.tool('read_text','Read a UTF-8 text file inside the bounded webapp root',{path:z.string(),max_bytes:z.number().int().positive().max(262144).optional()},async({path:requestedPath,max_bytes=65536})=>{\n  const q=await safeExistingPath(requestedPath);\n  const h=await fs.open(q,'r');\n  try{\n    const b=Buffer.alloc(max_bytes);\n    const {bytesRead}=await h.read(b,0,max_bytes,0);\n    return {content:[{type:'text',text:b.subarray(0,bytesRead).toString('utf8')}]};\n  }finally{\n    await h.close();\n  }\n});\n\nserver.tool('list_dir','List one directory inside the bounded webapp root',{path:z.string().optional()},async({path:requestedPath='.'})=>{\n  const q=await safeExistingPath(requestedPath);\n  const entries=[];\n  const dir=await fs.opendir(q);\n  for await(const x of dir){\n    entries.push((x.isDirectory()?'d ':'f ')+x.name);\n    if(entries.length>=500)break;\n  }\n  return {content:[{type:'text',text:entries.join('\\n')}]};\n});\n\nserver.tool('terminal_exec','Execute one bounded shell command as the existing Fasthosts account. No privilege escalation. Output is capped.',{command:z.string().min(1).max(8192),timeout_ms:z.number().int().min(100).max(30000).optional()},async({command,timeout_ms=10000})=>new Promise((resolve)=>{\n  const p=spawn('/bin/bash',['-lc',command],{cwd:ROOT,env:{...process.env,HOME:ROOT,PATH:ROOT+'/.local/node22-glibc217/bin:'+ROOT+'/miniconda/bin:/usr/local/bin:/usr/bin:/bin'},detached:true});\n  let o='',e='',done=false,t;\n  const finish=(c,why='')=>{\n    if(done)return;\n    done=true;\n    if(t)clearTimeout(t);\n    resolve({content:[{type:'text',text:(o+e+(why?'\\n'+why:'')).slice(-60000)}],isError:c!==0});\n  };\n  p.stdout.on('data',d=>{o=appendBounded(o,d.toString(),60000)});\n  p.stderr.on('data',d=>{e=appendBounded(e,d.toString(),30000)});\n  p.on('error',err=>finish(1,'SPAWN_ERROR: '+err.message));\n  p.on('close',c=>finish(c??1));\n  t=setTimeout(()=>{try{process.kill(-p.pid,'SIGTERM')}catch{};finish(124,'TIMEOUT')},timeout_ms);\n}));\n\nawait server.connect(new StdioServerTransport());\n",
+          "type": "text"
+        }
+      ]
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-local-mcp-server-contract-48",
+    "unresolved": []
+  }
+}
