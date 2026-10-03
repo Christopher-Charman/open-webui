@@ -1,0 +1,88 @@
+{
+  "authority_ceiling": "write_runtime",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:TDeOHYs1mVRxfoEyJrpF4ng4QUqsMx/vABzIxe85opY",
+  "request_id": "cg-evenio-20261003-paperclip-positive-01",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.evenio",
+  "task_id": "chatgpt-cg-evenio-20261003-paperclip-positive-01",
+  "tool": "delegation_execute",
+  "verified_at": 1791002693,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "c28d1d46b00fd0bcde70f5a186861949918e2de957f8ffe5900753f422f44ec8",
+        "capability": "delegation_execute"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.evenio",
+      "uid": 2283676,
+      "user": "csh3461042"
+    },
+    "resource_usage": {
+      "bounded_actions": 1,
+      "local_mcp_calls": 0,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "admission": {
+        "admitted": true,
+        "effective_authority": [
+          "write_runtime"
+        ],
+        "effective_capabilities": [
+          "workspace_write"
+        ],
+        "envelope_sha256": "b0c9635d1b0a9e7b3fbcd4cb5546775da34bf2609b5104c59f9400fbde1e3db7",
+        "target_agent_identity": "evenio-control-agent",
+        "target_runtime_identity": "fasthost.evenio",
+        "task_id": "paperclip-accept-20261003-01"
+      },
+      "idempotent_replay": false,
+      "receipt": {
+        "actions_taken": [
+          {
+            "arguments_sha256": "e3fbc7796c059ce398b096778dfddef45a572f25cd97603cfafc1f094b34a7be",
+            "capability": "workspace_write"
+          }
+        ],
+        "completion_state": "COMPLETE",
+        "evidence_refs": [
+          "envelope_sha256:b0c9635d1b0a9e7b3fbcd4cb5546775da34bf2609b5104c59f9400fbde1e3db7"
+        ],
+        "executor_identity": "evenio-control-agent",
+        "resource_usage": {
+          "bounded_actions": 1,
+          "bytes_written": 39
+        },
+        "result": {
+          "after_sha256": "5d337ae274d86051b309ec1c2e776acca084726f207ef65a4a399650284d445d",
+          "before_sha256": null,
+          "bytes_written": 39,
+          "capability": "workspace_write",
+          "created": true,
+          "path": "acceptance/20261003/delegation-execute.txt",
+          "workspace": "paperclip-private"
+        },
+        "runtime_receipt": {
+          "execution_surface": "evenio-control-v1 -> bounded-workspace-execution",
+          "observed_at": "2026-10-03T04:44:52.071844Z",
+          "stable_runtime_id": "fasthost.evenio"
+        },
+        "task_id": "paperclip-accept-20261003-01",
+        "unresolved_items": []
+      }
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/368/4910368/user/webapp/bin/evenio-local-mcp",
+      "namespace": "/home/storage/368/4910368/user",
+      "webapp": "/home/storage/368/4910368/user/webapp"
+    },
+    "task_id": "chatgpt-cg-evenio-20261003-paperclip-positive-01",
+    "unresolved": []
+  }
+}
