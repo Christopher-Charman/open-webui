@@ -1,9 +1,41 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-final-runtime-audit-01",
+  "request_id": "cg-evenio-20261003-paperclip-reject-budget-01",
   "target_runtime_id": "fasthost.evenio",
-  "tool": "runtime_audit",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "delegation_execute",
+  "arguments": {
+    "envelope": {
+      "task_id": "EVN-PAPERCLIP-REJECT-BUDGET-20261003-01",
+      "origin_runtime_identity": "chatgpt.control",
+      "target_runtime_identity": "fasthost.evenio",
+      "target_agent_identity": "evenio-control-agent",
+      "objective": "Validate enforcement of the bounded workspace byte ceiling.",
+      "evidence_refs": [
+        "git:Christopher-Charman/evenio-online@main"
+      ],
+      "authority_ceiling": [
+        "write_runtime"
+      ],
+      "allowed_capability_profile": [
+        "workspace_write"
+      ],
+      "resource_budget": {
+        "max_write_bytes": 16
+      },
+      "deadline": null,
+      "expected_result_schema": {
+        "type": "object"
+      },
+      "return_route": "owned:chatgpt-session",
+      "recursion_depth": 0
+    },
+    "action_tool": "workspace_write",
+    "action_arguments": {
+      "path": "acceptance/budget-probe.txt",
+      "content": "0123456789abcdefghijklmnopqrstuv\n",
+      "expected_sha256": "absent"
+    }
+  },
+  "authority_ceiling": "write_runtime",
   "ttl": 300
 }
