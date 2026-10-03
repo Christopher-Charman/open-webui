@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-benchmark-timeout-census-46",
+  "request_id": "cg-20261003-local-mcp-terminal-contract-47",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "terminal_exec",
+  "tool": "read_text",
   "arguments": {
-    "command": "set -eu\necho '--- API_PS ---'\ncurl -fsS --max-time 5 http://127.0.0.1:11434/api/ps; echo\necho '--- RECENT_OLLAMA_CHAT ---'\ntail -n 240 /home/storage/781/4477781/user/webapp/ollama-runtime.log 2>/dev/null | grep -E 'POST +\"/api/chat\"|runner|load' | tail -n 100 || true"
+    "path": "/home/storage/781/4477781/user/webapp/bin/local-mcp"
   },
-  "authority_ceiling": "bounded_operator",
+  "authority_ceiling": "read_only",
   "ttl": 300
 }
