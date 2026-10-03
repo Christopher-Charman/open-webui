@@ -935,6 +935,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ollama-event-540a0812c04545db",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "amdvjkOUOxGv2qGsLb4eKX351LYoX2HMdhyb-awcxhTGMTg0FnL3eyyaAQHLNQws3HfykfCXxX5-oWJl0ub15tK1jaRds7LOBkZBbg7Wm7Bu0LHREX6wJ-5v9euH8HlxIy0lBZnCEdWayKMmkTJapETA744Ooos3PBbNvCd5haAK4d-23cZ_XU3DwwruOnAywBvu2ELe8jXvCdIlZzjj0F2VFNGne96LB6hnRZyU3ZFIeUFYKLhwYJcMkGM8BBP8C06GIt5ODviN-Byr0uiPTHdMzyxW8hih9haphy0cUJA4ZGniWvtj8sZjd81rVWYUHrIuZQ_19uoRBkALtXaUGz9xxP1uPtZ26zEgSJ3KBqmEQWtFQGC_H-cR",
+      "created_at": 1791048261,
+      "expires_at": 1791048861,
+      "nonce_b64": "DX6P1xsLTKYBcWXt",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEA0NRvTJ9ygvi6JHNKFgDU0kDsTh9qT9ytxcbyi4bwinM",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "cg-20261003-health-musnw2w4fz7sxfqw",
+      "version": 1
     }
   ],
   "version": 1
