@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-runtime-health-after-restart-fail-32",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-runtime-health-after-restart-fail-32",
+  "tool": "runtime_health",
+  "verified_at": 1790999801,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "capability": "runtime_health"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "ARCHITECTURE HEALTH\nOpenWebUI            PASS 200\nOpenAI-broker        PASS 200\nKokoro-TTS           PASS 200\nPocket-voice         PASS 200\nOpen-Terminal        PASS 200\nTerminal-gateway     PASS 200\nOllama               PASS 200\nCONTROL_PLANE.md     PASS present\nENVIRONMENT_MATRIX.md PASS present\nSTATE_POLICY.md      PASS present\nRECOVERY_POLICY.md   PASS present\nRESOURCE_COORDINATION.md PASS present\nWORKER_ROUTING.md    PASS present\nDRIFT_REGISTER.md    PASS present\n-- resource snapshot --\n 04:56:38 up 1 day,  2:50,  0 users,  load average: 1.23, 1.06, 0.86\n              total        used        free      shared  buff/cache   available\nMem:            11G        4.4G        330M        423M        6.8G        6.4G\nSwap:          2.0G        121M        1.9G\n/dev/sdc1       493G  298G  170G  64% /home\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-runtime-health-after-restart-fail-32",
+    "unresolved": []
+  }
+}
