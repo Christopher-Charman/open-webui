@@ -21,7 +21,9 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 PROTOCOL = "evenio-control-v1"
 VERSION = 1
 RUNTIME_ID = "fasthost.evenio"
-ALLOWED_TOOLS = {"runtime_health", "control_state", "runtime_audit", "delegation_probe"}
+READ_ONLY_TOOLS = {"runtime_health", "control_state", "runtime_audit", "delegation_probe", "open_terminal_status"}
+WRITE_RUNTIME_TOOLS = {"delegation_execute", "open_terminal_control"}
+ALLOWED_TOOLS = READ_ONLY_TOOLS | WRITE_RUNTIME_TOOLS
 
 
 def b64e(data: bytes) -> str:
@@ -115,8 +117,11 @@ def prepare(args: argparse.Namespace) -> int:
     if not args.negative_contract_test:
         if tool not in ALLOWED_TOOLS:
             raise ValueError("tool is outside the Evenio bounded contract")
-        if args.authority == "read_only" and tool == "terminal_exec":
-            raise ValueError("read_only authority cannot request terminal_exec")
+        required_authority = "write_runtime" if tool in WRITE_RUNTIME_TOOLS else "read_only"
+        if args.authority != required_authority:
+            raise ValueError(
+                f"authority mismatch for {tool}: expected {required_authority}"
+            )
 
     arguments = json.loads(args.arguments)
     if not isinstance(arguments, dict):
@@ -251,7 +256,7 @@ def main() -> int:
     a.add_argument("--identity", required=True, help="runtime identity.json")
     a.add_argument("--tool", required=True)
     a.add_argument("--arguments", default="{}")
-    a.add_argument("--authority", choices=["read_only", "bounded_operator"], default="read_only")
+    a.add_argument("--authority", choices=["read_only", "write_runtime"], default="read_only")
     a.add_argument("--allowed", help="comma-separated capability profile; defaults to requested tool")
     a.add_argument("--ttl", type=int, default=600)
     a.add_argument("--created-at", type=int)
