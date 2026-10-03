@@ -1,0 +1,48 @@
+{
+  "schema": "chatgpt-owned-control-result-v1",
+  "request_id": "cg-20261003-concurrency-ledger-runtime-health-01",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "task_id": "ppc-acf8589d26e94f0c89907895acff9cf1",
+  "tool": "runtime_health",
+  "authority_ceiling": "read_only",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "verified_at": 1791004904,
+  "completion_state": "COMPLETED",
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "capability": "runtime_health"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "ARCHITECTURE HEALTH\nOpenWebUI            PASS 200\nOpenAI-broker        PASS 200\nKokoro-TTS           PASS 200\nPocket-voice         PASS 200\nOpen-Terminal        PASS 200\nTerminal-gateway     PASS 200\nOllama               PASS 200\nCONTROL_PLANE.md     PASS present\nENVIRONMENT_MATRIX.md PASS present\nSTATE_POLICY.md      PASS present\nRECOVERY_POLICY.md   PASS present\nRESOURCE_COORDINATION.md PASS present\nWORKER_ROUTING.md    PASS present\nDRIFT_REGISTER.md    PASS present\n-- resource snapshot --\n 06:13:43 up 1 day,  4:07,  0 users,  load average: 0.95, 1.07, 0.97\n              total        used        free      shared  buff/cache   available\nMem:            11G        4.9G        745M        352M        5.8G        5.9G\nSwap:          2.0G        118M        1.9G\n/dev/sdc1       493G  298G  170G  64% /home\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "ppc-acf8589d26e94f0c89907895acff9cf1",
+    "unresolved": []
+  }
+}
