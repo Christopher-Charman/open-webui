@@ -1,17 +1,18 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-replay-01",
+  "request_id": "cg-evenio-20261003-paperclip-create-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "EVN-PAPERCLIP-ACCEPT-20261003-01",
-      "origin_runtime_identity": "chatgpt.control",
+      "task_id": "paperclip-live-acceptance-20261003-create-01",
+      "origin_runtime_identity": "chatgpt.ios.owned-control",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "Create the bounded private-workspace acceptance artifact for the PR #9 live receiver acceptance test.",
+      "objective": "Create one bounded private Paperclip workspace acceptance artifact.",
       "evidence_refs": [
-        "git:Christopher-Charman/evenio-online@main"
+        "evenio-online:main",
+        "open-webui:evenio-control-v1"
       ],
       "authority_ceiling": [
         "write_runtime"
@@ -22,17 +23,15 @@
       "resource_budget": {
         "max_write_bytes": 4096
       },
-      "deadline": "2026-10-03T05:30:00+00:00",
-      "expected_result_schema": {
-        "type": "object"
-      },
-      "return_route": "owned:chatgpt-session",
+      "deadline": null,
+      "expected_result_schema": {},
+      "return_route": "evenio-control-v1",
       "recursion_depth": 0
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/pr9-owned-control-20261003.txt",
-      "content": "Evenio PR #9 bounded workspace acceptance.\n",
+      "path": "acceptance/live-control-plane.txt",
+      "content": "Evenio Paperclip bounded execution live acceptance 2026-10-03\\n",
       "expected_sha256": "absent"
     }
   },
