@@ -1,9 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-final-runtime-health-39",
+  "request_id": "cg-20261003-final-policy-readback-40",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "runtime_health",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\n\"$BASE/envs/openwebui/bin/python\" - <<'PY'\nimport sqlite3, json\np=\"/home/storage/781/4477781/user/webapp/openwebui-data/webui.db\"\nc=sqlite3.connect(\"file:\"+p+\"?mode=ro\",uri=True)\nc.execute(\"PRAGMA query_only=ON\")\nfor k in (\"task.model.default\",\"task.model.external\",\"task.model.params\"):\n    print(k,\"=\",c.execute('select value,updated_at from config where \"key\"=?',(k,)).fetchone())\nprint(\"integrity=\",c.execute(\"pragma integrity_check\").fetchone()[0])\nc.close()\nPY\necho '--- OLLAMA_EFFECTIVE ---'\npid=\"$(pgrep -f \"$BASE/miniconda/bin/ollama serve\" | head -n1)\"\ntr '\\0' '\\n' < \"/proc/$pid/environ\" | grep -E '^OLLAMA_(KEEP_ALIVE|CONTEXT_LENGTH|MAX_LOADED_MODELS|NUM_PARALLEL)=' | sort\necho '--- API_PS ---'\ncurl -fsS --max-time 5 http://127.0.0.1:11434/api/ps; echo\necho '--- WARM_CRON_COUNT ---'\n(crontab -l 2>/dev/null | grep -F -c \"$BASE/runtime-domains/automation/warm-residency.sh\" || true)"
+  },
+  "authority_ceiling": "bounded_operator",
   "ttl": 300
 }
