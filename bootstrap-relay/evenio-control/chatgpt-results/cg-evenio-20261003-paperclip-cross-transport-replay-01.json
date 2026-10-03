@@ -1,0 +1,88 @@
+{
+  "authority_ceiling": "write_runtime",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:TDeOHYs1mVRxfoEyJrpF4ng4QUqsMx/vABzIxe85opY",
+  "request_id": "cg-evenio-20261003-paperclip-cross-transport-replay-01",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.evenio",
+  "task_id": "chatgpt-cg-evenio-20261003-paperclip-cross-transport-replay-01",
+  "tool": "delegation_execute",
+  "verified_at": 1791004264,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "92519353bb6964b61e33df4abfed967c9c73b43d1672b4baaea7b1eb95120382",
+        "capability": "delegation_execute"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.evenio",
+      "uid": 2283676,
+      "user": "csh3461042"
+    },
+    "resource_usage": {
+      "bounded_actions": 1,
+      "local_mcp_calls": 0,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "admission": {
+        "admitted": true,
+        "effective_authority": [
+          "write_runtime"
+        ],
+        "effective_capabilities": [
+          "workspace_write"
+        ],
+        "envelope_sha256": "fd8bac737590c475620acb6f4a3c832d2f492a36504f0ed1fd388cb528678e96",
+        "target_agent_identity": "evenio-control-agent",
+        "target_runtime_identity": "fasthost.evenio",
+        "task_id": "EVN-PAPERCLIP-LOOPBACK-INGRESS-20261003-01"
+      },
+      "idempotent_replay": true,
+      "receipt": {
+        "actions_taken": [
+          {
+            "arguments_sha256": "c94bb69a789d46ea715c3d41a33b82291a4a223b6e8711e250a240431b7ebc9d",
+            "capability": "workspace_write"
+          }
+        ],
+        "completion_state": "COMPLETE",
+        "evidence_refs": [
+          "envelope_sha256:fd8bac737590c475620acb6f4a3c832d2f492a36504f0ed1fd388cb528678e96"
+        ],
+        "executor_identity": "evenio-control-agent",
+        "resource_usage": {
+          "bounded_actions": 1,
+          "bytes_written": 48
+        },
+        "result": {
+          "after_sha256": "eacc249f7c59ece6d44ff6900db294b564b046c002217da2aad5940b9b390124",
+          "before_sha256": null,
+          "bytes_written": 48,
+          "capability": "workspace_write",
+          "created": true,
+          "path": "acceptance/loopback-ingress-pr19.txt",
+          "workspace": "paperclip-private"
+        },
+        "runtime_receipt": {
+          "execution_surface": "evenio-control-v1 -> bounded-workspace-execution",
+          "observed_at": "2026-10-03T05:09:24.949942Z",
+          "stable_runtime_id": "fasthost.evenio"
+        },
+        "task_id": "EVN-PAPERCLIP-LOOPBACK-INGRESS-20261003-01",
+        "unresolved_items": []
+      }
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/368/4910368/user/webapp/bin/evenio-local-mcp",
+      "namespace": "/home/storage/368/4910368/user",
+      "webapp": "/home/storage/368/4910368/user/webapp"
+    },
+    "task_id": "chatgpt-cg-evenio-20261003-paperclip-cross-transport-replay-01",
+    "unresolved": []
+  }
+}
