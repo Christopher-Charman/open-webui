@@ -1,15 +1,15 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-reject-budget-01",
+  "request_id": "cg-evenio-20261003-paperclip-reject-byte-ceiling-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "EVN-PAPERCLIP-REJECT-BUDGET-20261003-01",
+      "task_id": "EVN-PAPERCLIP-REJECT-BYTE-CEILING-20261003-01",
       "origin_runtime_identity": "chatgpt.control",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "Validate enforcement of the bounded workspace byte ceiling.",
+      "objective": "Prove bounded workspace mutation rejects content larger than its delegated byte budget.",
       "evidence_refs": [
         "git:Christopher-Charman/evenio-online@main"
       ],
@@ -31,8 +31,8 @@
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/budget-probe.txt",
-      "content": "0123456789abcdefghijklmnopqrstuv\n",
+      "path": "acceptance/SHOULD-NOT-EXIST-byte-ceiling.txt",
+      "content": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ\n",
       "expected_sha256": "absent"
     }
   },
