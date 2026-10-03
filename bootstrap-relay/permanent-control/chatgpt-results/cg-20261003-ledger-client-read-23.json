@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-ledger-client-read-23",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-ledger-client-read-23",
+  "tool": "terminal_exec",
+  "verified_at": 1790998714,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "81052a2264f6552070a95dcd862f9b8dc8917f4547f51ecf0d1144f4cf1ed189",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "#!/usr/bin/env python3\nimport json,os,sys,urllib.request,urllib.error\nTOKEN=\"/home/storage/781/4477781/user/.concurrency-ledger/client.token\"\nURL=\"http://127.0.0.1:18766/v1/operations\"\nif len(sys.argv)>2:\n    raise SystemExit(\"usage: concurrency-ledger-call [request.json|-]\")\nsource=sys.argv[1] if len(sys.argv)==2 else \"-\"\nif source==\"-\":\n    request=json.load(sys.stdin)\nelse:\n    request=json.load(open(source,encoding=\"utf-8\"))\ntoken=open(TOKEN,encoding=\"utf-8\").read().strip()\npayload=json.dumps(request,separators=(\",\",\":\"),sort_keys=True).encode()\nreq=urllib.request.Request(\n    URL,data=payload,method=\"POST\",\n    headers={\"Authorization\":\"Bearer \"+token,\"Content-Type\":\"application/json\"},\n)\ntry:\n    with urllib.request.urlopen(req,timeout=15) as r:\n        body=r.read()\nexcept urllib.error.HTTPError as e:\n    body=e.read()\n    sys.stderr.write(body.decode(\"utf-8\",\"replace\")+\"\\n\")\n    raise SystemExit(1)\nsys.stdout.write(body.decode(\"utf-8\")+\"\\n\")\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-ledger-client-read-23",
+    "unresolved": []
+  }
+}
