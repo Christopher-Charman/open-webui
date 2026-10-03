@@ -73,12 +73,15 @@ elif auth!="read_only":
     raise AssertionError("non-terminal tools require read_only")
 ttl=d.get("ttl",300)
 assert isinstance(ttl,int) and 30 <= ttl <= 600
+visibility=d.get("result_visibility","summary")
+assert visibility in {"summary","public_plaintext"}
 PY
 
 REQUEST_ID="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'"))["request_id"])')"
 TOOL="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'"))["tool"])')"
 AUTHORITY="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'")).get("authority_ceiling","read_only"))')"
 TTL="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'")).get("ttl",300))')"
+RESULT_VISIBILITY="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'")).get("result_visibility","summary"))')"
 ARGS="$(python3 -c 'import json; print(json.dumps(json.load(open("'"$REQUEST"'"))["arguments"],separators=(",",":")))' )"
 TASK_ID="chatgpt-$REQUEST_ID"
 RESULT_REL="bootstrap-relay/permanent-control/chatgpt-results/$REQUEST_ID.json"
@@ -146,27 +149,7 @@ done
 
 python3 "$CLIENT" decode --result "$ENCRYPTED_RESULT" --context "$CONTEXT" --output "$PLAIN_RESULT" >/dev/null
 
-python3 - "$PLAIN_RESULT" "$WORK/adapter-result.json" "$TASK_ID" "$FP" "$REQUEST_ID" "$TOOL" "$AUTHORITY" <<'PY'
-import json,sys,time
-plain_path,out_path,task_id,fp,request_id,tool,authority=sys.argv[1:8]
-receipt=json.load(open(plain_path,encoding="utf-8"))
-assert receipt.get("task_id")==task_id
-out={
-  "schema":"chatgpt-owned-control-result-v1",
-  "request_id":request_id,
-  "target_runtime_id":"fasthost.powerpc_darwin_org",
-  "legacy_protocol_runtime_id":"fasthost.powerpc",
-  "task_id":task_id,
-  "tool":tool,
-  "authority_ceiling":authority,
-  "identity_fingerprint":fp,
-  "verified_at":int(time.time()),
-  "completion_state":receipt.get("completion_state"),
-  "verified_receipt":receipt,
-}
-with open(out_path,"w",encoding="utf-8") as f:
-    json.dump(out,f,indent=2,sort_keys=True); f.write("\n")
-PY
+python3 "$DIR/receipt_record.py" "$PLAIN_RESULT" "$ENCRYPTED_RESULT" "$WORK/adapter-result.json" "$TASK_ID" "$FP" "$REQUEST_ID" "$TOOL" "$AUTHORITY" "$RESULT_VISIBILITY"
 
 for attempt in 1 2 3 4 5; do
   git fetch origin main >/dev/null 2>&1 || continue

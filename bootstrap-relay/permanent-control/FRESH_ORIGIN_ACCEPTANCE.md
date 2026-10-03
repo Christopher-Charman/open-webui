@@ -1,6 +1,6 @@
 # Owned PowerPC control — fresh-origin acceptance runbook
 
-Status: VERSIONED / LIVE EXECUTION PENDING
+Status: TRANSPORT PROBE PASSED / FULL POSITIVE ACCEPTANCE PENDING (2026-10-03)
 
 This runbook begins only after `bootstrap-control-plane.sh` reports that the owned receiver host phase passed. It is intentionally origin-side: the Web Terminal must no longer be used as routine command or output transport.
 
@@ -16,15 +16,15 @@ Canonical queue:
 
 Runtime identity:
 
-`https://www.powerpc-darwin.org/static/ppc-control-identity-live.json`
+`https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json`
 
-Runtime status:
+Runtime status (operator-only; unauthenticated read returned HTTP 403 on 2026-10-03 and is not an acceptance gate):
 
 `https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/status.json`
 
 Result template:
 
-`https://www.powerpc-darwin.org/static/ppc-control-results/<task_id>.json`
+`https://www.powerpc-darwin.org/static/powerpc-control-v1/results/<task_id>.json`
 
 ## Fresh-origin positive acceptance
 
@@ -50,6 +50,16 @@ Result template:
 `runtime_health` remains available as a platform-health diagnostic, but it executes the wider architecture-health script and is not the owned-transport liveness gate. A degraded or slow unrelated service must not be misclassified as communication-path failure.
 
 Invariant: `CONTROL_TRANSPORT_ACCEPTANCE != AGGREGATE_RUNTIME_HEALTH`.
+
+## 2026-10-03 live observation
+
+The signed identity at `/static/powerpc-control-v1/identity.json` verified against the pinned fingerprint. Task `chatgpt-cg-20261003-concurrency-ledger-list-dir-01` completed with exactly one `list_dir` action, a non-empty 10,047-byte text result, and no unresolved items. Its redacted Git receipt is `bootstrap-relay/permanent-control/chatgpt-results/cg-20261003-concurrency-ledger-list-dir-01.json`.
+
+This proves transport liveness only. Duplicate suppression, the prescribed `read_text` action against `passenger_wsgi.py`, and bounded `terminal_exec` remain unverified, so full positive acceptance remains pending.
+
+## Public receipt handling
+
+GitHub receipts are public. The owned-control runner now stores a redacted summary by default and retains the encrypted result envelope and hashes. Set `result_visibility: "public_plaintext"` only after reviewing the complete result and confirming it is safe to publish. Do not publish local paths, directory listings, credentials, or private configuration.
 
 ## Duplicate suppression
 
