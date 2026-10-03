@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-owui-loopback-auth-preflight-42",
+  "request_id": "cg-20261003-owui-loopback-auth-preflight-43",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
     "command": "set -eu\nfor p in /ollama/api/version /api/models; do\n  tmp=$(mktemp)\n  code=$(curl -sS --max-time 8 -o \"$tmp\" -w '%{http_code}' \"http://127.0.0.1:18080$p\" || true)\n  printf '%s HTTP=%s BODY=' \"$p\" \"$code\"\n  head -c 300 \"$tmp\" | tr '\\n' ' '; echo\n  rm -f \"$tmp\"\ndone"
   },
-  "authority_ceiling": "read_only",
+  "authority_ceiling": "bounded_operator",
   "ttl": 300
 }
