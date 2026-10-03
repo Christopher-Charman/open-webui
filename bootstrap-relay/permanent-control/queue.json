@@ -935,6 +935,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ollama-event-540a0812c04545db",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "Oy4sR4xk8XDpn0YwmU__ZlExGSVuOUCFVM3M2uWDiIYnko1e2VoiV4AiNOUsWdGDBezvzRo41zeJpkiYKkJW1cA2kOiAr7zVyr6X9M6tPD07UsXWmkPgfnugGL94GEyOhZFCbxZPUgwHpGahKM7Dk6oz7JBIDfq4CR5xhZSAbE3_S4wvLbJkfCoH1OZFb-XZQG06sB7UQqXdjgYgzZo2dBcrarE0MZtv_rK6xdxP78-nC_bLyjeBo54hXZUuN2cT_BAiGganT0hXQAzRXxX3UYQb-xcwp_SMp6Ck_L5od3OL4rLArQzt0LYhxyybiLqp7iZL-9LAJ91h9RSvWbDqYagk-nfD4bMNsCzXtmlKhFN45q40MY5AelWC-L315we9Kq94cH8sUCdq4TLf1T7hyIIF4JS6zJSuir6sFcwwtIjEVkHeKrfH1nfWvcu9IB7O93LilQjAGtjIPYw2fXuR3jcpc4tFRfTrTFvvDZBiozF3ouqPNBgwXpY",
+      "created_at": 1791005248,
+      "expires_at": 1791005848,
+      "nonce_b64": "_qWBUHg6jhWMfOG4",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEA2XKRpGzXp51GIPOpl7W4DuQk6a3wl9iQX_lnxwz-gVY",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261003-ledger-client-script-read-01",
+      "version": 1
     }
   ],
   "version": 1
