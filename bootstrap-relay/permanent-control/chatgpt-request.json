@@ -1,9 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-runtime-health-29",
+  "request_id": "cg-20261003-owui-task-bounded-repair-30",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "runtime_health",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "/home/storage/781/4477781/user/webapp/envs/openwebui/bin/python - <<'PY'\nimport sqlite3,json,os,time,tempfile\ndb=\"/home/storage/781/4477781/user/webapp/openwebui-data/webui.db\"\nbackup_dir=\"/home/storage/781/4477781/user/webapp/backups/owui-task-params-bounded-20261003T0343Z\"\nlogical=backup_dir+\"/task.model.params.rollback.json\"\nexpected_default='\"local-agent-mini-c-agent\"'\nexpected_external='\"local-agent-mini-c-agent\"'\nexpected_params={\"top_p\":0.8,\"temperature\":0.7,\"num_ctx\":32768,\"max_tokens\":32768,\"keep_alive\":\"30m\",\"stream_response\":False,\"top_k\":20,\"min_p\":0.1,\"frequency_penalty\":1.05,\"compact_token_threshold\":80000,\"function_calling\":\"native\",\"reasoning_effort\":\"none\",\"use_mlock\":True,\"use_mmap\":True,\"think\":True,\"format\":\"json\",\"num_keep\":2,\"num_thread\":6,\"num_gpu\":0}\nnew_params={\"top_p\":0.9,\"temperature\":0.6,\"num_ctx\":4096,\"max_tokens\":1024,\"keep_alive\":\"2m\"}\nc=sqlite3.connect(db,timeout=10,isolation_level=None)\nc.execute(\"PRAGMA busy_timeout=10000\")\nc.execute(\"BEGIN IMMEDIATE\")\nrows={}\nfor k in (\"task.model.default\",\"task.model.external\",\"task.model.params\"):\n    r=c.execute('select value,updated_at from config where \"key\"=?',(k,)).fetchone()\n    if not r:\n        c.execute(\"ROLLBACK\"); raise SystemExit(\"CAS_ABORT missing \"+k)\n    rows[k]=r\nif rows[\"task.model.default\"][0]!=expected_default or rows[\"task.model.external\"][0]!=expected_external or json.loads(rows[\"task.model.params\"][0])!=expected_params:\n    c.execute(\"ROLLBACK\"); raise SystemExit(\"CAS_ABORT live config changed\")\nos.makedirs(backup_dir,mode=0o700,exist_ok=True)\nfd,tmp=tempfile.mkstemp(prefix=\".task-params.\",dir=backup_dir)\nwith os.fdopen(fd,\"w\",encoding=\"utf-8\") as h:\n    json.dump({\"key\":\"task.model.params\",\"value\":rows[\"task.model.params\"][0],\"updated_at\":rows[\"task.model.params\"][1]},h,separators=(\",\",\":\"))\n    h.write(\"\\n\"); h.flush(); os.fsync(h.fileno())\nos.chmod(tmp,0o600); os.replace(tmp,logical)\nc.execute('update config set value=?, updated_at=? where \"key\"=?',(json.dumps(new_params,separators=(\",\",\":\")),int(time.time()),\"task.model.params\"))\nc.execute(\"COMMIT\")\nprint(\"ROLLBACK_RECORD=\"+logical)\nprint(\"TASK_PARAMS=\"+c.execute('select value from config where \"key\"=?',(\"task.model.params\",)).fetchone()[0])\nprint(\"DEFAULT=\"+c.execute('select value from config where \"key\"=?',(\"task.model.default\",)).fetchone()[0])\nprint(\"EXTERNAL=\"+c.execute('select value from config where \"key\"=?',(\"task.model.external\",)).fetchone()[0])\nprint(\"INTEGRITY=\"+c.execute(\"pragma integrity_check\").fetchone()[0])\nc.close()\nPY"
+  },
+  "authority_ceiling": "bounded_operator",
   "ttl": 300
 }
