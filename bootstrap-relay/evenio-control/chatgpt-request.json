@@ -1,6 +1,6 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-reject-task-conflict-01",
+  "request_id": "cg-evenio-20261003-paperclip-task-conflict-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
@@ -9,9 +9,9 @@
       "origin_runtime_identity": "chatgpt.control",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "Deliberately alter an already-completed delegation while reusing its task_id to prove conflict rejection.",
+      "objective": "Conflict probe: same inner task ID with a different envelope must fail closed.",
       "evidence_refs": [
-        "git:Christopher-Charman/evenio-online@main"
+        "receipt:cg-evenio-20261003-paperclip-write-01"
       ],
       "authority_ceiling": [
         "write_runtime"
@@ -22,17 +22,15 @@
       "resource_budget": {
         "max_write_bytes": 4096
       },
-      "deadline": "2026-10-03T05:30:00+00:00",
-      "expected_result_schema": {
-        "type": "object"
-      },
-      "return_route": "owned:chatgpt-session",
+      "deadline": null,
+      "expected_result_schema": {},
+      "return_route": "evenio-control-v1",
       "recursion_depth": 0
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/SHOULD-NOT-EXIST-task-conflict.txt",
-      "content": "must not be created\n",
+      "path": "acceptance/should-not-exist-task-conflict.txt",
+      "content": "must not be written\\n",
       "expected_sha256": "absent"
     }
   },
