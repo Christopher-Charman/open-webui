@@ -1,17 +1,17 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-task-conflict-01",
+  "request_id": "cg-evenio-20261003-paperclip-reject-stale-cas-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "EVN-PAPERCLIP-ACCEPT-20261003-01",
+      "task_id": "EVN-PAPERCLIP-REJECT-STALE-CAS-20261003-01",
       "origin_runtime_identity": "chatgpt.control",
       "target_runtime_identity": "fasthost.evenio",
       "target_agent_identity": "evenio-control-agent",
-      "objective": "Conflict probe: same inner task ID with a different envelope must fail closed.",
+      "objective": "Prove bounded workspace mutation rejects a stale expected SHA-256 precondition.",
       "evidence_refs": [
-        "receipt:cg-evenio-20261003-paperclip-write-01"
+        "receipt:cg-evenio-20261003-paperclip-cas-update-01"
       ],
       "authority_ceiling": [
         "write_runtime"
@@ -23,15 +23,17 @@
         "max_write_bytes": 4096
       },
       "deadline": null,
-      "expected_result_schema": {},
-      "return_route": "evenio-control-v1",
+      "expected_result_schema": {
+        "type": "object"
+      },
+      "return_route": "owned:chatgpt-session",
       "recursion_depth": 0
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/should-not-exist-task-conflict.txt",
-      "content": "must not be written\\n",
-      "expected_sha256": "absent"
+      "path": "acceptance/live-control-plane.txt",
+      "content": "must not overwrite with stale CAS\n",
+      "expected_sha256": "e3c672665e0248515e83fd574e1b60e10301bb3592179acf98e5004e7b4a98b4"
     }
   },
   "authority_ceiling": "write_runtime",
