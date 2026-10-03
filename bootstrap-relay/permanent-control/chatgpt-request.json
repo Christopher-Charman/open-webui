@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-ledger-open-runtime-22",
+  "request_id": "cg-20261003-ledger-client-read-23",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "printf '%s\\n' '{\"schema_version\":1,\"protocol\":\"concurrency-ledger/1\",\"request_id\":\"owui-runtime-session-open-20261003-0436\",\"operation\":\"ledger_session_open\",\"actor_id\":\"actor:chatgpt-ios\",\"role_assignment_id\":null,\"surface_id\":\"chatgpt-ios-openwebui-runtime-lane\",\"session_id\":null,\"run_id\":null,\"task_id\":null,\"project_id\":null,\"state_owner\":null,\"executor_node_id\":null,\"idempotency_key\":\"owui-runtime-session-open-20261003-0436\",\"deadline\":\"2026-10-03T04:05:00Z\",\"correlation_id\":\"owui-runtime-20261003-0436\",\"causation_id\":null,\"client_capabilities\":[\"concurrency-ledger/1\"],\"arguments\":{},\"evidence_refs\":[]}' | /home/storage/781/4477781/user/webapp/bin/concurrency-ledger-call -"
+    "command": "sed -n '1,320p' /home/storage/781/4477781/user/webapp/bin/concurrency-ledger-call"
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300
