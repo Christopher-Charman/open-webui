@@ -1,16 +1,18 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-paperclip-reject-agent-01",
+  "request_id": "cg-evenio-20261003-paperclip-reject-symlink-01",
   "target_runtime_id": "fasthost.evenio",
   "tool": "delegation_execute",
   "arguments": {
     "envelope": {
-      "task_id": "paperclip-reject-agent-20261003-01",
-      "origin_runtime_identity": "chatgpt-session",
+      "task_id": "EVN-PAPERCLIP-REJECT-SYMLINK-20261003-01",
+      "origin_runtime_identity": "chatgpt.control",
       "target_runtime_identity": "fasthost.evenio",
-      "target_agent_identity": "wrong-agent",
-      "objective": "Fail-closed acceptance test for wrong delegated agent identity.",
-      "evidence_refs": [],
+      "target_agent_identity": "evenio-control-agent",
+      "objective": "Prove bounded workspace mutation rejects a symlink parent that escapes the private Paperclip workspace.",
+      "evidence_refs": [
+        "git:Christopher-Charman/evenio-online@main"
+      ],
       "authority_ceiling": [
         "write_runtime"
       ],
@@ -18,16 +20,19 @@
         "workspace_write"
       ],
       "resource_budget": {
-        "max_write_bytes": 64
+        "max_write_bytes": 4096
       },
-      "expected_result_schema": {},
-      "return_route": "evenio-control-v1",
+      "deadline": "2026-10-03T05:30:00+00:00",
+      "expected_result_schema": {
+        "type": "object"
+      },
+      "return_route": "owned:chatgpt-session",
       "recursion_depth": 0
     },
     "action_tool": "workspace_write",
     "action_arguments": {
-      "path": "acceptance/should-not-exist-agent.txt",
-      "content": "reject\n",
+      "path": "acceptance/symlink-parent/escaped-via-symlink.txt",
+      "content": "must not follow symlink\n",
       "expected_sha256": "absent"
     }
   },
