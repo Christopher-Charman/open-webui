@@ -1,0 +1,48 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "FAILED",
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261003-owui-timeout-artifact-check-27",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261003-owui-timeout-artifact-check-27",
+  "tool": "terminal_exec",
+  "verified_at": 1790999167,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "2c50f5b5a4cd68905681cd6319ca7926e059d39ffed6b2382f5e2231b8c13264",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "FAILED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "--- PROCESS CHECK ---\n--- BACKUP CHECK ---\nsize=0 mode=644 mtime=1790999020 path=/home/storage/781/4477781/user/webapp/backups/owui-task-params-bounded-20261003T0343Z/webui.db\nbackup_integrity= ok\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nsqlite3.OperationalError: no such table: config\n",
+          "type": "text"
+        }
+      ],
+      "isError": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261003-owui-timeout-artifact-check-27",
+    "unresolved": []
+  }
+}
