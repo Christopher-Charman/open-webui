@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-ollama-keepalive-policy-trace-34",
+  "request_id": "cg-20261003-warm-residency-caller-trace-35",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\necho '--- API_PS ---'\ncurl -fsS http://127.0.0.1:11434/api/ps; echo\necho '--- OLLAMA_KEEPALIVE_SCRIPT ---'\nsed -n '1,280p' \"$BASE/bin/ollama-keepalive\" 2>/dev/null || echo MISSING\necho '--- WARM_RESIDENCY_SCRIPT ---'\nsed -n '1,260p' \"$BASE/runtime-domains/automation/warm-residency.sh\" 2>/dev/null || echo MISSING\necho '--- OPERATING_STATE_RESIDENCY_SECTION ---'\nsed -n '990,1045p' \"$BASE/openai-token-broker/OPERATING_STATE.md\" 2>/dev/null || true\necho '--- KEEPALIVE_CHECKPOINT_FILES ---'\nfind \"$BASE/checkpoints/ollama-keepalive-20261001T010221+0100\" -maxdepth 2 -type f -printf '%p\\n' 2>/dev/null | sort\necho '--- KEEPALIVE_CHECKPOINT_ENV ---'\nsed -n '1,220p' \"$BASE/checkpoints/ollama-keepalive-20261001T010221+0100/ollama-runtime.env\" 2>/dev/null || true\necho '--- WARM_RESIDENCY_CHECKPOINT_ENV ---'\nsed -n '1,220p' \"$BASE/checkpoints/warm-residency-20260928-1915/ollama-runtime.env\" 2>/dev/null || true"
+    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\necho '--- WARM_RESIDENCY_CALLERS ---'\nfind \"$BASE\" -maxdepth 4 -type f \\( -name '*.sh' -o -name '*.py' -o -name '*.env' -o -name '*.json' -o -name '*.md' -o -name '*.conf' \\) \\\n ! -path \"$BASE/envs/*\" ! -path \"$BASE/miniconda/*\" ! -path \"$BASE/openwebui-data/*\" ! -path \"$BASE/.ollama/*\" ! -path \"$BASE/backups/*\" ! -path \"$BASE/checkpoints/*\" \\\n -print0 2>/dev/null | xargs -0 grep -nH -E 'warm-residency\\.sh|qwen2\\.5-coder:1\\.5b-instruct-q4_K_M|keep_alive.?[:=].?-1' 2>/dev/null | head -300 || true\necho '--- CRONTAB ---'\ncrontab -l 2>/dev/null || true\necho '--- RUNTIME_AUTOMATION_DIR ---'\nfind \"$BASE/runtime-domains/automation\" -maxdepth 2 -type f -printf '%p size=%s mtime=%TY-%Tm-%TdT%TH:%TM:%TS\\n' 2>/dev/null | sort\necho '--- TOPLEVEL_OLLAMA_FILES ---'\nfind \"$BASE\" -maxdepth 2 -type f \\( -iname '*ollama*' -o -iname '*residen*' -o -iname '*warm*' \\) -printf '%p size=%s mtime=%TY-%Tm-%TdT%TH:%TM:%TS\\n' 2>/dev/null | sort"
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300
