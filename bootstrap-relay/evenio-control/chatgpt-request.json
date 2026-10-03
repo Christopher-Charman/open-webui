@@ -1,9 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-evenio-20261003-open-terminal-status-03",
+  "request_id": "cg-evenio-20261003-open-terminal-restart-01",
   "target_runtime_id": "fasthost.evenio",
-  "tool": "open_terminal_status",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "open_terminal_control",
+  "arguments": {
+    "action": "restart"
+  },
+  "authority_ceiling": "write_runtime",
   "ttl": 300
 }
