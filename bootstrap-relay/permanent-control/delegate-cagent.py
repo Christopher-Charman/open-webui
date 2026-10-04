@@ -9,7 +9,6 @@ import json
 import os
 import re
 import socket
-import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -21,7 +20,6 @@ from typing import Any
 
 ACCOUNT = Path("/home/storage/781/4477781/user")
 WEBAPP = ACCOUNT / "webapp"
-DB = WEBAPP / "openwebui-data" / "webui.db"
 STATE = ACCOUNT / ".continuity-delegation"
 NODE = WEBAPP / ".local" / "node22-glibc217" / "bin" / "node"
 LOCAL_MCP_HELPER = ACCOUNT / ".powerpc-control-v1" / "local-mcp-call.mjs"
@@ -35,6 +33,7 @@ LEDGER_PROJECT_ID = "concurrency.orchestration"
 
 RUNTIME_ID = "fasthost.powerpc"
 AGENT_ID = "continuity-agent"
+CLAIM_MODEL_ID = "qwen2.5-coder:1.5b-instruct-q4_K_M"
 RECEIPT_SCHEMA = "assistant-delegation-receipt-v1"
 ALLOWED_TOOLS = {"runtime_health", "read_text", "list_dir", "terminal_exec"}
 TOOL_AUTHORITY = {
@@ -345,30 +344,30 @@ def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, 
 
 
 def resolve_claim_model() -> str:
-    con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
-    try:
-        row = con.execute(
-            "SELECT base_model_id,is_active FROM model WHERE id=?",
-            (AGENT_ID,),
-        ).fetchone()
-    finally:
-        con.close()
-    if not row or not row[1]:
-        raise Reject("continuity_agent_unavailable", "BLOCKED")
-    model_id = row[0]
-    if not isinstance(model_id, str) or not model_id:
-        raise Reject("continuity_agent_base_missing", "BLOCKED")
+    """Resolve the receiver's accepted local claim model.
 
-    req = urllib.request.Request(OLLAMA_TAGS, headers={"User-Agent": "continuity-delegation-v1/1"})
+    Receiver execution identity is intentionally independent from the mutable
+    OpenWebUI model-preset table.  The accepted delegation receipt binds this
+    receiver to CLAIM_MODEL_ID; changing that identity requires a reviewed
+    receiver/configuration change rather than an incidental UI-preset edit.
+    """
+    req = urllib.request.Request(
+        OLLAMA_TAGS,
+        headers={"User-Agent": "continuity-delegation-v1/1"},
+    )
     try:
         with urllib.request.urlopen(req, timeout=5) as r:
             tags = json.loads(r.read())
     except Exception as e:
         raise Reject("ollama_unavailable:" + type(e).__name__, "BLOCKED")
-    names = {m.get("name") for m in tags.get("models", []) if isinstance(m, dict)}
-    if model_id not in names:
+    names = {
+        m.get("name")
+        for m in tags.get("models", [])
+        if isinstance(m, dict)
+    }
+    if CLAIM_MODEL_ID not in names:
         raise Reject("continuity_agent_base_unavailable", "BLOCKED")
-    return model_id
+    return CLAIM_MODEL_ID
 
 
 def claim_task(env: dict[str, Any], validated: dict[str, Any], model_id: str, timeout: float) -> tuple[dict[str, Any], int]:
