@@ -29,9 +29,7 @@
 	"live_probe": {
 		"task_id": "cagent-frontier-live-final-20261004T232905",
 		"completion_state": "BLOCKED",
-		"unresolved": [
-			"agent_declined"
-		],
+		"unresolved": ["agent_declined"],
 		"ledger_calls": 3,
 		"model_calls": 1,
 		"local_mcp_calls": 0,
