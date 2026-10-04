@@ -1,0 +1,64 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 2215,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261004-reacquire-control-identity-01.json",
+    "envelope": {
+      "ciphertext_b64": "qGcOh1wRUn__vF1ZBpcEo5eAYct8ZFE7f4-mSFzCkLtl9_no-K2osqycVo8Wt6mInmlgNgq25L_akxXh7T_rRpk_vaTMuxN4n7cprDHduZvHhVsl5wKOb2-Y-BP5PlznanVR0Ybc4WgI4ybMRIkiEjH1UocQXDbtIH3mr7GJLzPVqsMQPONhIuBwkuXEp8FOAsjOGPpYXaz74AY3-iB05768YNVXlI7AaaeFdmnPqje015qjUVZPXXE54GKM-Sw313j1jsusEgKkxEQ6VAh8T8HZ2gzqOJS04dmE6lBWS-iRVTG4UNtk4SPzUZccV0QEJu2IAlWF3nCrZvIv3qX8a8_rNis71LCKyEdom9KDkiALTSbnSZaBeJe-GZgBIPF_aZ03w6bk8XE0auF7nmb71qi3uLLIVu7HeJpN-_rhBaQyLDOqnWPVQ7d08i1sPIQVHPF-rCyhl-yYkR3V6Xa7LjuntxggVkBYs_PVN2ZC1ZJM7Cj-dDHvgfj4vf1GjkRs5iNh0QVpMqNMidVzD8sQfG_A0-LdPS8KesJknj7pOp6XjwXwRc9ZYNzRpkheUQH7iQHKIE3mClq_lzJJiScjr2GqaWheyyhRnUSmr1NuHGSlUw6HmJ8nmmWLvdtXxPPsoLY_XKByro0gyrGsCzCQ9ED8x4id7R_UnKRU_MctulSYBbQDuJJdO240d07aOhdLT6Ua0Mo02UaSMFw22a_J9TOd3ZaObwXS5hnAniI-lWgioqxfWMoQ-9DO72g06sNnPpNeaxVnA-SVmQoG3DI_Vrozt3WAY7iK3uCSnaaESlleG99GnnhjZkwGUI6k84-xs2RQxdvN3f4nEc7bYrg2YQThDyc1JcvuTrgKCnI1CO2KluWluz9fgycsyZMwCwgNg6Jqh-lSu8JEeRkzgzV4dYCzxcLZAvXNrKJy4MOZ9kwmj-2GRs5reH4rqXpGxlT_eI5ZeQnwBo5Jwi2esWx6NX2ISsRnaKWF81C2MCaN0S1DBL-ECRQJroPqx5SMAtq5tieVJ-BtC2kD_C3r_qVmfwj0kEIW-HZC_beA0f_xga0GA6V8jhZ28EcnMdIZJuS-JzCCOVerlFprA2UyoLTEHK5WnhxfXTrxRUSZ12OuOpchUaO9NMh2N64-CBpxdX2-4xB4vAi0IARiMIDLNt4wXYxfWnJTCCvfR_YLS0aMvBIlwt2e1mPT6N1NfnB8DtCWLh-gMpf_3H0kfbUpxPzf329gDgYEE27DJAZI1BDt9fR014S-wsIV0XuhwcSqVw0ZnROydG8jrUygc5HRE9dkT_GNhkDRgOXiEg1fvd7tycjQOro19bKhmhlQccYuqKKpXkjmxAamyadHXOcDPhGBf3dShXA5YeihmhJuFRlZNmbAHvUI2TpYcaaWBmTAKSPgAPqicpme4R-bOIDdxpLF8TVX_jPxuv9FyZsL2gaXLQGGjQjcuVJZIXYnkBMcV6GUYmaiOWmRGWPMvzucg2wLohFUEcHBHTNI6vV0Gmz9g1F5NpY5Zo9ic6y8TxGMGL-Y5nfQ8o6aOTh4et6TRhN9D4_IfzU1UfMw2aotMdtbLt_sXymF48fUjdDtMudGZydSCX_7q4t2uCRw02FGkmeSlcKtKLJTMM7Ba3nMSzlsKw5emZtBqkxvaE2VT96WJm0W2w11c458XQZGYEuOO_fBU1dphwGguhU-HXEJH5V5ikUL3dT3Xvlpzi1XBuczvL3WH_QKpziMC6mE8tyCEmqCUXe4FuePkifx_Ipdq-hFJlEYqSEXLwjo01rc9m_udOl2CVOqTANw-z-fEngxaSqUix-oCUmTGCzbxyz-PmQqo1tKcuGpjqgPk1TD59iLGY4rmoj9lR6KjUPgsw",
+      "kind": "result",
+      "nonce_b64": "o1c3xqf52Vz0LHTP",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791133331,
+      "signature_b64": "90QXqsxNJoHtbsOZ-cznznICviO_fjTpzCCOeDFADBEOgglucUv3qGhOoqzbLEIVINyRlqEnQmVcdJCT_RNNDA",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261004-reacquire-control-identity-01",
+      "version": 1
+    },
+    "sha256": "2dfcfc1899f39d2e3afcff52f14f55e25050f9d8b8b116e63f5314e4b5c56504"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261004-reacquire-control-identity-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261004-reacquire-control-identity-01",
+  "tool": "read_text",
+  "verified_at": 1791133332,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "18c5fbd1b10a0ccb15f10f82a0a966e4c449cca2b37655d9aa119a00960a87b1",
+        "capability": "read_text"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "{\"ed25519_spki_b64\":\"MCowBQYDK2VwAyEA1a8sZ9dqIr8tX8UqBICKkbYn9LY4lf3nAoxjxxnhOiE\",\"heartbeat_at\":1791133330,\"hostname\":\"hp3-rr-1024747.hostingp3.local\",\"identity_fingerprint\":\"SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI\",\"protocol\":\"powerpc-control-v1\",\"runtime_id\":\"fasthost.powerpc\",\"signature_b64\":\"k7sfBWSNs_RneucWs3uoCbjaHn6vc4O0JLfpie-TqpSew8pZOJvtRPuGYLkA-0YN4D5ao3_VZppwKjN5eUlJCg\",\"started_at\":1790903230,\"state\":\"ready\",\"tool_contract\":[\"list_dir\",\"read_text\",\"runtime_health\",\"terminal_exec\"],\"uid\":2257347,\"user\":\"csh3280350\",\"version\":1,\"x25519_spki_b64\":\"MCowBQYDK2VuAyEAYcilFZeLhEV82hNDfsgradgplMD4MFJmC_RYlUmTKXo\"}\n",
+          "type": "text"
+        }
+      ]
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261004-reacquire-control-identity-01",
+    "unresolved": []
+  }
+}
