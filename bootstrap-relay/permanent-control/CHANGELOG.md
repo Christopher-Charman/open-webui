@@ -1,5 +1,15 @@
 # Permanent Control Changelog
 
+## 2026-10-04 — Continuity-Agent automatic project-frontier consumption implemented
+
+- Added the already-authorized `concurrency.orchestration` project-reader assignment to the receiver's ledger request binding.
+- Receiver order is now session open -> heartbeat -> bounded `ledger_frontier_get` -> model admission -> local-MCP execution.
+- The frontier must retain `SUMMARY_IS_NOT_AUTHORITY` and `READY_UNCLAIMED_IS_NOT_CLAIM_ADMISSION`; only its SHA-256 is added to delegation evidence.
+- Frontier data is not passed to the claim model and cannot create TASK_OWNER/claim/run/lease/fencing/destination-mutation authority.
+- Added fail-closed frontier regression coverage and opt-in `--require-ledger-frontier` acceptance verification while preserving the legacy acceptance fingerprint.
+- Live acceptance remains pending until merged source is installed and exercised.
+
+
 ## 2026-10-04 — Continuity-Agent ledger session live acceptance
 
 - Promoted the receiver's role-free Concurrency Ledger session open/heartbeat integration from implementation-pending to live accepted.
