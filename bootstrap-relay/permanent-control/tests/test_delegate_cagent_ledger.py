@@ -53,7 +53,9 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
     def test_ledger_session_precedes_model_and_tool_execution(self):
         events = []
 
-        def open_session(task_id):
+        def open_session(task_id, *, timeout):
+            self.assertGreater(timeout, 0)
+            self.assertLessEqual(timeout, 30.0)
             events.append(("ledger", task_id))
             return "session:continuity-test", "2026-10-04T18:31:44Z"
 
