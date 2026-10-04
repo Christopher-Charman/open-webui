@@ -1,10 +1,12 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261003-concurrency-runtime-health-01",
+  "request_id": "cg-20261004-model-policy-census-62",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "runtime_health",
-  "arguments": {},
-  "authority_ceiling": "read_only",
-  "ttl": 300,
-  "result_visibility": "summary"
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\nDB=\"$BASE/openwebui-data/webui.db\"\nWARM=\"$BASE/runtime-domains/automation/warm-residency.sh\"\necho -n \"WARM_MODE=\"; stat -c '%a' \"$WARM\"\necho -n \"WARM_SHA256=\"; sha256sum \"$WARM\" | awk '{print $1}'\necho -n \"WARM_CRON_COUNT=\"; (crontab -l 2>/dev/null || true) | grep -F -c \"$WARM\" || true\n\"$BASE/envs/openwebui/bin/python\" - <<'PY'\nimport sqlite3,json,subprocess,urllib.request\ndb=\"/home/storage/781/4477781/user/webapp/openwebui-data/webui.db\"\nids=[\"ahsoka-tano\",\"deepseek-r1:1.5b\",\"gemma3:270m\",\"granite4.2:3b\",\"lfm2.5:8b-a1b-q4_K_M\",\"local-agent-mini-c-agent\",\"ornith:latest\",\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"qwen3:4b-instruct\"]\nc=sqlite3.connect(\"file:\"+db+\"?mode=ro\",uri=True); c.row_factory=sqlite3.Row; c.execute(\"pragma query_only=on\")\nfor k in (\"task.model.default\",\"task.model.external\",\"task.model.params\"):\n r=c.execute('select value,updated_at from config where \"key\"=?',(k,)).fetchone()\n print(\"CFG\",k,json.dumps(dict(r) if r else None,separators=(\",\",\":\")))\nfor mid in ids:\n r=c.execute(\"select id,params,updated_at,is_active from model where id=?\",(mid,)).fetchone()\n if not r:\n  print(\"ROW\",mid,\"MISSING\"); continue\n p=json.loads(r[\"params\"] or \"{}\")\n print(\"ROW\",mid,json.dumps({\"updated_at\":r[\"updated_at\"],\"is_active\":r[\"is_active\"],\"keep_alive\":p.get(\"keep_alive\"),\"num_ctx\":p.get(\"num_ctx\"),\"num_thread\":p.get(\"num_thread\")},separators=(\",\",\":\")))\nprint(\"DB_INTEGRITY\",c.execute(\"pragma integrity_check\").fetchone()[0]); c.close()\npid=subprocess.check_output([\"pgrep\",\"-f\",\"^/home/storage/781/4477781/user/webapp/miniconda/bin/ollama serve$\"],text=True).splitlines()[0]\nenv=open(\"/proc/\"+pid+\"/environ\",\"rb\").read().split(b\"\\0\")\nkeys=(b\"OLLAMA_KEEP_ALIVE=\",b\"OLLAMA_CONTEXT_LENGTH=\",b\"OLLAMA_MAX_LOADED_MODELS=\",b\"OLLAMA_NUM_PARALLEL=\",b\"OLLAMA_NUM_THREAD=\",b\"OLLAMA_MAX_QUEUE=\")\nprint(\"OLLAMA_ENV\",json.dumps(sorted(x.decode() for x in env if x.startswith(keys)),separators=(\",\",\":\")))\nwith urllib.request.urlopen(\"http://127.0.0.1:11434/api/ps\",timeout=5) as r:\n print(\"OLLAMA_PS\",json.dumps(json.load(r),separators=(\",\",\":\")))\nPY",
+    "timeout_ms": 20000
+  },
+  "authority_ceiling": "bounded_operator",
+  "ttl": 300
 }
