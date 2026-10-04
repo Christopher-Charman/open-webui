@@ -1,0 +1,64 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 2205,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261004-cagent-deploy-identity-02.json",
+    "envelope": {
+      "ciphertext_b64": "faNGXZZG51lgmSS0fiuqlsM4yeAZWQqtXlH5to8MI6OATBrgu1kqZBOLngdrM3X9fT2FEp1daummOr4CG03x3DVvwQc4gyFlQCvh5qhJowLOL_70T8NDjA0i9sWkkfexRUk_ruY_PWWNp5ME3VWGp4m71JKy4HAAIIRSVuc9y2Ggq_lpPyvD5uCB6H3nnPpOc7KovyLUiUfjlJeAio3K-LRZHH-fFq7XHyPH9in0Ob_1pa-ZlqaJPetJ9lv0pkNAjL7yaLN7nRNqfhoYw1Nug9XGdYWubV5kFVpM2_zxd0mpIOU_Ojh5l34_J5MuQzbSWznhZBckAJjVdLtxVql3_eWTDLXu0eyp_IhhaVWdwhO2qUsr0R1yFqaWC5WaNqSKSAmGsPNOxQ2y3-2uj7RXewasu5KMQMkiPC0nuaXGGaUnJnzjLMZgvMj6hkwPPws-_RN7_klc2rHFwIt7wrlYDDpaVRB-Q359MBwFif3ptJtUjlmoOn_v-iWDe_-76s8h4tM0kAKdXbnvv_5hGJbpko3MuYoemkN92LDy2QejIruvuZphkR7_bLWi4YqXWSxQOMmki-whqhhzSSj4XypqIeDG0VLy4OlzMRNq_5qlB1RJ0G7NQr9bf4YWb9y2t7uYH0km7N3_TUL3BfbMgx0XKuASkSCfD0O96ENeOVlu3mnH3mgPDoQ9r_OYboFzraWK9rdNsVn8wji0qjmDkibJHfEqIIUcO6h7F81Jgj6FHRIgCnIiikBadshYHPN94xiT6V5iszu3-DN8EtmeYt17qFVfSXDv83JYY0K9UwpIOW3q7JjKjWuflNOMYPq4URxVDlRJugVc-flRyA2x8J3rj3Qbbl5NmeCjIlwoQrWNS2fTa6Uu1ZmqmStJtUZgo3j7mGIgf3Y-SWTUQz3nAJ-izpKxrI9KFDGConJLKDwkuSFb12oQzPOUy9XPfJxRLTU3BhW3b_FtlPZWn0RJFfXANU6ND6ewi8o_QG_4iVJ8jAY0w6plBvUjQq-QsyFXsTacZlQhGyEU-pRraBuZvK5UZvorCLOxdF3nM3ICA1vWX9f-5pU9seOEXlT_DLf2K40L2qnbHPImcMCOJcEKPWO_X-xWdJiWFhEk95ybNCqlIOCcM3N86ffv-CZtYr8Zvls8FWdH4cgDtWJP8qjbWtdF7SGQoTI-EcwkeXxmmWbEmSXpdNTit8MnemPUN7oaOPmKvFEl40ZnlzX7yvRXwyYSuTyzWMfFO4GQ6Nwb-ZZotitEb37NwalhtrADOzf2zruDXxwO23m4sM5e5iuwcuUA2_W_LsF5CGIdo96kVBLsCrLyx59N9tpab2JRJTxXhisNXFb9AgLXUzyaDXTNCdYg088q7STim68sTxytqdQIFmABhijphbSeZySTSmXuEAYPbziZUqNZp0dpMKem9zO3c0sxLcJjubNiryXHolwkdlDavDsJVWJoMe5Su89Xb9ooXFSNhIjmrSMOBMByJQUKv0CAslErv4sGDHAjvvirhPo8QZBD685YydOC2dmBWHnW7Vr4D-jR6c9yeZZBdJmqIbTiHQNehXhImm16JExGXk70rIJKiFL0ZAXtIfV48nP7YNFxuoaEatY8ZEP8QZLs8WAuYXpA7A9axZtuhg1ADPC8BruAkr4fCe6Zb17QMH11nTSYtusDaq1vKAYYj7TYKZYgtyjUHsbPRUjzCEsNMInfPFGps7Jv0hnF7RTLMgNyrPmpyjB_SxBXFCX77NamW1fhf1C8IMpnW3QRWniBMv0vK9QS1CEh6e8wyYB2B3RSzSTVkP7Z8x7yFLxvKAl8Dyvem9CKwGf6N80Gd73uNCgnE01J8O7ZkYYhZR-wMIsFeG2sbzKd",
+      "kind": "result",
+      "nonce_b64": "Gm4YKT-3PY_FoJ6i",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791138584,
+      "signature_b64": "hQb6oWHDGndMWd2Ztqnk95msu55LbcGFYr15uIiXR_3xqmahaF6P2V6clnWMDpSNGRorcJfQS4ZdOJE19YrwCg",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261004-cagent-deploy-identity-02",
+      "version": 1
+    },
+    "sha256": "f3842bb559e1ff2d048e0b6962f8c5209f9f8398604b960574300b39fc1f9034"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261004-cagent-deploy-identity-02",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261004-cagent-deploy-identity-02",
+  "tool": "read_text",
+  "verified_at": 1791138584,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "18c5fbd1b10a0ccb15f10f82a0a966e4c449cca2b37655d9aa119a00960a87b1",
+        "capability": "read_text"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "{\"ed25519_spki_b64\":\"MCowBQYDK2VwAyEA1a8sZ9dqIr8tX8UqBICKkbYn9LY4lf3nAoxjxxnhOiE\",\"heartbeat_at\":1791138555,\"hostname\":\"hp3-rr-1024747.hostingp3.local\",\"identity_fingerprint\":\"SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI\",\"protocol\":\"powerpc-control-v1\",\"runtime_id\":\"fasthost.powerpc\",\"signature_b64\":\"MtOfPNSk37lAiHKRuZlmQCt8JmbC-2M3PI-kOHIRC1Vwzd1yMltq0E9AWJ2T44KcbDu8Lkq4bc7hIPMJMJPSAQ\",\"started_at\":1790903230,\"state\":\"ready\",\"tool_contract\":[\"list_dir\",\"read_text\",\"runtime_health\",\"terminal_exec\"],\"uid\":2257347,\"user\":\"csh3280350\",\"version\":1,\"x25519_spki_b64\":\"MCowBQYDK2VuAyEAYcilFZeLhEV82hNDfsgradgplMD4MFJmC_RYlUmTKXo\"}\n",
+          "type": "text"
+        }
+      ]
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261004-cagent-deploy-identity-02",
+    "unresolved": []
+  }
+}
