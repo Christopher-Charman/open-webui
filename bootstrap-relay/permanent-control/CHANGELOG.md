@@ -9,7 +9,6 @@
 - Added fail-closed frontier regression coverage and opt-in `--require-ledger-frontier` acceptance verification while preserving the legacy acceptance fingerprint.
 - Live acceptance remains pending until merged source is installed and exercised.
 
-
 ## 2026-10-04 — Continuity-Agent ledger session live acceptance
 
 - Promoted the receiver's role-free Concurrency Ledger session open/heartbeat integration from implementation-pending to live accepted.
