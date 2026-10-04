@@ -1,6 +1,6 @@
 # Continuity-Agent ledger session wiring
 
-Status: `LIVE ACCEPTED 2026-10-04 / SESSION LAYER ONLY`
+Status: `SESSION LAYER LIVE ACCEPTED / PROJECT-FRONTIER CONSUMPTION IMPLEMENTED / LIVE ACCEPTANCE PENDING`
 
 The Continuity-Agent delegation receiver now participates in the authoritative
 Concurrency Ledger at the **session layer only**.
@@ -47,6 +47,34 @@ Acceptance evidence:
 Receipt: `C_AGENT_LEDGER_SESSION_ACCEPTANCE_20261004.json`.
 
 `LIVE SESSION ACCEPTANCE != ROLE AUTHORITY != TASK OWNERSHIP`.
+
+## Project-frontier consumption implementation
+
+The receiver now has an implementation path for the separately accepted
+`LEDGER_PROJECT_READ` assignment:
+
+- assignment:
+  `assignment:continuity-agent:concurrency.orchestration:read`;
+- project: `concurrency.orchestration`;
+- exact role-scoped read: `ledger_frontier_get`;
+- bounded limit: 10;
+- execution order: session open -> session heartbeat -> frontier read -> model
+  admission -> local-MCP execution.
+
+The frontier is validated before model/tool execution. The receiver requires
+both `SUMMARY_IS_NOT_AUTHORITY` and
+`READY_UNCLAIMED_IS_NOT_CLAIM_ADMISSION` and records only a
+`ledger_frontier_sha256:<digest>` evidence fact.
+
+The frontier is **not** supplied to the claim model and is not converted into
+task ownership, claim admission, run/lease authority or destination mutation
+authority. Failure to establish the authorized bounded read fails closed before
+model/tool execution.
+
+Focused source regression tests pass and the legacy 1 October delegation
+acceptance fingerprint remains unchanged. Live receiver acceptance remains
+pending until merged source is installed and a fresh real delegation proves
+the three-call ledger sequence.
 
 ## Authority boundary
 
