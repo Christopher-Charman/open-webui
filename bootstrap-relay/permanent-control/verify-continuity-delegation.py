@@ -102,7 +102,12 @@ def receipt_text(result: dict[str, Any]) -> str:
     return "\n".join(out)
 
 
-def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> dict[str, Any]:
+def validate_nested(
+    task_id: str,
+    *,
+    require_ledger_session: bool = False,
+    require_ledger_frontier: bool = False,
+) -> dict[str, Any]:
     path, receipt = nested_record(task_id)
     assert set(receipt) == RECEIPT_KEYS, sorted(set(receipt) ^ RECEIPT_KEYS)
     assert receipt["task_id"] == task_id
@@ -128,8 +133,10 @@ def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> di
     assert isinstance(evidence, list)
     ledger_session_evidence = None
     ledger_heartbeat_evidence = None
-    if require_ledger_session:
-        assert len(evidence) == 3, evidence
+    ledger_frontier_evidence = None
+    require_session = require_ledger_session or require_ledger_frontier
+    if require_session:
+        assert len(evidence) == (4 if require_ledger_frontier else 3), evidence
         session_refs = [
             ref for ref in evidence
             if isinstance(ref, str) and ref.startswith("ledger_session:")
@@ -137,6 +144,11 @@ def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> di
         heartbeat_refs = [
             ref for ref in evidence
             if isinstance(ref, str) and ref.startswith("ledger_session_heartbeat:")
+        ]
+        frontier_refs = [
+            ref for ref in evidence
+            if isinstance(ref, str)
+            and re.fullmatch(r"ledger_frontier_sha256:[0-9a-f]{64}", ref)
         ]
         claim_refs = [
             ref for ref in evidence
@@ -147,6 +159,11 @@ def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> di
         assert len(claim_refs) == 1, claim_refs
         assert session_refs[0] != "ledger_session:"
         assert heartbeat_refs[0] != "ledger_session_heartbeat:"
+        if require_ledger_frontier:
+            assert len(frontier_refs) == 1, frontier_refs
+            ledger_frontier_evidence = frontier_refs[0]
+        else:
+            assert frontier_refs == [], frontier_refs
         ledger_session_evidence = session_refs[0]
         ledger_heartbeat_evidence = heartbeat_refs[0]
         claim_evidence = claim_refs[0]
@@ -156,7 +173,9 @@ def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> di
         claim_evidence = evidence[0]
 
     usage = receipt["resource_usage"]
-    if require_ledger_session:
+    if require_ledger_frontier:
+        assert usage["ledger_calls"] == 3
+    elif require_ledger_session:
         assert usage["ledger_calls"] == 2
     assert usage["model_calls"] == 1
     assert usage["local_mcp_calls"] == 1
@@ -184,9 +203,11 @@ def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> di
         "model_id": executor["model_id"],
         "elapsed_ms": usage["elapsed_ms"],
     }
-    if require_ledger_session:
+    if require_session:
         out["ledger_session_evidence"] = ledger_session_evidence
         out["ledger_heartbeat_evidence"] = ledger_heartbeat_evidence
+    if require_ledger_frontier:
+        out["ledger_frontier_evidence"] = ledger_frontier_evidence
     return out
 
 
@@ -197,6 +218,7 @@ def main() -> int:
     ap.add_argument("--nested-task", required=True)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--require-ledger-session", action="store_true")
+    ap.add_argument("--require-ledger-frontier", action="store_true")
     args = ap.parse_args()
 
     try:
@@ -205,6 +227,7 @@ def main() -> int:
         nested = validate_nested(
             args.nested_task,
             require_ledger_session=args.require_ledger_session,
+            require_ledger_frontier=args.require_ledger_frontier,
         )
 
         # The nested durable receipt must have been produced during the first
@@ -223,7 +246,15 @@ def main() -> int:
             "local_mcp_calls": 1,
             "delegation_depth": 0,
         }
-        if args.require_ledger_session:
+        if args.require_ledger_frontier:
+            invariants.update({
+                "ledger_session_participation": True,
+                "ledger_session_heartbeat": True,
+                "ledger_project_frontier_consumption": True,
+                "summary_is_not_authority": True,
+                "ledger_calls": 3,
+            })
+        elif args.require_ledger_session:
             invariants.update({
                 "ledger_session_participation": True,
                 "ledger_session_heartbeat": True,
@@ -246,6 +277,12 @@ def main() -> int:
             print("OUTER_RETRY=" + args.outer_retry)
             print("NESTED_TASK=" + args.nested_task)
             print("MODEL_ID=" + nested["model_id"])
+            if args.require_ledger_frontier or args.require_ledger_session:
+                print("LEDGER_SESSION_PARTICIPATION=PASS")
+                print("LEDGER_SESSION_HEARTBEAT=PASS")
+            if args.require_ledger_frontier:
+                print("LEDGER_PROJECT_FRONTIER_CONSUMPTION=PASS")
+                print("SUMMARY_IS_NOT_AUTHORITY=PASS")
             print("NESTED_RETRY_WITHOUT_REEXECUTION=PASS")
             print("EVIDENCE_FINGERPRINT=" + evidence["evidence_fingerprint"])
         return 0
