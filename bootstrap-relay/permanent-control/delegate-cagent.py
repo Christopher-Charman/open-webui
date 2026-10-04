@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import fcntl
 import hashlib
+from datetime import datetime, timezone
 import json
 import os
 import re
@@ -24,6 +25,11 @@ DB = WEBAPP / "openwebui-data" / "webui.db"
 STATE = ACCOUNT / ".continuity-delegation"
 NODE = WEBAPP / ".local" / "node22-glibc217" / "bin" / "node"
 LOCAL_MCP_HELPER = ACCOUNT / ".powerpc-control-v1" / "local-mcp-call.mjs"
+LEDGER_SOURCE = WEBAPP / "concurrency-ledger" / "current" / "src"
+LEDGER_CLIENT = WEBAPP / "bin" / "concurrency-ledger-cagent-call"
+LEDGER_ACTOR_ID = "actor:continuity-agent"
+LEDGER_SURFACE_ID = "openwebui:continuity-agent"
+LEDGER_PROJECT_ID = "concurrency.orchestration"
 OLLAMA_CHAT = "http://127.0.0.1:11434/api/chat"
 OLLAMA_TAGS = "http://127.0.0.1:11434/api/tags"
 
@@ -302,6 +308,126 @@ def claim_task(env: dict[str, Any], validated: dict[str, Any], model_id: str, ti
     return claim, elapsed_ms
 
 
+def _ledger_adapter():
+    if not LEDGER_SOURCE.is_dir():
+        raise Reject("concurrency_ledger_source_unavailable", "BLOCKED")
+    source = str(LEDGER_SOURCE)
+    if source not in sys.path:
+        sys.path.insert(0, source)
+    try:
+        from concurrency_ledger.c_agent_adapter import (
+            CAgentLedgerBinding,
+            CAgentLedgerRequestAdapter,
+        )
+    except Exception as exc:
+        raise Reject(
+            "concurrency_ledger_adapter_unavailable:" + type(exc).__name__,
+            "BLOCKED",
+        ) from exc
+    try:
+        return CAgentLedgerRequestAdapter(
+            CAgentLedgerBinding(
+                actor_id=LEDGER_ACTOR_ID,
+                role_assignment_id=None,
+                surface_id=LEDGER_SURFACE_ID,
+                project_id=LEDGER_PROJECT_ID,
+            )
+        )
+    except Exception as exc:
+        raise Reject(
+            "concurrency_ledger_binding_invalid:" + type(exc).__name__,
+            "BLOCKED",
+        ) from exc
+
+
+def _ledger_deadline(epoch_seconds: int) -> str:
+    now = int(time.time())
+    bounded = min(int(epoch_seconds), now + 120)
+    if bounded <= now:
+        raise Reject("concurrency_ledger_deadline_expired", "EXPIRED")
+    return datetime.fromtimestamp(
+        bounded,
+        tz=timezone.utc,
+    ).isoformat().replace("+00:00", "Z")
+
+
+def _ledger_call(request: dict[str, Any], timeout: float) -> dict[str, Any]:
+    if not LEDGER_CLIENT.is_file():
+        raise Reject("concurrency_ledger_cagent_client_unavailable", "BLOCKED")
+    try:
+        p = subprocess.run(
+            [str(LEDGER_CLIENT), "-"],
+            input=canon(request),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(WEBAPP),
+            env={**os.environ, "HOME": str(ACCOUNT)},
+            timeout=max(1.0, min(10.0, timeout)),
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise Reject("concurrency_ledger_timeout", "BLOCKED") from exc
+    if p.returncode != 0:
+        raise Reject("concurrency_ledger_call_failed", "BLOCKED")
+    try:
+        result = json.loads(p.stdout.decode("utf-8"))
+    except Exception as exc:
+        raise Reject("invalid_concurrency_ledger_result", "BLOCKED") from exc
+    if not isinstance(result, dict) or result.get("ok") is not True:
+        code = (
+            (result.get("error") or {}).get("code")
+            if isinstance(result, dict)
+            else None
+        )
+        suffix = ":" + str(code)[:80] if code else ""
+        raise Reject("concurrency_ledger_rejected" + suffix, "BLOCKED")
+    return result
+
+
+def ledger_open_session(
+    task_id: str,
+    envelope_sha: str,
+    deadline: int,
+    timeout: float,
+) -> str:
+    adapter = _ledger_adapter()
+    now = datetime.now(timezone.utc)
+    request = adapter.session_open(
+        request_id="cagent-session-open-" + envelope_sha[:24],
+        idempotency_key="cagent-session-open-" + envelope_sha,
+        now=now,
+        deadline=_ledger_deadline(deadline),
+        correlation_id="delegation:" + task_id,
+    )
+    result = _ledger_call(request, timeout)
+    session_id = (result.get("result") or {}).get("session_id")
+    if not isinstance(session_id, str) or not session_id:
+        raise Reject("concurrency_ledger_session_missing", "BLOCKED")
+    return session_id
+
+
+def ledger_heartbeat(
+    session_id: str,
+    envelope_sha: str,
+    phase: str,
+    deadline: int,
+    timeout: float,
+) -> None:
+    adapter = _ledger_adapter()
+    now = datetime.now(timezone.utc)
+    request = adapter.session_heartbeat(
+        session_id=session_id,
+        request_id="cagent-heartbeat-" + phase + "-" + envelope_sha[:16],
+        idempotency_key=(
+            "cagent-heartbeat-" + phase + "-" + envelope_sha
+        ),
+        now=now,
+        deadline=_ledger_deadline(deadline),
+        correlation_id="delegation:" + envelope_sha[:32],
+    )
+    _ledger_call(request, timeout)
+
+
 def call_local_mcp(tool: str, arguments: dict[str, Any], timeout: float) -> tuple[dict[str, Any], int]:
     if not NODE.is_file() or not LOCAL_MCP_HELPER.is_file():
         raise Reject("local_mcp_helper_unavailable", "FAILED")
@@ -367,6 +493,8 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
 
         started = time.monotonic()
         model_id: str | None = None
+        ledger_session_id: str | None = None
+        ledger_calls = 0
         try:
             validated = validate_envelope(env)
             remaining = min(
@@ -376,16 +504,52 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             if remaining <= 0:
                 raise Reject("expired", "EXPIRED")
 
+            ledger_session_id = ledger_open_session(
+                task_id,
+                envelope_sha,
+                validated["deadline"],
+                remaining,
+            )
+            ledger_calls += 1
+            elapsed = time.monotonic() - started
+            remaining = min(
+                float(validated["wall_seconds"]) - elapsed,
+                float(validated["deadline"] - int(time.time())),
+            )
+            if remaining <= 0:
+                raise Reject("expired_after_ledger_session", "EXPIRED")
+
             model_id = resolve_claim_model()
             claim, model_ms = claim_task(env, validated, model_id, min(30.0, remaining))
             claim_digest = sha256_obj(claim)
+
+            elapsed = time.monotonic() - started
+            remaining = min(
+                float(validated["wall_seconds"]) - elapsed,
+                float(validated["deadline"] - int(time.time())),
+            )
+            if remaining <= 0:
+                raise Reject("expired_after_claim", "EXPIRED")
+            ledger_heartbeat(
+                ledger_session_id,
+                envelope_sha,
+                "post-claim",
+                validated["deadline"],
+                remaining,
+            )
+            ledger_calls += 1
             if claim["decision"] != "CLAIM":
                 receipt = make_receipt(
                     task_id,
                     model_id=model_id,
                     evidence_refs=["claim_sha256:" + claim_digest],
                     unresolved=["agent_declined"],
-                    resource_usage={"model_calls": 1, "local_mcp_calls": 0, "model_ms": model_ms},
+                    resource_usage={
+                        "model_calls": 1,
+                        "local_mcp_calls": 0,
+                        "model_ms": model_ms,
+                        "ledger_calls": ledger_calls,
+                    },
                     completion_state="BLOCKED",
                 )
             else:
@@ -395,12 +559,28 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                     float(validated["deadline"] - int(time.time())),
                 )
                 if remaining <= 0:
-                    raise Reject("expired_after_claim", "EXPIRED")
+                    raise Reject("expired_before_execution", "EXPIRED")
                 result, mcp_ms = call_local_mcp(
                     validated["tool"],
                     validated["arguments"],
                     min(30.0, remaining),
                 )
+                elapsed = time.monotonic() - started
+                remaining = min(
+                    float(validated["wall_seconds"]) - elapsed,
+                    float(validated["deadline"] - int(time.time())),
+                )
+                if remaining <= 0:
+                    raise Reject("expired_after_execution", "EXPIRED")
+                ledger_heartbeat(
+                    ledger_session_id,
+                    envelope_sha,
+                    "post-exec",
+                    validated["deadline"],
+                    remaining,
+                )
+                ledger_calls += 1
+
                 state = "FAILED" if result.get("isError") is True else "COMPLETED"
                 unresolved = ["local_mcp_is_error"] if state == "FAILED" else []
                 receipt = make_receipt(
@@ -418,6 +598,7 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                         "local_mcp_calls": 1,
                         "model_ms": model_ms,
                         "local_mcp_ms": mcp_ms,
+                        "ledger_calls": ledger_calls,
                         "elapsed_ms": int((time.monotonic() - started) * 1000),
                     },
                     completion_state=state,
@@ -438,6 +619,12 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 resource_usage={"elapsed_ms": int((time.monotonic() - started) * 1000)},
                 completion_state="FAILED",
             )
+
+        if ledger_session_id is not None:
+            receipt["executor_identity"]["ledger_actor_id"] = LEDGER_ACTOR_ID
+            receipt["executor_identity"]["ledger_session_id"] = ledger_session_id
+            receipt["executor_identity"]["ledger_surface_id"] = LEDGER_SURFACE_ID
+            receipt["resource_usage"]["ledger_calls"] = ledger_calls
 
         atomic_json(record_path, {"envelope_sha256": envelope_sha, "receipt": receipt})
         return receipt
@@ -493,7 +680,26 @@ def self_test() -> int:
     except Reject as e:
         assert e.completion_state == "NEEDS_AUTHORITY"
 
+    if not LEDGER_CLIENT.is_file():
+        raise AssertionError("dedicated C-Agent ledger client missing")
+    adapter = _ledger_adapter()
+    now_dt = datetime.now(timezone.utc)
+    request = adapter.session_open(
+        request_id="cagent-selftest-session-open",
+        idempotency_key="cagent-selftest-session-open",
+        now=now_dt,
+        deadline=datetime.fromtimestamp(
+            int(time.time()) + 60,
+            tz=timezone.utc,
+        ).isoformat().replace("+00:00", "Z"),
+        correlation_id="cagent:selftest",
+    )
+    assert request["actor_id"] == LEDGER_ACTOR_ID
+    assert request["role_assignment_id"] is None
+    assert request["surface_id"] == LEDGER_SURFACE_ID
+
     print("DELEGATE_CAGENT_SELFTEST=PASS")
+    print("DELEGATE_CAGENT_LEDGER_SESSION_ADAPTER_SELFTEST=PASS")
     return 0
 
 
