@@ -1,5 +1,17 @@
 # Permanent Control Changelog
 
+## 2026-10-04 — Continuity-Agent project-frontier consumption accepted live
+
+- Promoted automatic `concurrency.orchestration` frontier consumption to live accepted at the pre-model boundary.
+- Installed exact merged receiver/verifier source from `197277c6049c9fe217fc1ba45a954018f472864b`; receiver self-test and legacy `cagent-status` fingerprint both remained PASS.
+- Fresh live receipts proved session open -> heartbeat -> `ledger_frontier_get` -> model admission with exactly three ledger calls and one frontier digest.
+- The final acceptance receipt was deliberately BLOCKED after the existing model returned `DECLINE`; no local-MCP action was bypassed or forced.
+- Identical blocked replay returned the same durable receipt without another ledger/model execution.
+- Live read-back confirmed the project-reader assignment remains ACTIVE and the Continuity-Agent still has no task-ownership rows.
+- The exact claim input subsequently returned `CLAIM` in isolation; claim-decision reproducibility is recorded as a separate unresolved admission-quality issue, not a frontier defect.
+- Receipt: `C_AGENT_FRONTIER_CONSUMPTION_ACCEPTANCE_20261004.json`.
+
+
 ## 2026-10-04 — Continuity-Agent automatic project-frontier consumption implemented
 
 - Added the already-authorized `concurrency.orchestration` project-reader assignment to the receiver's ledger request binding.
