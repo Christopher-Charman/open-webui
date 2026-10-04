@@ -11,7 +11,6 @@
 - The exact claim input subsequently returned `CLAIM` in isolation; claim-decision reproducibility is recorded as a separate unresolved admission-quality issue, not a frontier defect.
 - Receipt: `C_AGENT_FRONTIER_CONSUMPTION_ACCEPTANCE_20261004.json`.
 
-
 ## 2026-10-04 — Continuity-Agent automatic project-frontier consumption implemented
 
 - Added the already-authorized `concurrency.orchestration` project-reader assignment to the receiver's ledger request binding.
