@@ -30,6 +30,8 @@ LEDGER_CLIENT = WEBAPP / "bin" / "concurrency-ledger-cagent-call"
 LEDGER_ACTOR_ID = "actor:continuity-agent"
 LEDGER_SURFACE_ID = "openwebui:continuity-agent"
 LEDGER_PROJECT_ID = "concurrency.orchestration"
+LEDGER_ROLE_ASSIGNMENT_ID = "assignment:continuity-agent:concurrency.orchestration:read"
+LEDGER_FRONTIER_LIMIT = 10
 
 RUNTIME_ID = "fasthost.powerpc"
 AGENT_ID = "continuity-agent"
@@ -94,7 +96,7 @@ def _ledger_task_key(task_id: str) -> str:
     return hashlib.sha256(task_id.encode("utf-8")).hexdigest()[:24]
 
 
-def _ledger_adapter():
+def _ledger_adapter(role_assignment_id: str | None = None):
     if not LEDGER_SRC.is_dir() or not LEDGER_CLIENT.is_file():
         raise Reject("ledger_adapter_unavailable", "BLOCKED")
     source = str(LEDGER_SRC)
@@ -114,7 +116,7 @@ def _ledger_adapter():
         return CAgentLedgerRequestAdapter(
             CAgentLedgerBinding(
                 actor_id=LEDGER_ACTOR_ID,
-                role_assignment_id=None,
+                role_assignment_id=role_assignment_id,
                 surface_id=LEDGER_SURFACE_ID,
                 project_id=LEDGER_PROJECT_ID,
             )
@@ -211,6 +213,53 @@ def open_ledger_session(
     if not isinstance(heartbeat_at, str) or not heartbeat_at:
         raise Reject("ledger_session_heartbeat_missing", "BLOCKED")
     return session_id, heartbeat_at
+
+
+def read_ledger_frontier(
+    task_id: str,
+    session_id: str,
+    *,
+    timeout: float = 15.0,
+) -> tuple[dict[str, Any], str]:
+    """Read and validate the bounded project coordination frontier.
+
+    This consumes only the already-authorized LEDGER_PROJECT_READ projection.
+    The summary is evidence/context only and never establishes task ownership,
+    claim admission, run/lease authority, or destination mutation authority.
+    """
+    adapter = _ledger_adapter(LEDGER_ROLE_ASSIGNMENT_ID)
+    key = _ledger_task_key(task_id)
+    correlation_id = "cagent-delegation:" + key
+    frontier_response = _ledger_call(
+        adapter.frontier(
+            session_id=session_id,
+            request_id="cagent-frontier-" + key,
+            idempotency_key="cagent-frontier-" + key,
+            now=datetime.now(timezone.utc),
+            limit=LEDGER_FRONTIER_LIMIT,
+            correlation_id=correlation_id,
+            causation_id="cagent-session-heartbeat-" + key,
+        ),
+        timeout=timeout,
+    )
+    frontier = frontier_response.get("result")
+    if not isinstance(frontier, dict):
+        raise Reject("ledger_frontier_missing", "BLOCKED")
+    if frontier.get("project_id") != LEDGER_PROJECT_ID:
+        raise Reject("ledger_frontier_project_mismatch", "BLOCKED")
+    filters = frontier.get("filters")
+    if not isinstance(filters, dict) or filters.get("limit") != LEDGER_FRONTIER_LIMIT:
+        raise Reject("ledger_frontier_filter_mismatch", "BLOCKED")
+    invariants = frontier.get("invariants")
+    if not isinstance(invariants, list):
+        raise Reject("ledger_frontier_invariants_missing", "BLOCKED")
+    required = {
+        "SUMMARY_IS_NOT_AUTHORITY",
+        "READY_UNCLAIMED_IS_NOT_CLAIM_ADMISSION",
+    }
+    if not required.issubset(set(invariants)):
+        raise Reject("ledger_frontier_invariants_rejected", "BLOCKED")
+    return frontier, sha256_obj(frontier)
 
 
 def make_receipt(
@@ -523,6 +572,24 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             )
             if remaining <= 0:
                 raise Reject("expired_after_ledger_session", "EXPIRED")
+
+            _, frontier_sha256 = read_ledger_frontier(
+                task_id,
+                ledger_session_id,
+                timeout=min(15.0, remaining),
+            )
+            ledger_calls = 3
+            ledger_evidence.append(
+                "ledger_frontier_sha256:" + frontier_sha256
+            )
+
+            elapsed = time.monotonic() - started
+            remaining = min(
+                float(validated["wall_seconds"]) - elapsed,
+                float(validated["deadline"] - int(time.time())),
+            )
+            if remaining <= 0:
+                raise Reject("expired_after_ledger_frontier", "EXPIRED")
 
             model_id = resolve_claim_model()
             claim, model_ms = claim_task(
