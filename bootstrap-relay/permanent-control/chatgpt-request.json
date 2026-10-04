@@ -1,12 +1,12 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261004-current-local-model-policy-census-02",
+  "request_id": "cg-20261004-read-warmer-current-03",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "terminal_exec",
+  "tool": "read_text",
   "arguments": {
-    "command": "set -eu\nBASE=/home/storage/781/4477781/user/webapp\nPY=\"$BASE/envs/openwebui/bin/python\"\nDB=\"$BASE/openwebui-data/webui.db\"\n\"$PY\" - <<'PY'\nimport sqlite3, json\np=\"/home/storage/781/4477781/user/webapp/openwebui-data/webui.db\"\nc=sqlite3.connect(\"file:\"+p+\"?mode=ro\",uri=True)\nc.execute(\"PRAGMA query_only=ON\")\nprint(\"INTEGRITY=\"+c.execute(\"pragma integrity_check\").fetchone()[0])\nfor k in (\"task.model.default\",\"task.model.external\",\"task.model.params\"):\n    print(k+\"=\"+repr(c.execute('select value,updated_at from config where \"key\"=?',(k,)).fetchone()))\nids=(\"local-agent-mini-c-agent\",\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"granite4.2:3b\",\"gemma3:270m\",\"deepseek-r1:1.5b-qwen-distill-q8_0\",\"qwen3:4b-instruct\")\nrows=c.execute(\"select id,name,base_model_id,params,updated_at from model where id in (%s) order by id\" % \",\".join(\"?\"*len(ids)), ids).fetchall()\nfor row in rows:\n    print(\"MODEL=\"+json.dumps({\"id\":row[0],\"name\":row[1],\"base_model_id\":row[2],\"params\":json.loads(row[3]) if row[3] else None,\"updated_at\":row[4]},separators=(\",\",\":\")))\nc.close()\nPY\necho '--- OLLAMA_EFFECTIVE ---'\npid=\"$(pgrep -f \"$BASE/miniconda/bin/ollama serve\" | head -n1 || true)\"\nif [ -n \"$pid\" ]; then\n  tr '\\0' '\\n' < \"/proc/$pid/environ\" | grep -E '^OLLAMA_(KEEP_ALIVE|CONTEXT_LENGTH|MAX_LOADED_MODELS|NUM_PARALLEL|NUM_THREAD)=' | sort || true\nfi\necho '--- API_PS ---'\ncurl -fsS --max-time 5 http://127.0.0.1:11434/api/ps || true; echo\necho '--- WARM_CRON_COUNT ---'\n(crontab -l 2>/dev/null | grep -F -c \"$BASE/runtime-domains/automation/warm-residency.sh\" || true)\necho '--- WARMER_EXISTS ---'\n[ -f \"$BASE/runtime-domains/automation/warm-residency.sh\" ] && echo yes || echo no"
+    "path": "runtime-domains/automation/warm-residency.sh"
   },
-  "authority_ceiling": "bounded_operator",
+  "authority_ceiling": "read_only",
   "ttl": 300,
   "result_visibility": "public_plaintext"
 }
