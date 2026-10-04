@@ -1,5 +1,14 @@
 # Permanent Control Changelog
 
+## 2026-10-04 — Continuity-Agent ledger session wiring
+
+- The Continuity-Agent delegation receiver candidate now has a bounded integration with the authoritative Concurrency Ledger session lifecycle; live receiver deployment is a separate acceptance step.
+- Before model admission or local-MCP execution, the receiver opens and heartbeats a dedicated role-free session as `actor:continuity-agent` through `concurrency-ledger-cagent-call`.
+- Ledger session failure blocks delegation before model/tool work; regression coverage verifies ordering and fail-closed behavior.
+- Receiver model resolution is decoupled from the mutable OpenWebUI `continuity-agent` preset; the accepted receiver claim model remains `qwen2.5-coder:1.5b-instruct-q4_K_M` and is checked against live Ollama availability.
+- This transition grants no role assignment, project-read authority, task ownership, claim, run, lease, fencing, or mutation authority.
+- Candidate source passed host compilation, receiver self-test, focused unit tests, and an exact-source live session-open/heartbeat probe.
+
 ## 2026-10-03
 
 - Corrected fresh-origin identity and result URLs to the live `powerpc-control-v1` carrier paths. Marked the unauthenticated runtime-status endpoint as operator-only.
