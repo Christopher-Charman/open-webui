@@ -60,6 +60,40 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
             events.append(("ledger", task_id))
             return "session:continuity-test", "2026-10-04T18:31:44Z"
 
+        def read_frontier(task_id, session_id, *, timeout):
+            self.assertEqual(session_id, "session:continuity-test")
+            self.assertGreater(timeout, 0)
+            self.assertLessEqual(timeout, 15.0)
+            events.append(("frontier", task_id))
+            return (
+                {
+                    "project_id": delegate.LEDGER_PROJECT_ID,
+                    "filters": {
+                        "owner_actor_id": None,
+                        "limit": delegate.LEDGER_FRONTIER_LIMIT,
+                    },
+                    "counts": {
+                        "tasks": 0,
+                        "blockers": 0,
+                        "conflicts": 0,
+                        "handoffs": 0,
+                        "leases": 0,
+                        "receipt_refs": 0,
+                    },
+                    "tasks": [],
+                    "blockers": [],
+                    "conflicts": [],
+                    "handoffs": [],
+                    "leases": [],
+                    "receipt_refs": [],
+                    "invariants": [
+                        "SUMMARY_IS_NOT_AUTHORITY",
+                        "READY_UNCLAIMED_IS_NOT_CLAIM_ADMISSION",
+                    ],
+                },
+                "a" * 64,
+            )
+
         def resolve_model():
             events.append(("model", None))
             return "model:test"
@@ -82,6 +116,7 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
         with (
             patch.object(delegate.time, "time", return_value=2_000_000_000),
             patch.object(delegate, "open_ledger_session", side_effect=open_session),
+            patch.object(delegate, "read_ledger_frontier", side_effect=read_frontier),
             patch.object(delegate, "resolve_claim_model", side_effect=resolve_model),
             patch.object(delegate, "claim_task", side_effect=model_claim),
             patch.object(delegate, "call_local_mcp", side_effect=local_mcp),
@@ -91,9 +126,9 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
         self.assertEqual(receipt["completion_state"], "COMPLETED")
         self.assertEqual(
             [name for name, _ in events],
-            ["ledger", "model", "claim", "mcp"],
+            ["ledger", "frontier", "model", "claim", "mcp"],
         )
-        self.assertEqual(receipt["resource_usage"]["ledger_calls"], 2)
+        self.assertEqual(receipt["resource_usage"]["ledger_calls"], 3)
         self.assertIn(
             "ledger_session:session:continuity-test",
             receipt["evidence_refs"],
@@ -102,12 +137,66 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
             "ledger_session_heartbeat:2026-10-04T18:31:44Z",
             receipt["evidence_refs"],
         )
+        self.assertIn(
+            "ledger_frontier_sha256:" + ("a" * 64),
+            receipt["evidence_refs"],
+        )
         self.assertTrue(
             any(
                 ref.startswith("claim_sha256:")
                 for ref in receipt["evidence_refs"]
             )
         )
+
+    def test_ledger_frontier_failure_blocks_before_model_or_tool(self):
+        with (
+            patch.object(delegate.time, "time", return_value=2_000_000_000),
+            patch.object(
+                delegate,
+                "open_ledger_session",
+                return_value=(
+                    "session:frontier-fail",
+                    "2026-10-04T18:31:44Z",
+                ),
+            ),
+            patch.object(
+                delegate,
+                "read_ledger_frontier",
+                side_effect=delegate.Reject(
+                    "ledger_frontier_rejected",
+                    "BLOCKED",
+                ),
+            ),
+            patch.object(delegate, "resolve_claim_model") as model,
+            patch.object(delegate, "claim_task") as claim,
+            patch.object(delegate, "call_local_mcp") as mcp,
+        ):
+            receipt = delegate.run(envelope("ledger-frontier-fail-0001"))
+
+        self.assertEqual(receipt["completion_state"], "BLOCKED")
+        self.assertEqual(
+            receipt["unresolved"],
+            ["ledger_frontier_rejected"],
+        )
+        self.assertEqual(receipt["resource_usage"]["ledger_calls"], 2)
+        self.assertIn(
+            "ledger_session:session:frontier-fail",
+            receipt["evidence_refs"],
+        )
+        model.assert_not_called()
+        claim.assert_not_called()
+        mcp.assert_not_called()
+
+    def test_project_read_binding_is_explicit_and_bounded(self):
+        self.assertEqual(
+            delegate.LEDGER_ROLE_ASSIGNMENT_ID,
+            "assignment:continuity-agent:concurrency.orchestration:read",
+        )
+        self.assertEqual(
+            delegate.LEDGER_PROJECT_ID,
+            "concurrency.orchestration",
+        )
+        self.assertEqual(delegate.LEDGER_FRONTIER_LIMIT, 10)
 
     def test_ledger_session_failure_blocks_before_model_or_tool(self):
         with (
