@@ -195,13 +195,17 @@ def main() -> int:
     ap.add_argument("--outer-first", required=True)
     ap.add_argument("--outer-retry", required=True)
     ap.add_argument("--nested-task", required=True)
-    ap.add_argument("--json", action="store_true")\n    ap.add_argument("--require-ledger-session", action="store_true")
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--require-ledger-session", action="store_true")
     args = ap.parse_args()
 
     try:
         first = validate_outer(args.outer_first)
         retry = validate_outer(args.outer_retry)
-        nested = validate_nested(\n            args.nested_task,\n            require_ledger_session=args.require_ledger_session,\n        )
+        nested = validate_nested(
+            args.nested_task,
+            require_ledger_session=args.require_ledger_session,
+        )
 
         # The nested durable receipt must have been produced during the first
         # outer execution and remain untouched by the later retry.  A 2-second
