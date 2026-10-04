@@ -125,10 +125,27 @@ def validate_nested(task_id: str) -> dict[str, Any]:
     assert isinstance(actions[0].get("arguments_sha256"), str) and len(actions[0]["arguments_sha256"]) == 64
 
     evidence = receipt["evidence_refs"]
-    assert isinstance(evidence, list) and len(evidence) == 1
-    assert re.fullmatch(r"claim_sha256:[0-9a-f]{64}", evidence[0])
+    assert isinstance(evidence, list) and len(evidence) == 3
+    session_refs = [
+        ref for ref in evidence
+        if isinstance(ref, str) and ref.startswith("ledger_session:")
+    ]
+    heartbeat_refs = [
+        ref for ref in evidence
+        if isinstance(ref, str) and ref.startswith("ledger_session_heartbeat:")
+    ]
+    claim_refs = [
+        ref for ref in evidence
+        if isinstance(ref, str) and re.fullmatch(r"claim_sha256:[0-9a-f]{64}", ref)
+    ]
+    assert len(session_refs) == 1, session_refs
+    assert len(heartbeat_refs) == 1, heartbeat_refs
+    assert len(claim_refs) == 1, claim_refs
+    assert session_refs[0] != "ledger_session:"
+    assert heartbeat_refs[0] != "ledger_session_heartbeat:"
 
     usage = receipt["resource_usage"]
+    assert usage["ledger_calls"] == 2
     assert usage["model_calls"] == 1
     assert usage["local_mcp_calls"] == 1
     assert usage["elapsed_ms"] > 0
@@ -150,7 +167,9 @@ def validate_nested(task_id: str) -> dict[str, Any]:
         "record_path": str(path),
         "record_sha256": sha256_file(path),
         "record_mtime": st.st_mtime,
-        "claim_evidence": evidence[0],
+        "ledger_session_evidence": session_refs[0],
+        "ledger_heartbeat_evidence": heartbeat_refs[0],
+        "claim_evidence": claim_refs[0],
         "dynamic_cap_evidence": caps[0],
         "model_id": executor["model_id"],
         "elapsed_ms": usage["elapsed_ms"],
@@ -188,6 +207,9 @@ def main() -> int:
                 "outer_retry_completed": True,
                 "nested_receipt_completed": True,
                 "nested_retry_without_reexecution": True,
+                "ledger_session_participation": True,
+                "ledger_session_heartbeat": True,
+                "ledger_calls": 2,
                 "model_calls": 1,
                 "local_mcp_calls": 1,
                 "delegation_depth": 0,
@@ -202,6 +224,8 @@ def main() -> int:
             print("OUTER_RETRY=" + args.outer_retry)
             print("NESTED_TASK=" + args.nested_task)
             print("MODEL_ID=" + nested["model_id"])
+            print("LEDGER_SESSION_PARTICIPATION=PASS")
+            print("LEDGER_SESSION_HEARTBEAT=PASS")
             print("NESTED_RETRY_WITHOUT_REEXECUTION=PASS")
             print("EVIDENCE_FINGERPRINT=" + evidence["evidence_fingerprint"])
         return 0
