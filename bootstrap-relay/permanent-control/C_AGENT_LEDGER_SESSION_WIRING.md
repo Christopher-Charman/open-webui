@@ -18,6 +18,18 @@ Before any model admission call or local-MCP action, the receiver:
 If any of those steps cannot be established, delegation fails closed before
 model or tool execution.
 
+## Receiver model identity
+
+The delegation receiver's accepted claim-model identity is
+`qwen2.5-coder:1.5b-instruct-q4_K_M`. It is now resolved from the receiver
+implementation itself and verified against the live Ollama inventory.
+
+The mutable OpenWebUI `continuity-agent` model-preset row is **not** receiver
+lifecycle authority. UI/preset experiments may therefore change or disable that
+row without silently changing the accepted inter-agent receiver model. A future
+receiver-model change requires an explicit reviewed implementation/configuration
+delta and fresh acceptance.
+
 ## Authority boundary
 
 This change deliberately does **not** grant or infer:
