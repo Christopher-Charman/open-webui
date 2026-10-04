@@ -102,7 +102,7 @@ def receipt_text(result: dict[str, Any]) -> str:
     return "\n".join(out)
 
 
-def validate_nested(task_id: str) -> dict[str, Any]:
+def validate_nested(task_id: str, *, require_ledger_session: bool = False) -> dict[str, Any]:
     path, receipt = nested_record(task_id)
     assert set(receipt) == RECEIPT_KEYS, sorted(set(receipt) ^ RECEIPT_KEYS)
     assert receipt["task_id"] == task_id
@@ -125,10 +125,39 @@ def validate_nested(task_id: str) -> dict[str, Any]:
     assert isinstance(actions[0].get("arguments_sha256"), str) and len(actions[0]["arguments_sha256"]) == 64
 
     evidence = receipt["evidence_refs"]
-    assert isinstance(evidence, list) and len(evidence) == 1
-    assert re.fullmatch(r"claim_sha256:[0-9a-f]{64}", evidence[0])
+    assert isinstance(evidence, list)
+    ledger_session_evidence = None
+    ledger_heartbeat_evidence = None
+    if require_ledger_session:
+        assert len(evidence) == 3, evidence
+        session_refs = [
+            ref for ref in evidence
+            if isinstance(ref, str) and ref.startswith("ledger_session:")
+        ]
+        heartbeat_refs = [
+            ref for ref in evidence
+            if isinstance(ref, str) and ref.startswith("ledger_session_heartbeat:")
+        ]
+        claim_refs = [
+            ref for ref in evidence
+            if isinstance(ref, str) and re.fullmatch(r"claim_sha256:[0-9a-f]{64}", ref)
+        ]
+        assert len(session_refs) == 1, session_refs
+        assert len(heartbeat_refs) == 1, heartbeat_refs
+        assert len(claim_refs) == 1, claim_refs
+        assert session_refs[0] != "ledger_session:"
+        assert heartbeat_refs[0] != "ledger_session_heartbeat:"
+        ledger_session_evidence = session_refs[0]
+        ledger_heartbeat_evidence = heartbeat_refs[0]
+        claim_evidence = claim_refs[0]
+    else:
+        assert len(evidence) == 1
+        assert re.fullmatch(r"claim_sha256:[0-9a-f]{64}", evidence[0])
+        claim_evidence = evidence[0]
 
     usage = receipt["resource_usage"]
+    if require_ledger_session:
+        assert usage["ledger_calls"] == 2
     assert usage["model_calls"] == 1
     assert usage["local_mcp_calls"] == 1
     assert usage["elapsed_ms"] > 0
@@ -145,16 +174,20 @@ def validate_nested(task_id: str) -> dict[str, Any]:
     assert EXPECTED_HOST in text
 
     st = path.stat()
-    return {
+    out = {
         "task_id": task_id,
         "record_path": str(path),
         "record_sha256": sha256_file(path),
         "record_mtime": st.st_mtime,
-        "claim_evidence": evidence[0],
+        "claim_evidence": claim_evidence,
         "dynamic_cap_evidence": caps[0],
         "model_id": executor["model_id"],
         "elapsed_ms": usage["elapsed_ms"],
     }
+    if require_ledger_session:
+        out["ledger_session_evidence"] = ledger_session_evidence
+        out["ledger_heartbeat_evidence"] = ledger_heartbeat_evidence
+    return out
 
 
 def main() -> int:
@@ -163,12 +196,16 @@ def main() -> int:
     ap.add_argument("--outer-retry", required=True)
     ap.add_argument("--nested-task", required=True)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--require-ledger-session", action="store_true")
     args = ap.parse_args()
 
     try:
         first = validate_outer(args.outer_first)
         retry = validate_outer(args.outer_retry)
-        nested = validate_nested(args.nested_task)
+        nested = validate_nested(
+            args.nested_task,
+            require_ledger_session=args.require_ledger_session,
+        )
 
         # The nested durable receipt must have been produced during the first
         # outer execution and remain untouched by the later retry.  A 2-second
@@ -177,21 +214,28 @@ def main() -> int:
         assert nested["record_mtime"] < retry["received_at"]
         assert first["completed_at"] < retry["received_at"]
 
+        invariants = {
+            "outer_first_completed": True,
+            "outer_retry_completed": True,
+            "nested_receipt_completed": True,
+            "nested_retry_without_reexecution": True,
+            "model_calls": 1,
+            "local_mcp_calls": 1,
+            "delegation_depth": 0,
+        }
+        if args.require_ledger_session:
+            invariants.update({
+                "ledger_session_participation": True,
+                "ledger_session_heartbeat": True,
+                "ledger_calls": 2,
+            })
         evidence = {
             "schema": "continuity-agent-delegation-acceptance-v1",
             "acceptance": "PASS",
             "outer_first": first,
             "outer_retry": retry,
             "nested": nested,
-            "invariants": {
-                "outer_first_completed": True,
-                "outer_retry_completed": True,
-                "nested_receipt_completed": True,
-                "nested_retry_without_reexecution": True,
-                "model_calls": 1,
-                "local_mcp_calls": 1,
-                "delegation_depth": 0,
-            },
+            "invariants": invariants,
         }
         evidence["evidence_fingerprint"] = "sha256:" + hashlib.sha256(canon(evidence)).hexdigest()
         if args.json:

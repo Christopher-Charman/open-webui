@@ -1,5 +1,14 @@
 # Permanent Control Changelog
 
+## 2026-10-04 — Continuity-Agent ledger session live acceptance
+
+- Promoted the receiver's role-free Concurrency Ledger session open/heartbeat integration from implementation-pending to live accepted.
+- Installed the exact current receiver source with the supported Python 3.12 shebang and verified its SHA-256.
+- Six focused regression tests passed; a fresh read-only live delegation recorded ledger session + heartbeat evidence before claim/local-MCP execution.
+- Identical envelope replay returned the existing durable receipt without re-execution.
+- The returned session was independently read back from the live ledger as `actor:continuity-agent` / `openwebui:continuity-agent`, active, heartbeat persisted, with no role assignment.
+- Added opt-in ledger-aware verification (`--require-ledger-session`) that requires session + heartbeat evidence and `ledger_calls=2`, while preserving the 1 October verifier output/fingerprint in default mode; role/project/task/run/lease authority remains explicitly ungranted.
+
 ## 2026-10-04 — Continuity-Agent executable entrypoint
 
 - Corrected the host-specific receiver shebang from `/usr/bin/env python3` (which resolves to Python 3.6.8 on the Fasthosts gateway) to the verified webapp Python 3.12 runtime.
