@@ -1,5 +1,10 @@
 # Permanent Control Changelog
 
+## 2026-10-04 — Continuity-Agent executable entrypoint
+
+- Corrected the host-specific receiver shebang from `/usr/bin/env python3` (which resolves to Python 3.6.8 on the Fasthosts gateway) to the verified webapp Python 3.12 runtime.
+- Added regression coverage so the deployed executable cannot silently regress to an unsupported interpreter.
+
 ## 2026-10-04 — Continuity-Agent ledger session wiring
 
 - The Continuity-Agent delegation receiver candidate now has a bounded integration with the authoritative Concurrency Ledger session lifecycle; live receiver deployment is a separate acceptance step.
