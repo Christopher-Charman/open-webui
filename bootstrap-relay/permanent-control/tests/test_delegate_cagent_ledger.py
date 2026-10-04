@@ -136,6 +136,13 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
         claim.assert_not_called()
         mcp.assert_not_called()
 
+    def test_executable_shebang_uses_supported_runtime(self):
+        first_line = SCRIPT.read_text(encoding="utf-8").splitlines()[0]
+        self.assertEqual(
+            first_line,
+            "#!/home/storage/781/4477781/user/webapp/miniconda/bin/python3.12",
+        )
+
     def test_claim_model_uses_receiver_identity_not_ui_preset(self):
         class Response:
             def __enter__(self):

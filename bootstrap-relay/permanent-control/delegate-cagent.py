@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/storage/781/4477781/user/webapp/miniconda/bin/python3.12
 from __future__ import annotations
 
 import argparse
