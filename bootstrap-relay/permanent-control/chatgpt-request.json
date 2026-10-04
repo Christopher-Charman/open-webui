@@ -1,6 +1,6 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261004-reacquire-control-identity-01",
+  "request_id": "cg-20261004-cagent-deploy-identity-02",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "read_text",
   "arguments": {
