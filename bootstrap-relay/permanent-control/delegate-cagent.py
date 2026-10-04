@@ -130,6 +130,9 @@ def _ledger_adapter():
 def _ledger_call(request: dict[str, Any], timeout: float = 15.0) -> dict[str, Any]:
     if not LEDGER_CLIENT.is_file() or not os.access(LEDGER_CLIENT, os.X_OK):
         raise Reject("ledger_client_unavailable", "BLOCKED")
+    timeout_value = float(timeout)
+    if timeout_value <= 0:
+        raise Reject("ledger_call_budget_exhausted", "BLOCKED")
     try:
         proc = subprocess.run(
             [str(LEDGER_CLIENT), "-"],
@@ -138,7 +141,7 @@ def _ledger_call(request: dict[str, Any], timeout: float = 15.0) -> dict[str, An
             stderr=subprocess.PIPE,
             cwd=str(WEBAPP),
             env={**os.environ, "HOME": str(ACCOUNT)},
-            timeout=max(1.0, min(float(timeout), 20.0)),
+            timeout=max(0.1, min(timeout_value, 20.0)),
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
@@ -159,15 +162,27 @@ def _ledger_call(request: dict[str, Any], timeout: float = 15.0) -> dict[str, An
     return result
 
 
-def open_ledger_session(task_id: str) -> tuple[str, str]:
+def open_ledger_session(
+    task_id: str,
+    *,
+    timeout: float = 30.0,
+) -> tuple[str, str]:
     """Open and heartbeat a role-free C-Agent coordination session.
 
-    This establishes only authenticated session provenance. It grants no role,
-    project-read, task-owner, claim, run, lease, or mutation authority.
+    The two ledger calls share one total timeout budget. This establishes only
+    authenticated session provenance. It grants no role, project-read,
+    task-owner, claim, run, lease, or mutation authority.
     """
     adapter = _ledger_adapter()
     key = _ledger_task_key(task_id)
     correlation_id = "cagent-delegation:" + key
+    started = time.monotonic()
+
+    def remaining_timeout() -> float:
+        remaining = float(timeout) - (time.monotonic() - started)
+        if remaining <= 0:
+            raise Reject("ledger_session_budget_exhausted", "BLOCKED")
+        return remaining
 
     opened = _ledger_call(
         adapter.session_open(
@@ -175,7 +190,8 @@ def open_ledger_session(task_id: str) -> tuple[str, str]:
             idempotency_key="cagent-session-open-" + key,
             now=datetime.now(timezone.utc),
             correlation_id=correlation_id,
-        )
+        ),
+        timeout=remaining_timeout(),
     )
     session_id = (opened.get("result") or {}).get("session_id")
     if not isinstance(session_id, str) or not session_id:
@@ -189,7 +205,8 @@ def open_ledger_session(task_id: str) -> tuple[str, str]:
             now=datetime.now(timezone.utc),
             correlation_id=correlation_id,
             causation_id="cagent-session-open-" + key,
-        )
+        ),
+        timeout=remaining_timeout(),
     )
     heartbeat_at = (heartbeat.get("result") or {}).get("heartbeat_at")
     if not isinstance(heartbeat_at, str) or not heartbeat_at:
@@ -490,15 +507,31 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             if remaining <= 0:
                 raise Reject("expired", "EXPIRED")
 
-            ledger_session_id, ledger_heartbeat_at = open_ledger_session(task_id)
+            ledger_session_id, ledger_heartbeat_at = open_ledger_session(
+                task_id,
+                timeout=min(30.0, remaining),
+            )
             ledger_calls = 2
             ledger_evidence = [
                 "ledger_session:" + ledger_session_id,
                 "ledger_session_heartbeat:" + ledger_heartbeat_at,
             ]
 
+            elapsed = time.monotonic() - started
+            remaining = min(
+                float(validated["wall_seconds"]) - elapsed,
+                float(validated["deadline"] - int(time.time())),
+            )
+            if remaining <= 0:
+                raise Reject("expired_after_ledger_session", "EXPIRED")
+
             model_id = resolve_claim_model()
-            claim, model_ms = claim_task(env, validated, model_id, min(30.0, remaining))
+            claim, model_ms = claim_task(
+                env,
+                validated,
+                model_id,
+                min(30.0, remaining),
+            )
             claim_digest = sha256_obj(claim)
             if claim["decision"] != "CLAIM":
                 receipt = make_receipt(
