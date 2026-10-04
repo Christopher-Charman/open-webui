@@ -1,6 +1,6 @@
 # Continuity-Agent ledger session wiring
 
-Status: `SESSION LAYER LIVE ACCEPTED / PROJECT-FRONTIER CONSUMPTION IMPLEMENTED / LIVE ACCEPTANCE PENDING`
+Status: `SESSION + PROJECT-FRONTIER PRE-ADMISSION LAYERS LIVE ACCEPTED / TASK OWNERSHIP NOT GRANTED`
 
 The Continuity-Agent delegation receiver now participates in the authoritative
 Concurrency Ledger at the **session layer only**.
@@ -72,33 +72,72 @@ authority. Failure to establish the authorized bounded read fails closed before
 model/tool execution.
 
 Focused source regression tests pass and the legacy 1 October delegation
-acceptance fingerprint remains unchanged. Live receiver acceptance remains
-pending until merged source is installed and a fresh real delegation proves
-the three-call ledger sequence.
+acceptance fingerprint remains unchanged.
+
+### Live frontier acceptance — 2026-10-04
+
+Merged source `open-webui@197277c6049c9fe217fc1ba45a954018f472864b`
+was installed byte-for-byte as the live receiver and verifier. The receiver
+self-test passed and live `cagent-status` retained the accepted 1 October
+fingerprint.
+
+Fresh real receiver executions proved the pre-admission sequence:
+
+1. open dedicated Continuity-Agent ledger session;
+2. heartbeat the session;
+3. perform the bounded project `ledger_frontier_get`;
+4. record exactly one `ledger_frontier_sha256:<digest>`;
+5. reach the existing model-admission step only after the frontier read.
+
+The final acceptance task
+`cagent-frontier-live-final-20261004T232905` recorded exactly three ledger
+calls, one model call and no local-MCP call because the independent claim model
+returned `DECLINE`. The durable receipt remained `BLOCKED /
+agent_declined`, which preserves admission semantics rather than bypassing
+them. An identical replay returned the same receipt byte-for-byte without
+opening another session, rereading the frontier or reinvoking the model.
+
+The acceptance session and active reader assignment were independently read
+back from the live ledger, and the Continuity-Agent still had no task-ownership
+rows. The same exact model claim input later returned `CLAIM` in an isolated
+diagnostic, so claim-decision reproducibility is a separate unresolved
+admission-quality issue and is not attributed to the frontier layer.
+
+Receipt:
+`C_AGENT_FRONTIER_CONSUMPTION_ACCEPTANCE_20261004.json`.
+
+`FRONTIER_CONSUMED_BEFORE_MODEL != TASK_OWNER`.
+
+`MODEL_DECLINE != FRONTIER_FAILURE`.
 
 ## Authority boundary
 
-This change deliberately does **not** grant or infer:
+The receiver now **uses** the separately accepted project-reader assignment:
 
-- a role assignment;
-- project-scoped read authority;
+- `assignment:continuity-agent:concurrency.orchestration:read`;
+- authority ceiling `LEDGER_PROJECT_READ`;
+- exact scope `project:concurrency.orchestration:read`.
+
+This integration does not widen that grant and still does **not** grant or
+infer:
+
 - task ownership or an ownership epoch;
-- a ledger task claim;
+- a ledger task claim/release;
 - a run binding;
 - a lease or fencing token;
-- mutation authority.
+- destination-project/runtime mutation authority.
 
 Those require separate authoritative bindings and acceptance.
 
-A successful session proves authenticated C-Agent participation and liveness,
-not permission to act on a project or task.
+A successful frontier read proves only bounded coordination-state visibility.
+It does not authorize acting on a summarized task.
 
 ## Retry semantics
 
 Ledger session open and heartbeat use deterministic idempotency keys derived
 from the delegation task ID. Existing delegation record replay remains the
-outer duplicate-suppression boundary: a completed identical envelope returns
-its existing receipt without opening another session, invoking the model, or
-re-executing local MCP.
+outer duplicate-suppression boundary: any durable identical envelope returns
+its existing receipt without opening another session, rereading the frontier,
+invoking the model, or re-executing local MCP.
 
 `SESSION PARTICIPATION != ROLE AUTHORITY != TASK OWNERSHIP`.
