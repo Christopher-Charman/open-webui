@@ -2,7 +2,7 @@
 
 ## 2026-10-04 — Continuity-Agent ledger session wiring
 
-- The deployed Continuity-Agent delegation receiver now has a bounded candidate integration with the authoritative Concurrency Ledger session lifecycle.
+- The Continuity-Agent delegation receiver candidate now has a bounded integration with the authoritative Concurrency Ledger session lifecycle; live receiver deployment is a separate acceptance step.
 - Before model admission or local-MCP execution, the receiver opens and heartbeats a dedicated role-free session as `actor:continuity-agent` through `concurrency-ledger-cagent-call`.
 - Ledger session failure blocks delegation before model/tool work; regression coverage verifies ordering and fail-closed behavior.
 - This transition grants no role assignment, project-read authority, task ownership, claim, run, lease, fencing, or mutation authority.
