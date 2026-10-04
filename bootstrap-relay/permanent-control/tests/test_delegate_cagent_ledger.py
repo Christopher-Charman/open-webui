@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -134,6 +135,53 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
         model.assert_not_called()
         claim.assert_not_called()
         mcp.assert_not_called()
+
+    def test_claim_model_uses_receiver_identity_not_ui_preset(self):
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return json.dumps(
+                    {"models": [{"name": delegate.CLAIM_MODEL_ID}]}
+                ).encode("utf-8")
+
+        with patch.object(
+            delegate.urllib.request,
+            "urlopen",
+            return_value=Response(),
+        ):
+            self.assertEqual(
+                delegate.resolve_claim_model(),
+                delegate.CLAIM_MODEL_ID,
+            )
+
+    def test_missing_accepted_claim_model_fails_closed(self):
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return b'{"models":[{"name":"other:model"}]}'
+
+        with patch.object(
+            delegate.urllib.request,
+            "urlopen",
+            return_value=Response(),
+        ):
+            with self.assertRaises(delegate.Reject) as caught:
+                delegate.resolve_claim_model()
+        self.assertEqual(
+            caught.exception.code,
+            "continuity_agent_base_unavailable",
+        )
+        self.assertEqual(caught.exception.completion_state, "BLOCKED")
 
     def test_same_task_has_stable_ledger_session_key(self):
         first = delegate._ledger_task_key("task:stable")
