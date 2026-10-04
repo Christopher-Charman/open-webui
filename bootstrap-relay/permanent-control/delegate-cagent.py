@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -26,6 +27,11 @@ NODE = WEBAPP / ".local" / "node22-glibc217" / "bin" / "node"
 LOCAL_MCP_HELPER = ACCOUNT / ".powerpc-control-v1" / "local-mcp-call.mjs"
 OLLAMA_CHAT = "http://127.0.0.1:11434/api/chat"
 OLLAMA_TAGS = "http://127.0.0.1:11434/api/tags"
+LEDGER_SRC = WEBAPP / "concurrency-ledger" / "current" / "src"
+LEDGER_CLIENT = WEBAPP / "bin" / "concurrency-ledger-cagent-call"
+LEDGER_ACTOR_ID = "actor:continuity-agent"
+LEDGER_SURFACE_ID = "openwebui:continuity-agent"
+LEDGER_PROJECT_ID = "concurrency.orchestration"
 
 RUNTIME_ID = "fasthost.powerpc"
 AGENT_ID = "continuity-agent"
@@ -83,6 +89,112 @@ def runtime_receipt() -> dict[str, Any]:
         "webapp": str(WEBAPP),
         "local_mcp": str(WEBAPP / "bin" / "local-mcp"),
     }
+
+
+def _ledger_task_key(task_id: str) -> str:
+    return hashlib.sha256(task_id.encode("utf-8")).hexdigest()[:24]
+
+
+def _ledger_adapter():
+    if not LEDGER_SRC.is_dir() or not LEDGER_CLIENT.is_file():
+        raise Reject("ledger_adapter_unavailable", "BLOCKED")
+    source = str(LEDGER_SRC)
+    if source not in sys.path:
+        sys.path.insert(0, source)
+    try:
+        from concurrency_ledger.c_agent_adapter import (
+            CAgentLedgerBinding,
+            CAgentLedgerRequestAdapter,
+        )
+    except Exception as exc:
+        raise Reject(
+            "ledger_adapter_import_failed:" + type(exc).__name__,
+            "BLOCKED",
+        ) from exc
+    try:
+        return CAgentLedgerRequestAdapter(
+            CAgentLedgerBinding(
+                actor_id=LEDGER_ACTOR_ID,
+                role_assignment_id=None,
+                surface_id=LEDGER_SURFACE_ID,
+                project_id=LEDGER_PROJECT_ID,
+            )
+        )
+    except Exception as exc:
+        raise Reject(
+            "ledger_adapter_binding_failed:" + type(exc).__name__,
+            "BLOCKED",
+        ) from exc
+
+
+def _ledger_call(request: dict[str, Any], timeout: float = 15.0) -> dict[str, Any]:
+    if not LEDGER_CLIENT.is_file() or not os.access(LEDGER_CLIENT, os.X_OK):
+        raise Reject("ledger_client_unavailable", "BLOCKED")
+    try:
+        proc = subprocess.run(
+            [str(LEDGER_CLIENT), "-"],
+            input=canon(request),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(WEBAPP),
+            env={**os.environ, "HOME": str(ACCOUNT)},
+            timeout=max(1.0, min(float(timeout), 20.0)),
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise Reject("ledger_call_timeout", "BLOCKED") from exc
+    except Exception as exc:
+        raise Reject(
+            "ledger_call_failed:" + type(exc).__name__,
+            "BLOCKED",
+        ) from exc
+    if proc.returncode != 0:
+        raise Reject("ledger_call_rejected", "BLOCKED")
+    try:
+        result = json.loads(proc.stdout.decode("utf-8"))
+    except Exception as exc:
+        raise Reject("ledger_result_invalid", "BLOCKED") from exc
+    if not isinstance(result, dict) or result.get("ok") is not True:
+        raise Reject("ledger_result_rejected", "BLOCKED")
+    return result
+
+
+def open_ledger_session(task_id: str) -> tuple[str, str]:
+    """Open and heartbeat a role-free C-Agent coordination session.
+
+    This establishes only authenticated session provenance. It grants no role,
+    project-read, task-owner, claim, run, lease, or mutation authority.
+    """
+    adapter = _ledger_adapter()
+    key = _ledger_task_key(task_id)
+    correlation_id = "cagent-delegation:" + key
+
+    opened = _ledger_call(
+        adapter.session_open(
+            request_id="cagent-session-open-" + key,
+            idempotency_key="cagent-session-open-" + key,
+            now=datetime.now(timezone.utc),
+            correlation_id=correlation_id,
+        )
+    )
+    session_id = (opened.get("result") or {}).get("session_id")
+    if not isinstance(session_id, str) or not session_id:
+        raise Reject("ledger_session_id_missing", "BLOCKED")
+
+    heartbeat = _ledger_call(
+        adapter.session_heartbeat(
+            session_id=session_id,
+            request_id="cagent-session-heartbeat-" + key,
+            idempotency_key="cagent-session-heartbeat-" + key,
+            now=datetime.now(timezone.utc),
+            correlation_id=correlation_id,
+            causation_id="cagent-session-open-" + key,
+        )
+    )
+    heartbeat_at = (heartbeat.get("result") or {}).get("heartbeat_at")
+    if not isinstance(heartbeat_at, str) or not heartbeat_at:
+        raise Reject("ledger_session_heartbeat_missing", "BLOCKED")
+    return session_id, heartbeat_at
 
 
 def make_receipt(
@@ -367,6 +479,8 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
 
         started = time.monotonic()
         model_id: str | None = None
+        ledger_evidence: list[str] = []
+        ledger_calls = 0
         try:
             validated = validate_envelope(env)
             remaining = min(
@@ -376,6 +490,13 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             if remaining <= 0:
                 raise Reject("expired", "EXPIRED")
 
+            ledger_session_id, ledger_heartbeat_at = open_ledger_session(task_id)
+            ledger_calls = 2
+            ledger_evidence = [
+                "ledger_session:" + ledger_session_id,
+                "ledger_session_heartbeat:" + ledger_heartbeat_at,
+            ]
+
             model_id = resolve_claim_model()
             claim, model_ms = claim_task(env, validated, model_id, min(30.0, remaining))
             claim_digest = sha256_obj(claim)
@@ -383,9 +504,14 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 receipt = make_receipt(
                     task_id,
                     model_id=model_id,
-                    evidence_refs=["claim_sha256:" + claim_digest],
+                    evidence_refs=ledger_evidence + ["claim_sha256:" + claim_digest],
                     unresolved=["agent_declined"],
-                    resource_usage={"model_calls": 1, "local_mcp_calls": 0, "model_ms": model_ms},
+                    resource_usage={
+                        "ledger_calls": ledger_calls,
+                        "model_calls": 1,
+                        "local_mcp_calls": 0,
+                        "model_ms": model_ms,
+                    },
                     completion_state="BLOCKED",
                 )
             else:
@@ -410,10 +536,11 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                         "capability": validated["tool"],
                         "arguments_sha256": sha256_obj(validated["arguments"]),
                     }],
-                    evidence_refs=["claim_sha256:" + claim_digest],
+                    evidence_refs=ledger_evidence + ["claim_sha256:" + claim_digest],
                     result=result,
                     unresolved=unresolved,
                     resource_usage={
+                        "ledger_calls": ledger_calls,
                         "model_calls": 1,
                         "local_mcp_calls": 1,
                         "model_ms": model_ms,
@@ -426,16 +553,24 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             receipt = make_receipt(
                 task_id,
                 model_id=model_id,
+                evidence_refs=ledger_evidence,
                 unresolved=[e.code],
-                resource_usage={"elapsed_ms": int((time.monotonic() - started) * 1000)},
+                resource_usage={
+                    "ledger_calls": ledger_calls,
+                    "elapsed_ms": int((time.monotonic() - started) * 1000),
+                },
                 completion_state=e.completion_state,
             )
         except Exception as e:
             receipt = make_receipt(
                 task_id,
                 model_id=model_id,
+                evidence_refs=ledger_evidence,
                 unresolved=[type(e).__name__ + ":" + str(e)[:500]],
-                resource_usage={"elapsed_ms": int((time.monotonic() - started) * 1000)},
+                resource_usage={
+                    "ledger_calls": ledger_calls,
+                    "elapsed_ms": int((time.monotonic() - started) * 1000),
+                },
                 completion_state="FAILED",
             )
 
@@ -461,6 +596,9 @@ def self_test() -> int:
         "delegation_depth": 0,
     }
     assert validate_envelope(base, now)["tool"] == "list_dir"
+    assert _ledger_task_key("selftest-1") == _ledger_task_key("selftest-1")
+    assert _ledger_task_key("selftest-1") != _ledger_task_key("selftest-2")
+    assert len(_ledger_task_key("selftest-1")) == 24
 
     expired = dict(base, task_id="selftest-expired", deadline=now - 1)
     try:
