@@ -572,17 +572,36 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 )
                 if remaining <= 0:
                     raise Reject("expired_after_execution", "EXPIRED")
-                ledger_heartbeat(
-                    ledger_session_id,
-                    envelope_sha,
-                    "post-exec",
-                    validated["deadline"],
-                    remaining,
-                )
-                ledger_calls += 1
+                post_exec_ledger_error: str | None = None
+                try:
+                    ledger_heartbeat(
+                        ledger_session_id,
+                        envelope_sha,
+                        "post-exec",
+                        validated["deadline"],
+                        remaining,
+                    )
+                    ledger_calls += 1
+                except Reject as exc:
+                    # The local MCP action has already executed. Preserve that
+                    # evidence and fail the overall delegation rather than
+                    # collapsing an executed side effect into a pre-execution
+                    # BLOCKED receipt.
+                    post_exec_ledger_error = exc.code
 
-                state = "FAILED" if result.get("isError") is True else "COMPLETED"
-                unresolved = ["local_mcp_is_error"] if state == "FAILED" else []
+                local_error = result.get("isError") is True
+                state = (
+                    "FAILED"
+                    if local_error or post_exec_ledger_error is not None
+                    else "COMPLETED"
+                )
+                unresolved = []
+                if local_error:
+                    unresolved.append("local_mcp_is_error")
+                if post_exec_ledger_error is not None:
+                    unresolved.append(
+                        "post_exec_ledger:" + post_exec_ledger_error
+                    )
                 receipt = make_receipt(
                     task_id,
                     model_id=model_id,
