@@ -1,6 +1,6 @@
 # Continuity-Agent ledger session wiring
 
-Status: `IMPLEMENTED ON RECEIVER BRANCH / LIVE ACCEPTANCE PENDING`
+Status: `LIVE ACCEPTED 2026-10-04 / SESSION LAYER ONLY`
 
 The Continuity-Agent delegation receiver now participates in the authoritative
 Concurrency Ledger at the **session layer only**.
@@ -29,6 +29,24 @@ lifecycle authority. UI/preset experiments may therefore change or disable that
 row without silently changing the accepted inter-agent receiver model. A future
 receiver-model change requires an explicit reviewed implementation/configuration
 delta and fresh acceptance.
+
+## Live acceptance — 2026-10-04
+
+The deployed receiver is now accepted for the bounded session-layer integration.
+
+Acceptance evidence:
+
+- exact receiver source from `open-webui@ad7dbddcded9799c5a6b167cd74a9d97aa715d85` was installed and verified byte-for-byte by SHA-256;
+- the deployed executable uses the supported Python 3.12 interpreter and passed its self-test;
+- all six focused ledger receiver regression tests passed;
+- a fresh read-only `runtime_health` delegation completed through the real receiver with exactly two ledger calls, one model claim and one local-MCP call;
+- the receipt contained one ledger-session fact, one ledger-heartbeat fact and one claim digest;
+- replaying the identical envelope returned the identical durable receipt without rewriting the receiver record;
+- the returned session was independently found in the live ledger as `actor:continuity-agent` on `openwebui:continuity-agent`, status `ACTIVE`, with a persisted heartbeat and no role assignment.
+
+Receipt: `C_AGENT_LEDGER_SESSION_ACCEPTANCE_20261004.json`.
+
+`LIVE SESSION ACCEPTANCE != ROLE AUTHORITY != TASK OWNERSHIP`.
 
 ## Authority boundary
 
