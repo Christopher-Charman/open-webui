@@ -1,5 +1,15 @@
 # Permanent Control Changelog
 
+## 2026-10-05 — Continuity-Agent admission determinism accepted live
+
+- Fixed nondeterministic CLAIM/DECLINE inference by adding explicit Ollama seed `42` to the existing admission request; prompt, model, temperature, context/output limits and authority/capability policy are unchanged.
+- Source PR #12 merged at `e4668f36f6cf8b057c9df22aa3116c57e7605d21`; seeded receiver blob `d6c140d9a9c840090748a9ddd2e6ca7cc74defac` was installed byte-for-byte and self-tested.
+- Before fix, six identical unseeded requests produced 5 CLAIM / 1 DECLINE; after fix, six identical live receiver admissions produced 6 CLAIM / 0 DECLINE.
+- Fresh full delegation `cagent-seed-e2e-20261005T035941` completed session -> heartbeat -> frontier -> seeded model -> local MCP with 3 ledger calls, 1 model call and 1 local-MCP call.
+- Identical-envelope replay returned the same durable receipt without re-execution; legacy `cagent-status` acceptance fingerprint remains `sha256:ee13430462886036621107f85c95fd4a9d2b76066a2e9d26ae2a17b8a1ea604f`.
+- No TASK_OWNER, task-claim, run, lease, fencing or destination-mutation authority was added.
+- Receipt: `C_AGENT_ADMISSION_DETERMINISM_ACCEPTANCE_20261005.json`.
+
 ## 2026-10-04 — Continuity-Agent project-frontier consumption accepted live
 
 - Promoted automatic `concurrency.orchestration` frontier consumption to live accepted at the pre-model boundary.
