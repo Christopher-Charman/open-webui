@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 4298,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261005-cagent-seed-e2e-01.json",
+    "envelope": {
+      "ciphertext_b64": "XmuvYw7DiDPwOD51tfVYHTe1LnkQlLJSYXzr6QxWBZ7xDD0xgtxnt1SPb0KzUhEC7E35aIcXXwadjOQqht69W11-DNE58jppqGKV2WL_UkZG6-WyNjNHvDPI6JysW_FIPq19CM8Wqdn68IUuyvozZyShiOX4ltLk9JNUXfhQKXmGfT15_06fc9STS7EgpRI7yVMeq5G_ZAtW84nUx6U7-C0db9D1s6TUXD-hzQ_gDhc8OCLZfnGwSoYG9FKUmN657Qucn48FopGuD2_73W949GqQvOS8EawE2Hr0e555sr9BeTEwBtnkU7DHg82xAL5pLsLQJ1VKbJxZoOyuclSLY51w1w0-prYyZ4IhJ-64jqK8x69311DYuiunpYGTi4MeEgriVSy_io1iuGtgMXvyBspH7Qnj-4t4zh2As7KnF5eJSYWf9iISrc8-4Sclriid_m_um69jBzI22kErmghwMTAA7vJ8eBheI2SddexgT80HSIDZrNa6b6NCujyDRI4IlqZTG5WVnHVSSoJtkRjNyM-sMi_uRk1YL1YtKxzsranOam_QyC8VvTnln1u531S6C9G0RYgeabPpoH3IQDM1mFCZs3VcnL__OB3ctCLbotKMqEPAA6EXB0VRWZOw4dtDBu5F6H8SixzyBIwdKQmccdyZKFGDgmXXkLfCWqHLSn4eV3FbO370yCf6WmWZhSicw6rWCg3dkXX6xyexX_Bx6SUi0ywk1eKKYqqM6eB4MHOEFwayS2gdfqPqMPbxsBahtEkloXZc6nbr5DWo7UrbdF7L2U0eQOJ26Fs3NjqMijbomgVTm9Dsq6sfdTu7w1DL3Dsk7hSjHLzpwr03LqGxPnx7lVH1pdP6VBSGYDPLX8H4c0m3XYJF2zLof5avgTAQNnUMYlu8Xf2p0Tlg198eeHUn4ofg6SGvoYst4ORCjm4l4myTxRXz5j6Elu4-TMXTugLDPV96LbgIUWxGUBjoi6bKHHfesFrCNqVaRlem25xNUiz46PAODvgSi7bPETXIxDqBk94OjfviqQGOfladxvq1MdGaDT8_oH89XRkx4hLzegfg-uwYi6x1_ORaith4unYiYddDreFmPSyuQ_01fZrXu8wCwi3lf3P50ZoBoL0ANdLzRGdkn23J6hNjCIB3rc3Fh5IU82x_b3M30fbTVL95zKD7a9CmaM8WsCz7QEd1V74FVVM_cksuyOWnPzgejHj84fJhp3nPtCw__HtS-d8n1Ew0Su55_FDP-Z9jmWDOi7rrvX7L2kB0ZLDoV4gXtxp7-C08fwX2w48KgXrsjRE8G-ksjknAUdDATpQajGmDQAEP28NNfAXED3yyJ19KdHcTI8i92haRS634uD2htvjVOMsVPandUmiN54fuVIaX-pdAfItFQyjjGHc9aT6OrfFzTGz0NyGdtpOyjMwmsSDTFsxxYTJLrV2v-Nz6sos1BApVMczQfDuh16A5XWJmQgmpaGyPgyqyeVYnVDnuVbA1DsFig3v91fKN1z7oFG4bgR1uRBtza1mre6IPe721BIUpFRCJK_TsulCwjny06lsaRrEyy86j0AbObuSwPvHrkrsCzZHGrdgP93lsnH3WRrg9srZ-r6t4lH85-AJ0vod5eePXH4uq-OPVWT8vngBmSA0c58udPoSwWlE2YNSAXf9owOSATXsDP2DnBC1utv6j631G3tLcuxEF_Pd3yMpEP5aCJVK0DxA47duIWJr00nGBJ_1tatShMEq4qpEkmrkDhehrkCXR7HV2leI-czKVcgOMGCfthtKrpgyVIvJbhNR7k8cOUXqEy1ysQKO7oKoYSpa65Ty3nTmaBpz9eU-WXmoDD1_kQTENBM1kKRjZQwKJI9HxdNnJsLZ_y5W0oWvfGZ6ZjWqNc0RhJwgKAfjseOHSknttrPGPkBV360pOKqraFfbzlBoyWLU8oCRhGEzvOXuhEaT7LhxOvC2cJ6lzz_sIFmYbhvY33YyZEo-x0xE3SoxAQUNsT3qguVFmGCahZ8clUXLulgwFswj7jSbR_TTuGn8zBcHi1LU8fBd6egAw1lv9WR4WvzxgPtrausUnMeID4ombDmsz6Nuw5mFLYsv8Cste5a6NswjT9crnkdkAd0bQyhoi_GlmUqmtMn-3ElDojjlgo6QvW1xzgvZYJ7HLdOrmN31AMzB7YbAn0t6iwRlM37x095E-AStlDELl5jDK6NsXPdijqTPV6tnuFTcWTodfbgPK4ixhNdR5V7r2IrSvUXC7dARg8nmjXhUdrtkxMmSB0R45TfNJnJmz2LkxHQJuhzVpGXU7tZrpqSNADYgqjHKLDty_dCBEm4MxlUKnHRZSaH-z9Pk8_qsst35yvcEM6fb-U1ywvD5lyOnowaNe-qLY-lVErrJmDHB_utnnKiWWNlxKkF-NQL_DtBet1O0_6ff8gFPq4ENWLGpo2miRXL6nKo_4z7Nkoi1CuyJaLohKkqhECY7PWiZoR9e4B0GMa5VmX6Q-5xDmt_mC-wGJz9gaic2Mg1KvKkM2MzmUX4gCKV6SDpEWmfrj56mCV0FWx_RlfEmEGEKod9apR-Vp1vPKIMZa1yH0yc-IAoBt3pWi8_cGzzqfOOzP526-ul3j9VFthBBtf6FXo-sux7CxiPlkyVS0kRwJ3hNb3_jQlwwMO3h_Mf-m643UCpDhJi6FEEH4kehPAHnU15KwHRYykZPlHxYZWPcVWPfKnI_oLh6o-5ihemEzg0EdSmC9Cvn0RWpNnWHUngtazrQ5OjKqnXujXL98EdRrZSYoTRo_LXsDCMvZPH3szsIbBNZwjPD97_okV9ci2EYLrL_PHtBCokNSC4V70u8w_smo3nt8TMGcvnYZrYN7wLA5QAdPIpe76lXtXKsmX6jxYlm4MNhVUgoNuB0-qPDDHkMBSkrb6avILE2kpyLc0Gj-VPth5OuGJhErJB9XyVY8LXykHGyj4t1Ga5LvxPtyO4mvBABiuw6e9w1E-zxr_zQqxWI6eWMSqKofQNCNqJALbyR5eWF5q-2Vl388kFrFSu1hMAY1Y_ScOtCGm7lD_cNXLO1k8xaIKtljDdg8cq4jjmtdU48LNMs4306UsFidhUqAFWfGbyUsl_8ooHlacIjP_IWMqyE582IXshlA7UhPzF3q1byNdeo80L6li4YWVz3jHkXhLue8V5DCZV8QJUP_ut9UqlObugrO0SDtG6RHmjSxSMYG7H9dpK4IStjK0nCTsiwNG76jbk5h4vY50W8gS3GkOAdvDKUYyoi5FOnt4ymww7BXY7H_Y2pV8wLrUa-t5ay-Y3l4jbizTgDyj9gX8zJVtrWtQakv_gMrrR2hEdUmuMjlE6KkxaDg955QeitPTMn__eTdA37AU0ewzG4PyNlkL5EV780bsv84G6_a67ABDofXc2bTwz7Mp7CMIZibXIkdCGrJSPz60a0pCGW5sYFy7ZVxMD_6aVeZvr1KcvAyhjJVEDRtGTkxz9GiVqxskbnhZwlvn0u7zgymFrJrLYxrY5mdQlaqy2pBBWM47m9ZGSOdqzzQ_rrrLdujQHasJ4G7aHpMOPSyDV-PDx2EYnvTYdioHMt4BDP_t6PmNzMff0fdFEf0FaqdF1cSJKgYHmxGR6xhdDQ3Ff33d6JDP7f2Le-PqNSVP0RRpDM5r0yAC6eoeRknzOWf3kEweddrKuz5aYwSrQ_3_k38ce5yPM29xvPv64ZlIZ5-ufxjA2jBSywH5zXcm17B8fGe3KZLyipt_G4Yxs7rosa0DI4gKf058VZWZoAEVK_lvSXzxm2Qz0ht5lD13jBMnrRs07dLywYV-kjWMfHhxUFB5TIKLss5zevQbPULQED3nCq6iaOuKVokbp5dFXAlwqiRf6T-C-uIc5Z_VeaqIsnJha7UIIkFF6-q_iazBbtrvEkpwVrRiCBHaFjuBVQZaBQiAfy-fqWaBkXUCSqBRFoQgwW_93iz7A9Zw7TKYmqs",
+      "kind": "result",
+      "nonce_b64": "52lpJnpCeMaPf203",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791169186,
+      "signature_b64": "OSValLxZglukrlMIT6WAmTYiaHug42Fy0EAg-g4SrhiI_6l__oZnl8aYSLiDboUa0hw4B2Q9-DkpzOI865gTAA",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261005-cagent-seed-e2e-01",
+      "version": 1
+    },
+    "sha256": "88c3951658305e2d49332771732b5e53be8dac204753dd63ce01bd44bea6d89b"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261005-cagent-seed-e2e-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261005-cagent-seed-e2e-01",
+  "tool": "terminal_exec",
+  "verified_at": 1791169187,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "f8e6960ae75ce18566831351502feba53a4b1cf0d07193e0a886c9824b71c897",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "IDENTICAL_REPLAY_WITHOUT_REEXECUTION=PASS\nTASK_ID=cagent-seed-e2e-20261005T035941\nRECEIPT_SHA256=0ef63cdd5e7a98cf769150ab74dbdf346931f623a90ffe6869fccc0d71429353\n{\"actions\":[{\"arguments_sha256\":\"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\",\"capability\":\"runtime_health\"}],\"completion_state\":\"COMPLETED\",\"evidence_refs\":[\"ledger_session:01a10a00-b966-76af-add5-a7ef5782be99\",\"ledger_session_heartbeat:2026-10-05T02:59:42.186340Z\",\"ledger_frontier_sha256:9fa791031cb57cc66f9495b384f2deff89645b63ed5b0a51e19a16e57654d4bc\",\"claim_sha256:b18f821e7a435ef8ff52b9cb0527fc43ae837b6608d3464a7fa0489af8ca2e89\"],\"executor_identity\":{\"agent_id\":\"continuity-agent\",\"model_id\":\"qwen2.5-coder:1.5b-instruct-q4_K_M\",\"runtime_id\":\"fasthost.powerpc\"},\"resource_usage\":{\"elapsed_ms\":4975,\"ledger_calls\":3,\"local_mcp_calls\":1,\"local_mcp_ms\":525,\"model_calls\":1,\"model_ms\":4015},\"result\":{\"content\":[{\"text\":\"ARCHITECTURE HEALTH\\nOpenWebUI            PASS 200\\nOpenAI-broker        PASS 200\\nKokoro-TTS           PASS 200\\nPocket-voice         PASS 200\\nOpen-Terminal        PASS 200\\nTerminal-gateway     PASS 200\\nOllama               PASS 200\\nCONTROL_PLANE.md     PASS present\\nENVIRONMENT_MATRIX.md PASS present\\nSTATE_POLICY.md      PASS present\\nRECOVERY_POLICY.md   PASS present\\nRESOURCE_COORDINATION.md PASS present\\nWORKER_ROUTING.md    PASS present\\nDRIFT_REGISTER.md    PASS present\\n-- resource snapshot --\\n 03:59:46 up 3 days,  1:53,  0 users,  load average: 0.43, 0.54, 0.44\\n              total        used        free      shared  buff/cache   available\\nMem:            11G        5.0G        427M        779M        6.0G        5.4G\\nSwap:          2.0G        136M        1.9G\\n/dev/sdc1       493G  312G  156G  67% /home\\n\",\"type\":\"text\"}],\"isError\":false},\"runtime_receipt\":{\"hostname\":\"hp3-rr-1024747.hostingp3.local\",\"local_mcp\":\"/home/storage/781/4477781/user/webapp/bin/local-mcp\",\"namespace\":\"/home/storage/781/4477781/user\",\"runtime_id\":\"fasthost.powerpc\",\"uid\":2257347,\"user\":\"csh3280350\",\"webapp\":\"/home/storage/781/4477781/user/webapp\"},\"task_id\":\"cagent-seed-e2e-20261005T035941\",\"unresolved\":[]}\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261005-cagent-seed-e2e-01",
+    "unresolved": []
+  }
+}
