@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261005-cagent-seed-status-01",
+  "request_id": "cg-20261006-theme-recovery-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "/home/storage/781/4477781/user/webapp/bin/powerpc-control cagent-status",
-    "timeout_ms": 10000
+    "command": "set -eu; W=/home/storage/781/4477781/user/custom-shell-workbench/open-webui; echo WORKBENCH=$W; test -d \"$W/.git\"; cd \"$W\"; echo HEAD=$(git rev-parse HEAD); echo BRANCH=$(git branch --show-current); echo STATUS_BEGIN; git status --short; echo STATUS_END; echo LOG_BEGIN; git log -8 --oneline --decorate --all; echo LOG_END; echo BRANCHES_BEGIN; git branch -avv; echo BRANCHES_END; echo PRESENTATION_FILES_BEGIN; find src/lib/custom-shell src/routes -maxdepth 4 -type f \\( -iname '*orb*' -o -iname '*theme*' -o -iname '*shell*' -o -iname '*hero*' \\) -print 2>/dev/null | sort | head -120; echo PRESENTATION_FILES_END",
+    "timeout_ms": 20000
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300,
