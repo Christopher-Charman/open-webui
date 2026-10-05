@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 1592,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261005-cagent-seed-status-01.json",
+    "envelope": {
+      "ciphertext_b64": "s01lw0oxpHzUmx0eV-xDDzMYcRUnjkj7ujxQXkkFPurMkV_3XKB7X3w4g6xg2RdnMYk5MBx7ZTfHsTjZCBF83ZA8KF7X3d2RDqQ0LOt3EnmImc2D_lJIMGQYN9CULWnTD54v4g7JoSWsPtwN2CfTztJWygWfCIiaqkL50UIIfq_Lksjeziu6ZWqKUl_OI8KWPaZgDHwD-cCy0VpVlbLrJBJItpyxAEzJmzedJq9OHNVUPfPz5sBsVX4wxe2ZkOOadb_A0W-rBHIVJTJAnxN9YwV5B_CALz6izWIrXTiS29jrnx4Gd2j_bfj-vrTEfD8T3dvyQ9fysV6e1lcFzcJTq7PgWOW4YQiq0r_bEf2XgiIiUh09A8qGUtZWComR_XMGWY0MvcClrk6sYtJDhiu_r490WVb81yq8pTlCahyhjwraXT6JnAD2Z-J6dX3yDJJzbBJcWNtk-r3A-r9uymJRYFCuPILtkNwne0rQC16zcnfCfTkZizR5q1vCVR9rjhHcObhtLowtyeIb0l-lVY2Xvij0erJqHAV95MhAXND7AvXBrSxgJSBk2DEdXtJG4TmPRn11xa1d6yGDho9B8f6aKDg-LWB3D62HYLQ2l5HBeSL2PiM8lxX9NqgEerkye8lDGlSPxe1Ajj0zxcQ7FGAsRsJ1a8zhIyhmhtj3wCHY7nCi_yUydj5b6Snan81XvtIS6_dFYluouSUIjEciNNJZ4fyUWOJK6nzJLbchVywNDrnQPCXGXCC_S1N51ZtoUaFRldZJ43o_ndsdi1LjtQpUb6wU6QycfpQQRxUof67aKHZ9DrchqVL5PrlBwVFAytqLXfx7epIBmLMEf8KcOuJEs-r0Sv21w-YUDNM-stjJ102u6RmmvXqoEOMQuGgKCKnaXjuislE1dGbdk0G6y_sKYdT04UAUXHMjI8IiLtX13m0Y_dDgd8dOeApD8wQZgNZhH-2h5edelmHgzbZZTw_48JgQxPDouzpi3lUp8Letar8Gi0CBvp9K3SfOlvUMq7hx1WuV0aL5EqyZjy-5rmAXXSD39xb9qnUS0j8TqIOJonSkdwPwLmaFiYAU9P8RV-pKlOGpS9BsGl_RHXcwFs7VbMldweMARuCmW95vJ9B8zBZPi5rMLX5a4zd6yLDY55KMkT3KoB-vHTzw6j3mJXTPqxD_pvTlGPkfa1wt2svrxMschD3twqSowpRr8Vrw0UjmE-AIMXBJYDSYVaIyIHAmyc-jpXlBL5pZqnSBhNo",
+      "kind": "result",
+      "nonce_b64": "ZYLR_5y7vEx0NTnv",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791169258,
+      "signature_b64": "rNbN5QHpVKFD5BG4cQaPKeZKMUV1MPSS1hcR_HI2xzyR5BBySWE8jcqtMbLZxrFZLl4Xq3w5mI9qQek97kQvBw",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261005-cagent-seed-status-01",
+      "version": 1
+    },
+    "sha256": "e1eca0a8fab2495892f4264915f1c9657f4cae262113fde77fc07b45a048b168"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261005-cagent-seed-status-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261005-cagent-seed-status-01",
+  "tool": "terminal_exec",
+  "verified_at": 1791169259,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "009981e63ba96268e7507d8ffafdb43e2aebda8abac4d7695b5a15194d60ddd7",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "INTER_AGENT_CONTROL_PLANE=ACCEPTED\nCONTINUITY_AGENT_DELEGATION_ACCEPTANCE=PASS\nMODEL_ID=qwen2.5-coder:1.5b-instruct-q4_K_M\nEVIDENCE_FINGERPRINT=sha256:ee13430462886036621107f85c95fd4a9d2b76066a2e9d26ae2a17b8a1ea604f\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261005-cagent-seed-status-01",
+    "unresolved": []
+  }
+}
