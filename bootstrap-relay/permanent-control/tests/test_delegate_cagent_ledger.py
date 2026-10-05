@@ -232,6 +232,66 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
             "#!/home/storage/781/4477781/user/webapp/miniconda/bin/python3.12",
         )
 
+    def test_claim_model_request_has_fixed_deterministic_seed(self):
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return json.dumps(
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "task_id": "seeded-claim-test",
+                                    "decision": "CLAIM",
+                                    "capability": "runtime_health",
+                                }
+                            )
+                        }
+                    }
+                ).encode("utf-8")
+
+        captured = {}
+
+        def urlopen(request, timeout):
+            captured["request"] = request
+            captured["timeout"] = timeout
+            return Response()
+
+        env = envelope("seeded-claim-test")
+        validated = {
+            "task_id": "seeded-claim-test",
+            "tool": "runtime_health",
+            "authority": "read_only",
+        }
+
+        with patch.object(
+            delegate.urllib.request,
+            "urlopen",
+            side_effect=urlopen,
+        ):
+            claim, _ = delegate.claim_task(
+                env,
+                validated,
+                delegate.CLAIM_MODEL_ID,
+                5.0,
+            )
+
+        payload = json.loads(captured["request"].data)
+        self.assertEqual(claim["decision"], "CLAIM")
+        self.assertEqual(delegate.CLAIM_MODEL_SEED, 42)
+        self.assertEqual(payload["options"]["temperature"], 0)
+        self.assertEqual(
+            payload["options"]["seed"],
+            delegate.CLAIM_MODEL_SEED,
+        )
+        self.assertEqual(payload["options"]["num_ctx"], 1024)
+        self.assertEqual(payload["options"]["num_predict"], 64)
+
     def test_claim_model_uses_receiver_identity_not_ui_preset(self):
         class Response:
             def __enter__(self):
