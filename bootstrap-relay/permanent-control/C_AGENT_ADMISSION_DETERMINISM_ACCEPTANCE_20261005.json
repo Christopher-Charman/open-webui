@@ -1,0 +1,96 @@
+{
+	"schema": "c-agent-admission-determinism-acceptance-v1",
+	"accepted_at": "2026-10-05T03:01:04Z",
+	"status": "ACCEPTED",
+	"scope": "deterministic Continuity-Agent CLAIM/DECLINE inference only",
+	"runtime_id": "fasthost.powerpc_darwin_org",
+	"source": {
+		"repository": "Christopher-Charman/open-webui",
+		"pull_request": 12,
+		"merge_commit": "e4668f36f6cf8b057c9df22aa3116c57e7605d21",
+		"delegate_blob_sha": "d6c140d9a9c840090748a9ddd2e6ca7cc74defac",
+		"claim_model_id": "qwen2.5-coder:1.5b-instruct-q4_K_M",
+		"claim_model_seed": 42
+	},
+	"policy_unchanged": {
+		"prompt": true,
+		"model": true,
+		"temperature": 0,
+		"num_ctx": 1024,
+		"num_predict": 64,
+		"authority_checks": true,
+		"capability_policy": true
+	},
+	"diagnosis": {
+		"identical_unseeded_requests": 6,
+		"unseeded_claim": 5,
+		"unseeded_decline": 1,
+		"identical_fixed_seed_diagnostic_requests": 6,
+		"fixed_seed_claim": 6,
+		"fixed_seed_decline": 0
+	},
+	"source_validation": {
+		"tests_workflow_run": 37256534671,
+		"tests_workflow": "PASS",
+		"frontend_unit_tests": "PASS",
+		"frontend_dirty_tree_failure": "PRE_EXISTING_BASELINE; NO PR-CHANGED FILE IN FORMATTER DIFF"
+	},
+	"live_deployment": {
+		"health_request": "cg-20261005-cagent-seed-health-01",
+		"deployment_request": "cg-20261005-cagent-seed-deploy-01",
+		"live_blob_sha": "d6c140d9a9c840090748a9ddd2e6ca7cc74defac",
+		"receiver_self_test": "PASS",
+		"claim_model_seed": 42
+	},
+	"live_reproducibility": {
+		"request": "cg-20261005-cagent-seed-repro-03",
+		"identical_requests": 6,
+		"claim": 6,
+		"decline": 0,
+		"result": "PASS"
+	},
+	"live_end_to_end": {
+		"control_request": "cg-20261005-cagent-seed-e2e-01",
+		"delegation_task_id": "cagent-seed-e2e-20261005T035941",
+		"completion_state": "COMPLETED",
+		"session_id": "01a10a00-b966-76af-add5-a7ef5782be99",
+		"frontier_evidence": "ledger_frontier_sha256:9fa791031cb57cc66f9495b384f2deff89645b63ed5b0a51e19a16e57654d4bc",
+		"claim_evidence": "claim_sha256:b18f821e7a435ef8ff52b9cb0527fc43ae837b6608d3464a7fa0489af8ca2e89",
+		"ledger_calls": 3,
+		"model_calls": 1,
+		"local_mcp_calls": 1,
+		"receipt_sha256": "0ef63cdd5e7a98cf769150ab74dbdf346931f623a90ffe6869fccc0d71429353",
+		"identical_replay_without_reexecution": "PASS"
+	},
+	"compatibility": {
+		"status_request": "cg-20261005-cagent-seed-status-01",
+		"inter_agent_control_plane": "ACCEPTED",
+		"continuity_agent_delegation_acceptance": "PASS",
+		"legacy_evidence_fingerprint": "sha256:ee13430462886036621107f85c95fd4a9d2b76066a2e9d26ae2a17b8a1ea604f"
+	},
+	"harness_attempts": [
+		{
+			"request": "cg-20261005-cagent-seed-repro-01",
+			"result": "HARNESS_IMPORT_FAILURE",
+			"product_defect": false
+		},
+		{
+			"request": "cg-20261005-cagent-seed-repro-02",
+			"result": "HARNESS_EXCEEDED_30S_TERMINAL_CEILING",
+			"product_defect": false
+		},
+		{
+			"request": "cg-20261005-cagent-seed-repro-03",
+			"result": "PASS",
+			"product_defect": false
+		}
+	],
+	"authority_boundary": {
+		"project_read_authority": "UNCHANGED",
+		"task_owner_authority": false,
+		"task_claim_authority": false,
+		"run_authority": false,
+		"lease_or_fencing_authority": false,
+		"destination_mutation_authority": false
+	}
+}
