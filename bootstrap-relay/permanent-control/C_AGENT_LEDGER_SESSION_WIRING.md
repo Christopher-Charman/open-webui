@@ -1,6 +1,6 @@
 # Continuity-Agent ledger session wiring
 
-Status: `SESSION + PROJECT-FRONTIER PRE-ADMISSION LAYERS LIVE ACCEPTED / TASK OWNERSHIP NOT GRANTED`
+Status: `SESSION + PROJECT-FRONTIER + SEEDED ADMISSION LAYERS LIVE ACCEPTED / TASK OWNERSHIP NOT GRANTED`
 
 The Continuity-Agent delegation receiver now participates in the authoritative
 Concurrency Ledger at the **session layer only**.
@@ -29,6 +29,10 @@ lifecycle authority. UI/preset experiments may therefore change or disable that
 row without silently changing the accepted inter-agent receiver model. A future
 receiver-model change requires an explicit reviewed implementation/configuration
 delta and fresh acceptance.
+
+Admission sampling is also pinned by the receiver implementation:
+`CLAIM_MODEL_SEED = 42`. This controls reproducibility only; it does not widen
+the admitted capability set or relax the CLAIM/DECLINE policy.
 
 ## Live acceptance — 2026-10-04
 
@@ -100,15 +104,27 @@ opening another session, rereading the frontier or reinvoking the model.
 The acceptance session and active reader assignment were independently read
 back from the live ledger, and the Continuity-Agent still had no task-ownership
 rows. The same exact model claim input later returned `CLAIM` in an isolated
-diagnostic, so claim-decision reproducibility is a separate unresolved
-admission-quality issue and is not attributed to the frontier layer.
+diagnostic. That separate claim-decision reproducibility defect was subsequently
+reproduced as 5 CLAIM / 1 DECLINE across six identical unseeded live requests
+and repaired on 2026-10-05 by pinning the Ollama admission seed to `42`
+without changing the prompt, model, authority policy, capability policy,
+temperature, context limit or output limit.
 
-Receipt:
+The deployed seeded receiver then returned 6 CLAIM / 0 DECLINE across six
+identical live admissions, completed a fresh end-to-end
+session -> heartbeat -> frontier -> seeded model -> local-MCP delegation, and
+returned the identical durable receipt on replay without re-execution. The
+legacy inter-agent acceptance fingerprint remained unchanged.
+
+Frontier receipt:
 `C_AGENT_FRONTIER_CONSUMPTION_ACCEPTANCE_20261004.json`.
+
+Determinism receipt:
+`C_AGENT_ADMISSION_DETERMINISM_ACCEPTANCE_20261005.json`.
 
 `FRONTIER_CONSUMED_BEFORE_MODEL != TASK_OWNER`.
 
-`MODEL_DECLINE != FRONTIER_FAILURE`.
+`DETERMINISTIC_ADMISSION != AUTHORITY_EXPANSION`.
 
 ## Authority boundary
 
