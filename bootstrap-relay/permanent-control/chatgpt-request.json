@@ -1,10 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261006-theme-locate-02",
+  "request_id": "cg-20261006-theme-inspect-03",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -u; ROOT=/home/storage/781/4477781/user; echo SEARCH_ROOT=$ROOT; find \"$ROOT\" -maxdepth 5 -type d \\( -name 'custom-shell-workbench' -o -name '.bootstrap-source' -o -name 'open-webui' -o -name '.git' \\) -print 2>/dev/null | sort | head -200",
+    "command": "set -eu; W=/home/storage/781/4477781/user/webapp/custom-shell-workbench/open-webui; cd \"$W\"; printf 'HEAD='; git rev-parse HEAD; printf 'BRANCH='; git branch --show-current; echo STATUS_BEGIN; git status --short; echo STATUS_END; echo TARGET_OBJECT_BEGIN; if git cat-file -e '37460a57ba33ccb42185fd838f04d2cca4025a05^{commit}' 2>/dev/null; then git show -s --format='%H%n%P%n%D%n%s%n%ci' 37460a57ba33ccb42185fd838f04d2cca4025a05; git diff --stat 472325c9d736bf09f0b61c81ecc8833d5eb91ff3..37460a57ba33ccb42185fd838f04d2cca4025a05; else echo TARGET_COMMIT_ABSENT; fi; echo TARGET_OBJECT_END; echo REFS_BEGIN; git for-each-ref --format='%(refname:short) %(objectname) %(subject)' refs/heads refs/remotes | head -80; echo REFS_END; echo RECENT_BEGIN; git log --all -12 --oneline --decorate; echo RECENT_END; echo REMOTES_BEGIN; git remote -v; echo REMOTES_END",
     "timeout_ms": 20000
   },
   "authority_ceiling": "bounded_operator",
