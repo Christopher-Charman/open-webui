@@ -1,10 +1,13 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261005-cagent-seed-health-01",
+  "request_id": "cg-20261005-cagent-seed-deploy-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "runtime_health",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "set -eu\nroot=/home/storage/781/4477781/user/webapp\npy=$root/miniconda/bin/python3.12\ntarget=$root/bin/delegate-cagent\ntmp=$root/bin/.delegate-cagent.seeded.$$\nurl='https://raw.githubusercontent.com/Christopher-Charman/open-webui/e4668f36f6cf8b057c9df22aa3116c57e7605d21/bootstrap-relay/permanent-control/delegate-cagent.py'\ncleanup(){ rm -f \"$tmp\"; }\ntrap cleanup EXIT\ncurl -fsSL \"$url\" -o \"$tmp\"\nblob=$(\"$py\" - \"$tmp\" <<'PY'\nfrom pathlib import Path\nimport hashlib,sys\nb=Path(sys.argv[1]).read_bytes()\nprint(hashlib.sha1(b'blob '+str(len(b)).encode()+b'\\0'+b).hexdigest())\nPY\n)\ntest \"$blob\" = 'd6c140d9a9c840090748a9ddd2e6ca7cc74defac'\n\"$py\" -m py_compile \"$tmp\"\nchmod 700 \"$tmp\"\n\"$tmp\" --self-test\nmv \"$tmp\" \"$target\"\nchmod 700 \"$target\"\ntrap - EXIT\nliveblob=$(\"$py\" - \"$target\" <<'PY'\nfrom pathlib import Path\nimport hashlib,sys\nb=Path(sys.argv[1]).read_bytes()\nprint(hashlib.sha1(b'blob '+str(len(b)).encode()+b'\\0'+b).hexdigest())\nPY\n)\ntest \"$liveblob\" = 'd6c140d9a9c840090748a9ddd2e6ca7cc74defac'\ngrep -q '^CLAIM_MODEL_SEED = 42$' \"$target\"\necho LIVE_CAGENT_SEEDED_SOURCE=PASS\necho LIVE_CAGENT_BLOB_SHA=$liveblob\necho CLAIM_MODEL_SEED=42",
+    "timeout_ms": 30000
+  },
+  "authority_ceiling": "bounded_operator",
   "ttl": 300,
   "result_visibility": "public_plaintext"
 }
