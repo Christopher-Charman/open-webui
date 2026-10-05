@@ -10,7 +10,6 @@
 - No TASK_OWNER, task-claim, run, lease, fencing or destination-mutation authority was added.
 - Receipt: `C_AGENT_ADMISSION_DETERMINISM_ACCEPTANCE_20261005.json`.
 
-
 ## 2026-10-04 — Continuity-Agent project-frontier consumption accepted live
 
 - Promoted automatic `concurrency.orchestration` frontier consumption to live accepted at the pre-model boundary.
