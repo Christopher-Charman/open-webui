@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 2415,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261005-cagent-seed-health-01.json",
+    "envelope": {
+      "ciphertext_b64": "n26xNwFwylsBGJEtQHeZzaxWjEoIzBt7CR9u-mOIYGx9lBmzpwy1dihUjV0a5EQ_0U90JrxtOiwR55qdZSjDl_My20V8ecbr3jaZwK8_9V78IfoZ24qhgrUllN3mVJl-rg523t4pQHyiQDFpNSHLzKNxzl2VMZNQVF-0tFh5urfJClZ18mENR7gCgCWmXRTihFZBrVsWdJO0-I5sfaP3Ade7dXyGvx2TnmLji-43kNtNXcpnQlPiJF38D6rkz5GqJ-4vIrDcBp1xasy-yaRHbSVrEuo5YnYhRscB50iajk5ykHseCVNGFwAGs3qdu1huN01XOGX1VNNZ3Kvx0qah-lkMWaAUp_mjirhfBFGqmEhGK6yPN0-VzXfwzvp3kBdym48TMLXrhaxMdvjh9aHTeDZWP_0A66T2Uxp5P9aXLe30Dlo49NeTDZ02wtPjCcMxY1yLE87F1Llx5dTE9RqQRqk4KRj8yn7T7Sku8I46h7kOqD8NxJ7pAkAeXU__YankjjnyT937vPTBBLN9S-eh0U924WfeRJYHkkchnYZE0sTxIguagvtdrIKIbWABTUP3phMWEWOyALPJDFJw5B3bwqBFuqasDQ-41yMbXjiBrnGtyDofGqq11IIJ07yOHlFIxYXMajL0Wt0UjtHPqvac18OZuvTFrgz6JCTfTrK_ND_It0c57wOzxh3l1WzHpZVIv5HOx4Xxf0R1qxq2HIlIGF54DonQGBDyNFDzBSpAu0kULOxa0IiTZJBef05SpB-EszWOEC0q5IDuOHMrIhkkieKfdErlRSHo6EFN2_jaWo-1S29cKHKfjjvb--BvNpUo1x5jHmBZl-rOPcTzfgPtpiofntW2NaAqcnaw5fVDBsu9tEJRAnGAbvJdH29eT0IUDq28Ftf5Fx0VOpNUF7bhfOCTckCkpgrpk3BCYgwF9J_PoLANsYtodAF2NtlUTPCHhU5ViBY7WjGRXCcyFT0lWLfQr5u8DRLfWXion7GqzpBs8A_gQRfi8bl3gahiGo7h9G7gwjijnbO15eOzim_7cHnuS6wEIUYxPpqss2PoEgLYzrIxgD68-ID9lnhLA9QMBYBbWOg3Ok17cbiGCei9D81-0LkgJ7hlyHgYFh927CxfODA-Er7OVMezcdSckJMWeVjyAr9WPRqt6vBOgFgga6pfHkBbU42IiN3Is1_Y7oa6xtnoxHUh1sUm9wt-8G_vkRWRELdTG7CeQ3I1PCuhwMsKZpW25nZU9wulFOPpsuXG4L68NL9EvrLAEeFF6qcA1OBFpZxjvVE1H3PTNlLfkU1o5djLKVnUazQOq3Vkgfx9YqbwlMppiV6VpL-pgmDsj5wbip6u7BDM4shUjcyUgdsc9HqAi21Z6RoOXsE6PTJNAxORfw5YYNpEoMuVjHh6nBKgoUD9cVdFJGQdCQl4wK2MtA6QXcwGcTWkKm3eNlqR9esIkqirDQhRVqMMwVTx12fNnif1dco8_tmMPiEN1cNcd7OSKCDZjAUYDP2mU6C40B3PuVL9JqAKh_CXCWNByz8tnyn1YqP2okGt0re42z2k-yEgB5cg8Z7vCANxB6R-SwWSH6IWMl86LhzVh_dldKRUfkuUNJ6poL6I5To7BNyk_5EQIIrbedmPcH_UI49OOPfqz7lF3QsJXrWllxv2ByXcQbqWVVjQdlkQaNNZeMp-Smk-WGHBc1Qwq67UQgPPKAQWzOQ78Wsq_uRJ0It2WJfboA9rjr-LNf79cteiE0iDv-RALvwuRKQOSfekZiVICIvosMDwtpA1e3OLqgtNq7nWTRkX6e6gXUkkh9Q7NHwGkH8JDba6qfqzM7NEFs9qWNPZ6MGYyBB6BzJXKkuhqPQsrI2HbUR1EDV6gas0kW75UFv1ASm4t7vv6sKHDV5o-Y1c1F1_5Hq_2R2fd1INyKND07km7pAQY9bqdy2j6j8KiA3TrTCmlYZ2PP8Lib9vxsGuCqJn80tWyDlU8NEAeyzX5U-tNuhnJXew4I2l-znabe-ST7T8HGTExkkTGEjtteEp6Xty95_cs_a8bvVIqBtkN4Sfw9wPtpLN15xQYns1zXAUlg",
+      "kind": "result",
+      "nonce_b64": "33kAWEI12alkVEsE",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791168475,
+      "signature_b64": "ISItOL2xM9upKqsmnhbhEswxW2a-rWKY3x6zbefpUETGyjhuRx8Vw_Q9O-1Y_WBmvauEwH9bzc_82_LVmtUpCw",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261005-cagent-seed-health-01",
+      "version": 1
+    },
+    "sha256": "724cf4d4c41ba17717637a386ad76d47cda6f5efc856b38ae4a01b973cb2422b"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261005-cagent-seed-health-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261005-cagent-seed-health-01",
+  "tool": "runtime_health",
+  "verified_at": 1791168475,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "capability": "runtime_health"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "ARCHITECTURE HEALTH\nOpenWebUI            PASS 200\nOpenAI-broker        PASS 200\nKokoro-TTS           PASS 200\nPocket-voice         PASS 200\nOpen-Terminal        PASS 200\nTerminal-gateway     PASS 200\nOllama               PASS 200\nCONTROL_PLANE.md     PASS present\nENVIRONMENT_MATRIX.md PASS present\nSTATE_POLICY.md      PASS present\nRECOVERY_POLICY.md   PASS present\nRESOURCE_COORDINATION.md PASS present\nWORKER_ROUTING.md    PASS present\nDRIFT_REGISTER.md    PASS present\n-- resource snapshot --\n 03:47:55 up 3 days,  1:41,  0 users,  load average: 0.30, 0.33, 0.28\n              total        used        free      shared  buff/cache   available\nMem:            11G        3.9G        1.1G        662M        6.5G        6.6G\nSwap:          2.0G        136M        1.9G\n/dev/sdc1       493G  312G  156G  67% /home\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261005-cagent-seed-health-01",
+    "unresolved": []
+  }
+}
