@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "FAILED",
+  "encrypted_result": {
+    "bytes": 1385,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261006-theme-recovery-01.json",
+    "envelope": {
+      "ciphertext_b64": "IXNy-HBFbxzfvkMrnLM4Vl5EHJq3r6rY-8yHoYMM2OGgRX81Nf8pZjKO73qTDrTyXKk9l_6DzxRz-ZFPR8KZwp68RNtJctmV_EDiL9ecoJb6mCyYlkH0Gm5BYwm1UwSaa30O2zYHqJyNDSPMnmIilI1QclR_qh_Pmc6dLweWdHwG5es4lVI9rGbYrVjKqo7wliuf9Yu9jZbYuH3O20JJT6ZDrYy68fdPZw7pEklxeAr-cK3b6orC3OofAr1dmVhit3cVfNk_bLpTHtEGycXH7O5__BP_kFyHh1ZbQawZIWkHzhxX3mklCRc1LlvmYEbUhDx9yvqbfJJYI5aHh43EgZgfy7ITuuhVFGV_AiWCZ8sg0vDFMcroeNLntEK1bqpc06uRXOk3Fa_uiqaXSg3DP4qFzrC7PvgRvToxpoUGPk2XU6kqOEO-L2i2r3PdxLOXnTZevMDFoGfevci7nNsMfEqQaL-O3k2n6QPjsTgPI2lgq7rMMuaW6Z7MC6PkSiIElQIDgtlNaVnYLRPffLJiviZaaPc08ly_UEO3OmCYlaZzoBBPSiN2lKArapHaaoVVuD80vQbKcAWnOZACIjW_d_9_21xrAWxNv_9tmD0rGCvItN2rPMWabfA8Y3BG0aenGI-Vd_MrQjWT6dv5my-6yWBd4S9I5F9aKf9TKe-0t3xVFgIxp3VIQSJISjyDsMTF8Qu_-IlOq2iKUlfLSATkmK-wE8Iw64JM56_0GFqCC37Og64vGH6DRmzpaFoSY0OD4PXST0dhh-63nxrQ1Bjf9HmLm52j1RWkHLgxEoMX6cJTdVTmx4bDmB9xfCqWXtlJ9-swy45g5jHZHwCFRzifmoWZBmj3Dm7PTnnRzp9pcblmxLJ3JLnaumDy5gfSFihsmfodyCqkYuJJO8RoJO_fvEXHO2ZByL49lqbiSg92J-sERJHZFAkTBcBOmWlyVgcEGWQ47O7WKGVjz6Rd_FTtc-4RMEghqrZVHIwHcRSY1WA5vyRNWIbFeNPH3vVwSsVl01Iyi4iRmQ_jcLBoA3UZonkO9YDp",
+      "kind": "result",
+      "nonce_b64": "nitb8arRWo46ymOv",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791244158,
+      "signature_b64": "dZxgwJ6aeOSt11__Su9T4m6a-ARybTS3oaG37NrEnXMnszRmleI7amQSZ_YYhuT3GOGrcjiz5SKIwCv0uc5RCQ",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261006-theme-recovery-01",
+      "version": 1
+    },
+    "sha256": "123ac2331cbbe41b93f7c253fc4787eda33088e1251f16e0a9d6c475ef5240ef"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261006-theme-recovery-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261006-theme-recovery-01",
+  "tool": "terminal_exec",
+  "verified_at": 1791244160,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "5d7bd81d59e0b81eea785af547f9135a08de511988ab82b05611f084d45f5ca8",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "FAILED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "WORKBENCH=/home/storage/781/4477781/user/custom-shell-workbench/open-webui\n",
+          "type": "text"
+        }
+      ],
+      "isError": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261006-theme-recovery-01",
+    "unresolved": []
+  }
+}
