@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "FAILED",
+  "encrypted_result": {
+    "bytes": 1572,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261005-cagent-seed-repro-01.json",
+    "envelope": {
+      "ciphertext_b64": "wrsXmfg4Pddjc7XLX--bwLKjFXiSAQ3AanTLKqPHw_YifkF_AFiZdVsy5CtyAMmb3p284O6KSvYPBdVSmLu95WwTvs9V-HNvJnnPjmCLX1ZYAH9hNdaH2FbIYmIQIT2spIfuAYVJuDzxX6GFnCBZHeU_Z1S3PEPmqlHZVA6rHWUrsBoGdTjV0sxL9GqVReOUYPymB-EPMv2anpzo_wmBJYKcbBY8rX4HrwmB5mnMnKIZ0RpCuEuwUQw0kcy1AXSczqCF4ufpjrWircBZ9WZS0MkmSYKpWY_70QhmUMjPZJJSiuRk5nRjvpkZq2Fm1Fgq1uk7rvirGow320GwfSFe7rowDxapNY0WD5PH8dDW1J1ygdxgzs6u6LaNWLo7QftHoCA5jKweYcX4ypNHhIk9exClkwhGPCO5cAtTW9lGwArtVM_ZPX6eTILdZFOD-b5ha5Kcm-nkdYisHDTgSOR0rYMd5qW3lOqXsc0sG41ECXTdrlhR5cVUCO7cvtjtnioJMl0PTv-35vbAqyicGkfkFre6G-G9JU41fKsWIy0Jpk5gAGETjH3qNJ53Fl7VbFfShyMcp_iTCi_1djtliR1Kw7CJYlIemRi9hHSA3jRYSw71IMOjXR9cBke5u4EBpS8txa8S4eP6dOwh8sFEaUVWHuGFn5GkcBWLwxRO40lfMl4FBBfEElQIAysnd1YbnuUH-HTOAMzsOtz8YdzS6SUsDYvKUlLFIaJuYZbFMLiUgNIla___vzhq3LORddvGmo5YfhEi2Li5MKRImvsvLcWZ8tzzamQoQUsAUgDXg_tZVl5xhbqpaWcU3lc77r01ixLqsSdNs5jx-iaQYVlXOb0X_il7z5NaIDb9SjrME20WZrbeFty23u9g5nAyYkQCfE9cns-vM6cUNInYjHBcvsqsazyldmg-mWL2m88ozWknStsXEd-0uLTAemRJh5P1TFWaPdHjgN--oL9h8UW2meNw8PqFKy0Dopw6f2nYNKUPa2guQJe_1FLeOLS12LT6ph5KSPu5qgav7G4EL7gHdwE5t724t5YzPsGEz6P0sgsiqnEFTImBPxIVMLIFO4cruXZPYs81ycm9n5FZ_ASHw5_KfURRNquVOcZpGirIg3tiglKqPa734ilNis2lwinlEvoMAXCU6kt_Riqo1hoGDX68qNW7WlwiUKuvB9zkl0_L85IF0OEw9iiKO6tVWjw9jVvaSA4limJfQyc7aUK9KsjX",
+      "kind": "result",
+      "nonce_b64": "UQBUOqUyEWhByHej",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791168707,
+      "signature_b64": "cj8B0x3EKXbvfYmt6D5rPueYSJtURtX5rGRjnAmA9Boav4J1Z7TcSSQKVRk7x5AJgFFE7rLsOzE871lgh9eiAA",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261005-cagent-seed-repro-01",
+      "version": 1
+    },
+    "sha256": "f36be1d35945c8bf1a301e96bb7b0c012e585069b78e91a9a5b39ea9116a0aa3"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261005-cagent-seed-repro-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261005-cagent-seed-repro-01",
+  "tool": "terminal_exec",
+  "verified_at": 1791168708,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "6d98e99de26eed3311e8a4ff7fcbfd9ebb4ee294deceb34f92afa1303cf0b921",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "FAILED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "Traceback (most recent call last):\n  File \"<stdin>\", line 4, in <module>\n  File \"<frozen importlib._bootstrap>\", line 810, in module_from_spec\nAttributeError: 'NoneType' object has no attribute 'loader'\n",
+          "type": "text"
+        }
+      ],
+      "isError": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261005-cagent-seed-repro-01",
+    "unresolved": []
+  }
+}
