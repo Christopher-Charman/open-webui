@@ -36,6 +36,7 @@ LEDGER_FRONTIER_LIMIT = 10
 RUNTIME_ID = "fasthost.powerpc"
 AGENT_ID = "continuity-agent"
 CLAIM_MODEL_ID = "qwen2.5-coder:1.5b-instruct-q4_K_M"
+CLAIM_MODEL_SEED = 42
 RECEIPT_SCHEMA = "assistant-delegation-receipt-v1"
 ALLOWED_TOOLS = {"runtime_health", "read_text", "list_dir", "terminal_exec"}
 TOOL_AUTHORITY = {
@@ -445,6 +446,7 @@ def claim_task(env: dict[str, Any], validated: dict[str, Any], model_id: str, ti
         "format": "json",
         "options": {
             "temperature": 0,
+            "seed": CLAIM_MODEL_SEED,
             "num_ctx": 1024,
             "num_predict": 64,
         },
