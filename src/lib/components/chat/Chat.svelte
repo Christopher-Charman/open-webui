@@ -4135,7 +4135,11 @@
 	};
 
 	$: shellMessage = history?.currentId ? history.messages?.[history.currentId] : null;
-	$: shellPhase = deriveShellPhase({ generating, taskCount: taskIds?.length ?? 0, message: shellMessage });
+	$: shellPhase = deriveShellPhase({
+		generating,
+		taskCount: taskIds?.length ?? 0,
+		message: shellMessage
+	});
 </script>
 
 <svelte:head>
@@ -4371,6 +4375,11 @@
 					{/if}
 					<div id="chat-pane" class="flex flex-col flex-auto z-10 w-full @container overflow-auto">
 						{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || createMessagesList(history, history.currentId).length > 0}
+							{#if !embedded}
+								<div class="custom-shell-telemetry-lane">
+									<ChatTelemetry phase={shellPhase} showDetail={!$mobile} />
+								</div>
+							{/if}
 							<div
 								class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden"
 								id="messages-container"
@@ -4427,11 +4436,6 @@
 									id={embedded ? messageInputDropzoneId : undefined}
 									class=" pb-2 {dragged ? 'z-0' : 'z-10'}"
 								>
-									{#if !embedded}
-										<div class="custom-shell-telemetry-lane">
-											<ChatTelemetry phase={shellPhase} showDetail={!$mobile} />
-										</div>
-									{/if}
 									<MessageInput
 										bind:this={messageInput}
 										{history}
