@@ -13,7 +13,7 @@
 
 	$: visual = resolveShellVisualState(phase, detail);
 	$: palette = SHELL_TONE_PALETTES[visual.tone];
-	$: heroState = phase === 'ready' ? 'connecting' : visual.orbState;
+	$: heroState = visual.orbState;
 	$: canvasSize = Math.round(size * 0.9);
 </script>
 
@@ -71,7 +71,11 @@
 		border-radius: 50%;
 		background:
 			radial-gradient(ellipse at 38% 42%, rgb(var(--shell-accent-rgb) / 0.25), transparent 42%),
-			radial-gradient(ellipse at 64% 60%, color-mix(in srgb, var(--shell-accent-3) 19%, transparent), transparent 48%);
+			radial-gradient(
+				ellipse at 64% 60%,
+				color-mix(in srgb, var(--shell-accent-3) 19%, transparent),
+				transparent 48%
+			);
 		filter: blur(30px) saturate(1.25);
 		opacity: 0.68;
 		animation: hero-breathe 5.4s ease-in-out infinite;
@@ -82,12 +86,8 @@
 		position: relative;
 		display: grid;
 		place-items: center;
-		filter:
-			brightness(1.2)
-			contrast(1.06)
-			drop-shadow(0 0 10px rgb(var(--shell-accent-rgb) / 0.48))
-			drop-shadow(0 0 26px rgba(124, 92, 255, 0.24))
-			drop-shadow(0 0 42px rgba(255, 79, 216, 0.14));
+		filter: brightness(1.2) contrast(1.06) drop-shadow(0 0 10px rgb(var(--shell-accent-rgb) / 0.48))
+			drop-shadow(0 0 26px rgba(124, 92, 255, 0.24)) drop-shadow(0 0 42px rgba(255, 79, 216, 0.14));
 		animation: network-float 7s ease-in-out infinite;
 	}
 
@@ -119,23 +119,44 @@
 	}
 
 	@keyframes hero-breathe {
-		0%, 100% { transform: scale(0.96); opacity: 0.72; }
-		50% { transform: scale(1.04); opacity: 1; }
+		0%,
+		100% {
+			transform: scale(0.96);
+			opacity: 0.72;
+		}
+		50% {
+			transform: scale(1.04);
+			opacity: 1;
+		}
 	}
 
 	@keyframes network-float {
-		0%, 100% { transform: translate3d(0, 2px, 0) rotate(-0.8deg); }
-		50% { transform: translate3d(0, -3px, 0) rotate(0.8deg); }
+		0%,
+		100% {
+			transform: translate3d(0, 2px, 0) rotate(-0.8deg);
+		}
+		50% {
+			transform: translate3d(0, -3px, 0) rotate(0.8deg);
+		}
 	}
 
 	@media (max-width: 520px) {
-		.hero-orb { gap: 0.62rem; }
-		.hero-field { transform: scale(0.94); margin-block: -0.5rem; }
-		.hero-copy h1 { font-size: 0.68rem; }
+		.hero-orb {
+			gap: 0.62rem;
+		}
+		.hero-field {
+			transform: scale(0.94);
+			margin-block: -0.5rem;
+		}
+		.hero-copy h1 {
+			font-size: 0.68rem;
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.hero-aura,
-		.hero-network { animation: none; }
+		.hero-network {
+			animation: none;
+		}
 	}
 </style>
