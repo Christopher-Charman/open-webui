@@ -183,6 +183,7 @@ html.dark {
 
 .custom-shell-telemetry-lane {
 	position: relative;
+	top: 3rem;
 	z-index: 36;
 	display: flex;
 	flex: 0 0 3.95rem;
