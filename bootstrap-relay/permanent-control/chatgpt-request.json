@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261006-wireguard-ledger-open-01",
+  "request_id": "cg-20261006-wireguard-ledger-frontier-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session open chatgpt-ios-wireguard-headscale-20261006",
-    "timeout_ms": 10000
+    "command": "W=/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session; S=chatgpt-ios-wireguard-headscale-20261006; I=01a111c8-94b1-721f-8130-b6c49b204711; \"$W\" heartbeat \"$S\" \"$I\"; \"$W\" frontier \"$S\" \"$I\" 20; \"$W\" conflicts \"$S\" \"$I\" 20",
+    "timeout_ms": 15000
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300,
