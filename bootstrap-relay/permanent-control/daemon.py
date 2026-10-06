@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import signal
 import socket
 import sqlite3
@@ -57,6 +58,14 @@ HELPER = Path(os.environ.get("PPC_CONTROL_MCP_HELPER", str(STATE / "local-mcp-ca
 QUEUE_URL = os.environ.get(
     "PPC_CONTROL_QUEUE_URL",
     "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json",
+)
+QUEUE_REFS_URL = os.environ.get(
+    "PPC_CONTROL_QUEUE_REFS_URL",
+    "https://github.com/Christopher-Charman/open-webui.git/info/refs?service=git-upload-pack",
+)
+QUEUE_IMMUTABLE_URL_TEMPLATE = os.environ.get(
+    "PPC_CONTROL_QUEUE_IMMUTABLE_URL_TEMPLATE",
+    "https://raw.githubusercontent.com/Christopher-Charman/open-webui/{sha}/bootstrap-relay/permanent-control/queue.json",
 )
 QUEUE_API_URL = os.environ.get(
     "PPC_CONTROL_QUEUE_API_URL",
@@ -239,6 +248,59 @@ def _parse_queue_bytes(raw: bytes) -> dict[str, Any]:
     return obj
 
 
+def _resolve_queue_main_sha() -> str | None:
+    req = urllib.request.Request(
+        QUEUE_REFS_URL,
+        headers={
+            "User-Agent": "powerpc-control-v1/1",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            raw = r.read(512 * 1024)
+        matches = {
+            item.decode("ascii")
+            for item in re.findall(
+                rb"([0-9a-f]{40}) refs/heads/main(?:\x00|\n)",
+                raw,
+            )
+        }
+        if len(matches) != 1:
+            raise ValueError("queue_main_ref_ambiguous")
+        return next(iter(matches))
+    except Exception as e:
+        _log("queue_ref_error=" + type(e).__name__)
+        return None
+
+
+def _fetch_queue_immutable() -> dict[str, Any] | None:
+    sha = _resolve_queue_main_sha()
+    if sha is None:
+        return None
+    if not re.fullmatch(r"[0-9a-f]{40}", sha):
+        _log("queue_ref_error=InvalidSha")
+        return None
+    url = QUEUE_IMMUTABLE_URL_TEMPLATE.format(sha=sha)
+    url += ("&" if "?" in url else "?") + "t=" + str(time.time_ns())
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "powerpc-control-v1/1",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=12) as r:
+            raw = r.read(MAX_QUEUE_BYTES + 1)
+        return _parse_queue_bytes(raw)
+    except Exception as e:
+        _log("queue_immutable_error=" + type(e).__name__)
+        return None
+
+
 def _fetch_queue_raw() -> dict[str, Any] | None:
     url = QUEUE_URL + ("&" if "?" in QUEUE_URL else "?") + "t=" + str(time.time_ns())
     req = urllib.request.Request(
@@ -285,6 +347,13 @@ def _fetch_queue_api() -> dict[str, Any] | None:
 
 def _fetch_queue() -> dict[str, Any] | None:
     global _LAST_API_FALLBACK_MONO
+
+    immutable_obj = _fetch_queue_immutable()
+    if immutable_obj is not None:
+        return immutable_obj
+
+    # Compatibility fallback only. Branch-content endpoints may lag and must
+    # never outrank an immutable-SHA read when ref resolution succeeds.
     raw_obj = _fetch_queue_raw()
     now = time.monotonic()
     if now - _LAST_API_FALLBACK_MONO >= API_FALLBACK_SECONDS:
