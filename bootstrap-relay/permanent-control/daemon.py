@@ -40,12 +40,20 @@ MIRROR_RESULTS = PUBLIC_MIRROR / "results"
 
 def _discover_public_mirrors() -> list[Path]:
     mirrors = {PUBLIC_MIRROR}
-    try:
-        for marker in WEBAPP.glob("**/site-packages/open_webui/static/owui-orb-v1.js"):
-            if marker.is_file():
-                mirrors.add(marker.parent)
-    except Exception:
-        pass
+    # Keep discovery bounded. WEBAPP is NFS-backed on the hosted runtime, so a
+    # recursive "**" scan here can block daemon startup before PID/heartbeat
+    # publication. Known environment layouts are sufficient and deterministic.
+    patterns = (
+        "envs/*/lib/python*/site-packages/open_webui/static/owui-orb-v1.js",
+        "miniconda/envs/*/lib/python*/site-packages/open_webui/static/owui-orb-v1.js",
+    )
+    for pattern in patterns:
+        try:
+            for marker in WEBAPP.glob(pattern):
+                if marker.is_file():
+                    mirrors.add(marker.parent)
+        except OSError:
+            continue
     return sorted(mirrors, key=lambda p: str(p))
 
 PUBLIC_MIRRORS = _discover_public_mirrors()
