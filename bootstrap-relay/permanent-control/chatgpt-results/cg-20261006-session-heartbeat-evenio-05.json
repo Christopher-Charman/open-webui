@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "FAILED",
+  "encrypted_result": {
+    "bytes": 3279,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261006-session-heartbeat-evenio-05.json",
+    "envelope": {
+      "ciphertext_b64": "KYI3ceM-WDMmwIuJy1LUW9gkb9rw6CTVhhNgfI01Xqe7mgMPyvxRL69aowjfvjOl09YDNHbHkLxeYndoguV_3Yk5yO3sUoNzzGUzylIekg1ixjDCtRq98JQPWysSdvCva6vYup3p-1tJyc7TZdSkTyLjdD6ol3BMrlU19BAHb-i_oRbqvkEcAioZDk5JDJe2pwb6lTVKCZ4Wb5UsidI2_jlc6I3H5mSRe9EjW6d6PHzIcOTPOOVLidz-6ATmiycH1XF9KlI_2djy2TqmOzh2zGy5c4bP4EscDua61ks6cCDgzoIr6zwFRvv9nmh251R6ZGLM5sPz9-t4ItwnctTceE155JcWgX-pKtMuA1UsLl0Ud49Juj8aG8fdcKZ9ExXTxAiMH_NUqZNwFjHLEj__A5uEJIg_GmrQTEhH2DXfwo0HRZNauzSMQQqcY6vgzTW3CAxwYkjL3vTQE3t5lmcMb59Ejzxc_m3ZTb4R7AwjuNHflejFcta1oMzER6Ovy6oMPVdI9prvkENW_dVFg5-meawNDfYb1Rnj1m0vrxr6xVIRXyD1p0I7E1H7GoCoc9H9IEuKJUSaVILdZWCtWQE9oSsHLsauiNkYWKHlePsqMsN6PEGH2ZyIcU3HkkvuxA8RS9dcWgq3dQwQdqfhe3lw_DkoQU53oHkegDw6hq1O0OGdde5NRpfr4MXEH-8jOdSLZ_ru9a6Z9OVF31Bry48UDleAdrAjBV_PdljD3P1LPeBo4JunFGIOXfFVBSgkggahzgjg-aYqiXFo7pSe-E69fvFLiXZNehTo_wtfG1VsvFPacCrVuIzep76uMpQ34wJ-yiHj0z3c6seaaU-1SwOXS31ZXyzCC7hC1G4EIhPyWS0n5fGboR9JEi_8CvwiVq2tJPVCsQWrfR6DvjPt7kRkugqw1NV2pEoZNSxNpKteaJcVPNWvUTqyMQrdYbHIiWUoC5mxNbVTbziBBZZD8vNdeuXEAUG9pWuIpplbAEYfZyNn4xlMd4yH63Mvl5dcf5PmVGyNTGLEMFnXAcNlw_gbjlJ3LN5B3YrwCj_DRSeQCJ0Ro76LTMJs9PtaOGtcskbef0E31Wjf-zRUcluvklqlFC5SYLA_8m72BTLYkdV9NkunlxcCo3bldh6n7HJW2wZkiOaGug-VAMdsztY_2sxEnlIC4L0A_S-5NmznbBLnDfIKpHElgxarpoiVKr1fw2My4lOy3sA5ob5B3UgojUG2ktOZVOyCRmIHQdTLmqtstdYXKpJu0z_VPfaYdz15EvLrSFAoKc4hTgwbkdLGpmQrtSyyi_zi_9od0n3QaZWX3CYWt2Mx392VwEmThJvDF_lv69YI7Ps3qnQ9NpgRJq_G2mr_5ywMZ9TI-ggJtX0OAwRrEuPNWoQTFcSs5ZW9Bp6hvTjdY-1YtJM4e4lat-aPkIJmhkauG-6aI6gvJD99_c4KYygB9DdBwmxZiSGGAo8D-cMEoZj2xbiebCVqFnd8lGiiIdk6Nga134yVg1yGVUEo1L88WDo4Cp-8AK5nQUz0bjRJPZ9920GU-mWcxaytpxdJ_FNZ-vXNoLuXWIzcMX6ioFZQgQPARb7ag_fOtfZxqHakj9nOMBDqWluv235-KmamlnOaa5XrvsH8nQ-ma6kPxjl134UTYHFoOEftkFyjCPJki5h7QeQZxeBtORkJ9IEhJ4HHlQ7-FwEQX5WcOWF_5yx0Dm9flaXgpTtx6vqbV6fBiGWEF85Uf5owU-rjlKz4SFhXdegaySKXbD7dZjUetvWnDSLNGCz1Dq0jvMrnlLRyKMZIvzrFl_ZmDZldSLYKRPoMF_KGBKi8gtEbqrQ-GfnaG3RE3MYnl86rOh5BFMjIYSwhmFjY6_vQnq86DApMn7_xq9O0OWshPDdjWyImtvu2XDvEsailTNDV73ShBFgjG8XdOD-LMMKmetzWa94UQxbgBhQezCZA_ARedc8F9RVIZzhBxD5ovzb7d0T1QfbK5Yi6Nqfi5NzreewPmzr_ZokPn7DU4eOCoGoAY5GbRq2OHZysLV5Rla9by07TQOb3yE5FR9_DKE5fMSKncVN369EvNawbQXKFedNBTLtNRBOZVUbTPxPobdohQfuvqzk4EDo2XzKRHSTwofZEj4_zcL2R9ecgjSLq9mLmdtpUeCOHSXm5g7yfIIVe5cgbNoovhXu7ztwk9hLvldQiqbV5auVbSYBmssAi3Ra-ECBPH4XWl6Stwuvn_D05a4zxgAy7xmiQ9Dh-uNzXG6TjNzC2QP8boZTc8e59uK1voXIceS58fMe1ZpvO4JG1unhmwB7vy8dp8N3uWjXfNt4tQLnt8VFPJ17-oT2UybveZ34mQYG7lrqAhuXJd9nncy9j5bsxklTV-m20ybNXuh0Bbf-9qcM43AF6aI9Ql3bYLDWGuq6kTBQh3DWk5-ZOL8LKOCx9qbNebgHY40O_ACIuRHtKPHAYeXzT4_QObGUj2GmwsgHkSTcf_S1e7wvznmHMuIUj2Mohf8f3R2ffT9c78MIke194LRQ-NlYffadZTVteWgt_s6lDvV5sXtYYsMVcuFNTWNLaz86pnYGw47STKc_vYwdofO049ewZwzkIp94OgdfeToYs-k0YRu3TDLfH3q_X7EBC7SyB9lUdRhf2PdrlCPImjiu_Yu6Qyh0qeCOgNSyYeOG8BBEafXspt_e9WdXcgd2_rfn2d50MqcOT2qLR4pKE2SGUsefA6ZiqETLdJafrkP-XfOqfQ5Ip4oykxcBFTOZLzY29qkD3XFqnFd3T0nzF0rsTFNmhA9jC1jmrkWE_BPc0e9m5fbLIgk6ABV-Tukn0kWDfY8y3PuycQdJ7c0hlOKw-A0fAvNLSZSLa3V0u7FJZXYyToCIFwjdHXXBsAudamJulUfopkiWbk5kfDlLfm4m8-62ibQTgBKF7QZzqOrqRvsjt",
+      "kind": "result",
+      "nonce_b64": "U1X5itz2QgSNxaHE",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791314844,
+      "signature_b64": "-n8e0SeBXSWHEq7iLUNoqLcS-Or2R2yeetQA-EkqmQMEA4f4ObaRvPvx1ERQ9TWzulbU2YSpYgGm2S-DpRoaCQ",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261006-session-heartbeat-evenio-05",
+      "version": 1
+    },
+    "sha256": "ba47969fcc34fc11e2bd1087e737d0eec156f85eb1c3b307f7d17809a3fd9ed8"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261006-session-heartbeat-evenio-05",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261006-session-heartbeat-evenio-05",
+  "tool": "terminal_exec",
+  "verified_at": 1791314847,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "d127c7247c11fcdf7a3896eec6eb2203d90d52c1eb2560594c46576197d89c40",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "FAILED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "HEARTBEAT=Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/home/storage/781/4477781/user/webapp/concurrency-ledger/current/src/concurrency_ledger/chatgpt_session_adapter.py\", line 339, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/home/storage/781/4477781/user/webapp/concurrency-ledger/current/src/concurrency_ledger/chatgpt_session_adapter.py\", line 333, in main\n    result = _invoke(request)\n             ^^^^^^^^^^^^^^^^\n  File \"/home/storage/781/4477781/user/webapp/concurrency-ledger/current/src/concurrency_ledger/chatgpt_session_adapter.py\", line 268, in _invoke\n    raise ChatGPTSessionAdapterError(json.dumps(result, sort_keys=True))\nChatGPTSessionAdapterError: {\"completed_at\": \"2026-10-06T19:27:24.828415Z\", \"error\": {\"code\": \"SESSION_CONFLICT\", \"details_ref\": null, \"message\": \"session heartbeat requires an ACTIVE session\", \"retryable\": false}, \"evidence_refs\": [], \"idempotency_replayed\": false, \"ledger_seq\": null, \"ok\": false, \"operation\": \"ledger_session_heartbeat\", \"protocol\": \"concurrency-ledger/1\", \"receipt_ref\": null, \"request_id\": \"chatgpt-session-request-28af6058249940358779f726ac8a91de\", \"result\": null, \"retry_after_ms\": null, \"schema_version\": 1, \"server_instance_id\": \"fasthost.powerpc_darwin_org:concurrency-ledger\", \"status\": \"CONFLICT\"}\n",
+          "type": "text"
+        }
+      ],
+      "isError": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261006-session-heartbeat-evenio-05",
+    "unresolved": []
+  }
+}
