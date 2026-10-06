@@ -45,6 +45,13 @@ TOOL_AUTHORITY = {
     "list_dir": "read_only",
     "terminal_exec": "bounded_operator",
 }
+INTENT_CLASS_BY_TOOL = {
+    "runtime_health": "runtime_health",
+    "read_text": "filesystem_read",
+    "list_dir": "filesystem_read",
+    "terminal_exec": "bounded_operator_command",
+}
+SUPPORTED_INTENT_CLASSES = frozenset(INTENT_CLASS_BY_TOOL.values())
 AUTHORITY_RANK = {"read_only": 0, "bounded_operator": 1}
 TASK_RE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 
@@ -362,6 +369,18 @@ def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, 
     if not isinstance(arguments, dict):
         raise Reject("invalid_tool_arguments", "FAILED")
 
+    intent_class = env.get("intent_class")
+    claim_mode = "model"
+    if intent_class is not None:
+        if (
+            not isinstance(intent_class, str)
+            or intent_class not in SUPPORTED_INTENT_CLASSES
+        ):
+            raise Reject("invalid_intent_class", "FAILED")
+        if INTENT_CLASS_BY_TOOL[tool] != intent_class:
+            raise Reject("intent_class_tool_mismatch", "BLOCKED")
+        claim_mode = "deterministic"
+
     if tool == "terminal_exec":
         command = arguments.get("command")
         timeout_ms = arguments.get("timeout_ms", 10000)
@@ -373,11 +392,20 @@ def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, 
     budget = env.get("resource_budget")
     if not isinstance(budget, dict):
         raise Reject("invalid_resource_budget", "FAILED")
-    model_calls = budget.get("model_calls", 1)
+    model_calls = budget.get(
+        "model_calls",
+        0 if claim_mode == "deterministic" else 1,
+    )
     local_mcp_calls = budget.get("local_mcp_calls", budget.get("terminal_calls", 1))
     wall_seconds = budget.get("wall_seconds", 120)
-    if not isinstance(model_calls, int) or not (1 <= model_calls <= 1):
+    if (
+        not isinstance(model_calls, int)
+        or isinstance(model_calls, bool)
+        or not (0 <= model_calls <= 1)
+    ):
         raise Reject("model_call_budget_exceeded", "BLOCKED")
+    if claim_mode == "model" and model_calls < 1:
+        raise Reject("model_call_budget_required_for_untyped_intent", "BLOCKED")
     if not isinstance(local_mcp_calls, int) or not (1 <= local_mcp_calls <= 1):
         raise Reject("local_mcp_budget_exceeded", "BLOCKED")
     if not isinstance(wall_seconds, int) or not (5 <= wall_seconds <= 300):
@@ -388,6 +416,9 @@ def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, 
         "tool": tool,
         "arguments": arguments,
         "authority": authority,
+        "intent_class": intent_class,
+        "claim_mode": claim_mode,
+        "model_call_budget": model_calls,
         "wall_seconds": wall_seconds,
         "deadline": deadline,
     }
@@ -593,23 +624,37 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             if remaining <= 0:
                 raise Reject("expired_after_ledger_frontier", "EXPIRED")
 
-            model_id = resolve_claim_model()
-            claim, model_ms = claim_task(
-                env,
-                validated,
-                model_id,
-                min(30.0, remaining),
-            )
+            if validated["claim_mode"] == "deterministic":
+                claim = {
+                    "task_id": validated["task_id"],
+                    "decision": "CLAIM",
+                    "capability": validated["tool"],
+                }
+                model_ms = 0
+                model_calls = 0
+                claim_evidence_prefix = "deterministic_claim_sha256:"
+            else:
+                model_id = resolve_claim_model()
+                claim, model_ms = claim_task(
+                    env,
+                    validated,
+                    model_id,
+                    min(30.0, remaining),
+                )
+                model_calls = 1
+                claim_evidence_prefix = "claim_sha256:"
+
             claim_digest = sha256_obj(claim)
+            claim_evidence = claim_evidence_prefix + claim_digest
             if claim["decision"] != "CLAIM":
                 receipt = make_receipt(
                     task_id,
                     model_id=model_id,
-                    evidence_refs=ledger_evidence + ["claim_sha256:" + claim_digest],
+                    evidence_refs=ledger_evidence + [claim_evidence],
                     unresolved=["agent_declined"],
                     resource_usage={
                         "ledger_calls": ledger_calls,
-                        "model_calls": 1,
+                        "model_calls": model_calls,
                         "local_mcp_calls": 0,
                         "model_ms": model_ms,
                     },
@@ -637,12 +682,12 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                         "capability": validated["tool"],
                         "arguments_sha256": sha256_obj(validated["arguments"]),
                     }],
-                    evidence_refs=ledger_evidence + ["claim_sha256:" + claim_digest],
+                    evidence_refs=ledger_evidence + [claim_evidence],
                     result=result,
                     unresolved=unresolved,
                     resource_usage={
                         "ledger_calls": ledger_calls,
-                        "model_calls": 1,
+                        "model_calls": model_calls,
                         "local_mcp_calls": 1,
                         "model_ms": model_ms,
                         "local_mcp_ms": mcp_ms,
@@ -697,6 +742,47 @@ def self_test() -> int:
         "delegation_depth": 0,
     }
     assert validate_envelope(base, now)["tool"] == "list_dir"
+
+    typed = dict(
+        base,
+        task_id="selftest-typed",
+        intent_class="filesystem_read",
+        resource_budget={
+            "model_calls": 0,
+            "local_mcp_calls": 1,
+            "wall_seconds": 30,
+        },
+    )
+    typed_validated = validate_envelope(typed, now)
+    assert typed_validated["claim_mode"] == "deterministic"
+    assert typed_validated["model_call_budget"] == 0
+
+    mismatch = dict(
+        typed,
+        task_id="selftest-intent-mismatch",
+        intent_class="runtime_health",
+    )
+    try:
+        validate_envelope(mismatch, now)
+        raise AssertionError("intent/tool mismatch accepted")
+    except Reject as e:
+        assert e.code == "intent_class_tool_mismatch"
+
+    untyped_zero_model = dict(
+        base,
+        task_id="selftest-untyped-zero-model",
+        resource_budget={
+            "model_calls": 0,
+            "local_mcp_calls": 1,
+            "wall_seconds": 30,
+        },
+    )
+    try:
+        validate_envelope(untyped_zero_model, now)
+        raise AssertionError("untyped request without model budget accepted")
+    except Reject as e:
+        assert e.code == "model_call_budget_required_for_untyped_intent"
+
     assert _ledger_task_key("selftest-1") == _ledger_task_key("selftest-1")
     assert _ledger_task_key("selftest-1") != _ledger_task_key("selftest-2")
     assert len(_ledger_task_key("selftest-1")) == 24
