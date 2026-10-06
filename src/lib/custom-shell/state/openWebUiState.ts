@@ -1,16 +1,23 @@
 import type { ShellPhase } from './shellState';
 
+interface OpenWebUiStatusEntry {
+	action?: string;
+	description?: string;
+}
+
+interface OpenWebUiMessage {
+	error?: unknown;
+	statusHistory?: OpenWebUiStatusEntry[];
+	content?: unknown;
+}
+
 export interface OpenWebUiActivity {
 	generating: boolean;
 	taskCount?: number;
-	message?: any;
+	message?: OpenWebUiMessage;
 }
 
-const SEARCH_ACTIONS = new Set([
-	'web_search',
-	'web_search_queries_generated',
-	'knowledge_search'
-]);
+const SEARCH_ACTIONS = new Set(['web_search', 'web_search_queries_generated', 'knowledge_search']);
 
 export function deriveShellPhase(activity: OpenWebUiActivity): ShellPhase {
 	const message = activity.message;
