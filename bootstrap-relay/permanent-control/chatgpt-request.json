@@ -1,10 +1,13 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261006-model-profile-health-01",
+  "request_id": "cg-20261006-session-refresh-evenio-02",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "runtime_health",
-  "arguments": {},
-  "authority_ceiling": "read_only",
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "set -eu; W=/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session; SURFACE=chatgpt-ios-evenio-architecture-20261006T145900Z; OLD=01a111bf-4908-7877-980e-3c851a49428b; if HB=$(\"$W\" heartbeat \"$SURFACE\" \"$OLD\" 2>&1); then SID=\"$OLD\"; printf 'OLD_HEARTBEAT=%s\\n' \"$HB\"; else printf 'OLD_STALE=%s\\n' \"$HB\"; OPEN=$(\"$W\" open \"$SURFACE\"); SID=$(printf '%s' \"$OPEN\" | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"result\"][\"session_id\"])'); printf 'OPEN=%s\\n' \"$OPEN\"; \"$W\" heartbeat \"$SURFACE\" \"$SID\"; fi; printf 'SESSION_ID=%s\\n' \"$SID\"; printf 'FRONTIER='; \"$W\" frontier \"$SURFACE\" \"$SID\" 20; printf 'CONFLICTS='; \"$W\" conflicts \"$SURFACE\" \"$SID\" 20",
+    "timeout_ms": 20000
+  },
+  "authority_ceiling": "bounded_operator",
   "ttl": 300,
   "result_visibility": "public_plaintext"
 }
