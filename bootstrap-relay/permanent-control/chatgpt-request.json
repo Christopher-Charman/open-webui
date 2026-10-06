@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261006-theme-inspect-03",
+  "request_id": "cg-20261006-concurrency-bootstrap-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu; W=/home/storage/781/4477781/user/webapp/custom-shell-workbench/open-webui; cd \"$W\"; printf 'HEAD='; git rev-parse HEAD; printf 'BRANCH='; git branch --show-current; echo STATUS_BEGIN; git status --short; echo STATUS_END; echo TARGET_OBJECT_BEGIN; if git cat-file -e '37460a57ba33ccb42185fd838f04d2cca4025a05^{commit}' 2>/dev/null; then git show -s --format='%H%n%P%n%D%n%s%n%ci' 37460a57ba33ccb42185fd838f04d2cca4025a05; git diff --stat 472325c9d736bf09f0b61c81ecc8833d5eb91ff3..37460a57ba33ccb42185fd838f04d2cca4025a05; else echo TARGET_COMMIT_ABSENT; fi; echo TARGET_OBJECT_END; echo REFS_BEGIN; git for-each-ref --format='%(refname:short) %(objectname) %(subject)' refs/heads refs/remotes | head -80; echo REFS_END; echo RECENT_BEGIN; git log --all -12 --oneline --decorate; echo RECENT_END; echo REMOTES_BEGIN; git remote -v; echo REMOTES_END",
-    "timeout_ms": 20000
+    "command": "set -eu; ROOT=/home/storage/781/4477781/user; W=\"$ROOT/webapp/bin/concurrency-ledger-chatgpt-session\"; PY=\"$ROOT/webapp/miniconda/bin/python3.12\"; [ -x \"$PY\" ] || PY=\"$ROOT/webapp/miniconda/bin/python3\"; \"$PY\" - \"$W\" <<'PY'\nimport json,subprocess,sys,uuid\nw=sys.argv[1]; surface='chatgpt-ios:concurrency-maintenance:'+uuid.uuid4().hex\ndef call(*a):\n p=subprocess.run([w,*a],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=20)\n if p.returncode: raise SystemExit(p.stderr or p.stdout)\n o=json.loads(p.stdout)\n if not o.get('ok'): raise SystemExit(json.dumps(o,sort_keys=True))\n return o\no=call('open',surface); sid=o['result']['session_id']; call('heartbeat',surface,sid); f=call('frontier',surface,sid,'20'); c=call('conflicts',surface,sid,'20'); print(json.dumps({'session_id':sid,'surface_id':surface,'frontier_counts':f['result']['counts'],'conflict_returned':c['result']['returned']},sort_keys=True))\nPY",
+    "timeout_ms": 30000
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300,
