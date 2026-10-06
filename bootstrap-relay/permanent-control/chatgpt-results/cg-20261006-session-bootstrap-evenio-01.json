@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 5327,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261006-session-bootstrap-evenio-01.json",
+    "envelope": {
+      "ciphertext_b64": "BfKJTpAj5aIXlySfHkXRxAfPNmv_tCizFP71_0poQk5KeW_dXCLkGwKld10Agv9Fb_2SGKP84GoawGXeJyO6HusO1uChCfIYAl54uIrE72AZAc0YT73Ve7C05TxMtQhohnTaW3tsGAABP9_uAwkH7eUheoeNbl6BgV8P8PNLnZndM95zM-6agYnNKlMrm-xIxbW-wy-gD_BTwoKOZlg2nebk848J1lKxmz_pvOaPastZONU_iEySMXYQ5tCKKSOVXiqwnz_FivYmPkrcJvnirjws5Vp-y5vCkDcZ1vSd0Sbs-iZeQpjH9qkKnLcu8oK7Fz8F4WX3IxEUPur_Mec9ILRyf7yPhc7PDHNzs9gVCAaXjtaMDaDffxibGpTEfq4ucH3GANxiU2ThmodoaOiBbl7kPLqcMxqOSC_xVpqr8Mx6TIzuBqZTpzVOWSaLoaeCR-yZIx1P3AZVFObDQ4utqIWi2cFCGjpKSgZZ5ipCPnIvZRt8v9sqH_6-AsIvPleybLDlVaRosGyo7Y_HntzRlKMKfjWsAFF-oerCtPElMe1NJek97hxXnhsen70jboomhuzPj82HijBJCGAytXAKmF_0yhOD340lKxgz-p-svTSM-i2pUEyMJ88lDYaSD2XVwbXicOsCmiI2c3vAHCNYvmUZa2z_Loz1nqAIo-kainqpak_Oxf2aTF0XrEWSEYSVVvqwS6i5GnCi2eAVJxNH7zLWwvFmo4scp7O48oz9kU5bRzGxWrouQOmAxQXBUHLxj51F_12Y3CtgfJsC0EFS6GcOHLciM2n-sT_1L251mVV0rDCcuYr8VsJRtzn3OrCSqTxuSptvw4p0FV7_uU7Oh4ZN0IMHgZixIUJtG27xMSBJWz6TZyWykcMy0ZxUZY2mUFDx7_pVZlUymkWPtIMxJ3tFSNdDgbhotGTMLIoC58CtWN8iPEmlzZhPoQEpR2VM0sluy7YqTiEnfHvfyc1SGTVp1w_WLsoFUbOChrf_Cl8nT90kR6JcKKZ0OGv7mwHBJE_y4oL_rIXeKQNZKfDMOSYPhkTeQgK2DQL6Y3uYSmjhTITnH4N9jp0l-fl0hfdS_22fL4AbqKsocGnxL2IL6B70id6rxIp7Y7YcnIIY2gQ0heJkA7M2mGLC1B2GZK0pvMztSjIwmw-bWQNj28Rrv0Y__y3aZSj86Fvjc9OSwYnPRg2D2yFFNR1LupvspX6lEpXdIvp37fE_9WCZrdkBHmqnyDSOvTHjCaKEaB-_X4uiRsoRO9KpV00AZfCFubaX5X3cicj3lH7eLeZjhmjVHn_kZ3RN-goblrcrvSExgIyq_r6f1weY7iczfvPk2lJ1Y90BrHH_1E7sk1H925OY8ezSzlETV9vhFAi1d46q2SZwSubCF4AzmM3E77JIDSAhbd41txUZHTAD-fiqqmOnis0DZ1NuQJhpbkZP7w56CdFdzfMHF6I1GMQk2sm9XWaaOWfl_BBDQ3rsH3oZ8KCOI6T-rZISOEy69oWC-fiw-soKwVkVwpi2j2sSQT4EMIC5OBVfQ7zLKhVrYXGs3tdWSXiHQsL96Yg1U6LBJ7tv6glCOc0ILRlhQbcVBnRwNXBj2xK_l2jyRAK9x17kg87vDTbWYb4gKLaX-Pw0bmjL37XxPZYvKvJCyF-d6jJp3DKpXasUa8znMN63HDyA2roCSsjbg0k6sOuwfUFv6YrLJEa77kSoRBeUFrRPifdSCT1-XjyVQUwW2RxsoZNp7jA4y5o9ZkOi1K8UFtE_-mhKN8wcYi5sQbzcFLEk0WEyosfrWisn9XlbRWW127MKU7r-HVKXt4NxSYnlJFDZ-BqHneiFv9izaknvq0Tt4_Zi-05a-ERvOKnAkzaY9K9OzjroX6Gf6Uru8GmnyL15EhMTiOKZCQERZAMgG770Dj3eR2IwJtzzmTfIzHE_XdwnfivSsxA2xc3dF0TWvopqo4VqM_H-K9gPO69_SXAwMcL1jYGFW35P4M8J295H7smRyqFXnyIVxGcI_hjh1bw6bIvem3gIigGhYi3faDVxCc2Oqet_Zt1KEQH6FLhwgqIAfAjAAWdoI01qVp5gvd8MfM384XGy7Xcv_xI4zsXPpOaqJDV4o4mI-v8MU2jmRP2dZ7Zpz77_NkMbWFvi_yUVvQh3C9qIP1viPJJ3g8slcn-6ewdlTdee51C9xu7Lt8qeuxbWWXwYLD8mdLZvbPARt8XQ-C7VDaXXlkhHMbsBTPSY5QjCU9KCWrWvFFQX3hSn28xfeGtMBUmqeSjVYi-peErwqnYX_aXD0QlkJMAFGJ4R6X8P-vbgB_XTf-ir9C8LTbjPV6wEAYUozXz84qszDSl-Pqk442ZglfP6Aag9iztuAxNv6kfinB7scKOtd1nFIv6k6Typ5xBFcnLmyZUMZmyHU2JjrF6l4UgCd5e7T5pHic6BY3Jiftt4XWLOkrPH5Z5ts6-BZpNBMyhHYPntY8dMDI8e_FkOKFU44e47alivRW5YzZugHXDmOHI8Z2adWVQQcrLV-U_u7zIBSDR-cvz2hwZz6trVw6MrGNVWfMmLc_KX2QNK_MqNfoGNw0--sCWIUKmRsf-zpdfXbd6maRyrR30CyM_iNr7R4-Awzzb-EaDmcy6febR5hu3aPuV6lRwxz5nDwGNvRiH3dGWZgm8S9zu4UaLS1rLrUMFH-sQJYnHwjSoqnO5UrZypTiNu4ToE2jFH8hU6ChE58LzQ_0aqvC4j9QcdoSvt0TjZtIYcX-C8fBp7QXZtVjY4Jik65l1MLsaloAqsH8fZjVRPaQxS21xAJ1IkP1o9D8O0jVaIBPZ4dmiLgFlmte4GED68Ty3UafnLwXaa8Do8vzdfWdxVuEWNuPNQu3F1PvcBckjTNSqhSsIUB0kyKsCiBFZiI4JH03TG6MCnJweZPv02o8_muETO4Rpy84Lkc4itZpwwBhmHbN0X2Z18TpRcBZKH1bp4iUrp0F5f0ldlmun6hYRKfyi4omkUKIxok-_ThRnK-AqznEjD4fvV8aLKZYzsxzMspc2jqyfYyXoM9W-e1ylydk8DDNWjOdlAboFjqQOrNm4tWzv7Y33harhFbbC5gCCHebWMnkeTeRlD5SM4bXvBGkAFLpPQ-FtWHD50pC99gD6hQQ1SfW3oeVKnaoZjj-8hyxLgoQpmd0ebfY9ApSgdsVDic5qVmdkTsykADmEgp_745VfQd3vIEOXxI9kOYbZ7Pk-h9YEKF6TSIPaDCfMS-ZAgPgLDuSVSkgsPwSSGmR-9abvv0VoLhKyegv4YSd23raAEK8E0vBGUWteOIkHU_xTlM8gBFuCkpx_fB6JQdj28XYsf8u4mItCegttJOylvyLdNC2UmQ_QE4wViGEHSR0LGNGeQo9qv-uepvOGzxbjTGTJAAVqLqF18NFIgOdwyauA2r0kFs-gvOi5Gy72Bv4Z5pxK1ic4UTNtpCxbSnReLeZeoN5ffrPu0L_JGtZ2hc-m6T5tNXNSMTzrXiGqXR4tISsrh_Rxb9CfSsVbyVL4VafTbHdN08ECQI3BDYu1QptMjYv_mGArcoOqGrGZbLpsERSlkvzkNiFQApu63_SCQTdNIn9TPE9wmUarJH8NXSzyC6BXIAv5PQfZmqtfdLwPQyAJUUIGiJuUdqeiCWJZxYO711zYxh9f18YDxN9RzDkKVeqcZQquMtj5fljTFETBEoN6oqRqUTYBKac_DE-TO_x4lLGiEQI-ttm3lWRBxEP3TA_aXEU7DtRYSZAe6PKz_C_hKYgM4ohTgTE0M2kGEnyLc10Hb9TZ3IwjUFGP2uglqjU1JylrMjnZztVzxn_5J0Sb4S-KiJkpFPHDoxmQ70hyGRKtltbFRrpA058tuZ0Sgb5QoDPTHVhwRka9soFJuk2SYZE2izOo1sE8A1OzHQNrzow27gWJpmm3UHul1wUP5NxyR1KDm1PAct1K4BtC2t9F-y6izD0ULM5EUeqK-NAZBbZ0wR5CFtpiCr1F5XZPWvJRBeDi-0V2Yos1YvaMG3xA5vaMKnAyTkqpYxZMScXHqIe5sbk5fZ38cjpazQPyFHSPnUkBagW0U4WgW5AeFC0JYGrMq4UR09LRmPtDyS-9pf410BNwTbGcpn2HgYpDycJ0H1ag4qa5VtkYiCtJdljiuLVRWuW5gQltiwzZXx6nODGEUvJw2P7dg1WtAVYb2QLe9E5m5Hlsw_U95NOe-FOogvyAo2_gRjMs_7sxLo3LegVs4bQLKXzF-gWWpA5vMWrD4wG3F5-aqsMPQZWlGMpn1bIdmpruyx-KxoiLACdBiS-q1TXIsYJcjA4vzg1thHtZ9KY_GZ8MqDzT_eIEDyyifcLKzm4L_dCuNuWlmZBpbXruIHU8lYBhw73uIenP-sZt7bqERwdkEZl4IfDoUs-8Ft_X_0-QR7te5D3Cy4V_jyGgxxT4wxodbnmm4Nf-BW44pY8sFvCFnHhBtwQwxRjTg4v1J2KJV0Uq_AEwZlFMQzWin2Tm1T1LU3RWyKX5waCCLeMNo3GAspiY-vi5-DRXZ07Gydaxr46KcF_yhPzX6uk8esW7saBVH9rBaasx05U5Fd8rlpgSmEAh6SiDk86lgsCSbf-63Vh2_fPvRrhDBZgrcZ5TcatR-bwTnet-Yh0eQSKzOotESwSV-TBVneIoaRmHcT8vRzC538t4ZL9KvFfVlKn6-JvIGdjak7wS-uLdXY5IGr_TFUhkuK-hhnztH43Ra0JlDTO8rH9Ao_yJYt98HQTW4ojbp7BpRPKK2p7rn0aWtBT4gaQhYLZkGlE9FwevB_ijuXgDikjLoGOVtDTH5gzpmoF14NOnXfjp7xX-IUt9hFlUuFj7iJTH-5da54nB8e6ffYng0TND_ILM4IXOJF0cKFSrsRJiUf56K4rj8HGdLbg1Ct3fdUi-GHibe6lccQ2RkuDSlfBNLI_G84YgApfYosnFo9RDSCjnJ4ZjsUbvDhVBKQlCuhqHMDAWq0-uC65Pe",
+      "kind": "result",
+      "nonce_b64": "PWwJvZuthYoTzV9S",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791299111,
+      "signature_b64": "M0wPxJbvFFljzOsleVxY9TdZFcwcHpHiHXBFXwHe4-jpY_QKV3GeOp6ywwGthMmICBk91KcP_EbjdxVNXOukDA",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261006-session-bootstrap-evenio-01",
+      "version": 1
+    },
+    "sha256": "af7f72a989d5707d6d3f06ea2f7f5b678026a67ba7cdcd857ae521f676b36ddf"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261006-session-bootstrap-evenio-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261006-session-bootstrap-evenio-01",
+  "tool": "terminal_exec",
+  "verified_at": 1791299113,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "57771354541398c92dad552ed40362850da3b733cb9795896865f61ade6f8a5a",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "OPEN={\"completed_at\": \"2026-10-06T15:05:11.176511Z\", \"error\": null, \"evidence_refs\": [], \"idempotency_replayed\": false, \"ledger_seq\": null, \"ok\": true, \"operation\": \"ledger_session_open\", \"protocol\": \"concurrency-ledger/1\", \"receipt_ref\": null, \"request_id\": \"chatgpt-session-request-c1a10d6cb9ca41afb475d29c48cf52e2\", \"result\": {\"session_id\": \"01a111bf-4908-7877-980e-3c851a49428b\"}, \"retry_after_ms\": null, \"schema_version\": 1, \"server_instance_id\": \"fasthost.powerpc_darwin_org:concurrency-ledger\", \"status\": \"OK\"}\nSESSION_ID=01a111bf-4908-7877-980e-3c851a49428b\nHEARTBEAT={\"completed_at\": \"2026-10-06T15:05:11.337988Z\", \"error\": null, \"evidence_refs\": [], \"idempotency_replayed\": false, \"ledger_seq\": null, \"ok\": true, \"operation\": \"ledger_session_heartbeat\", \"protocol\": \"concurrency-ledger/1\", \"receipt_ref\": null, \"request_id\": \"chatgpt-session-request-bf9e083172c7411bbe24ccfd3cebf85e\", \"result\": {\"heartbeat_at\": \"2026-10-06T15:05:11.338202Z\", \"session_id\": \"01a111bf-4908-7877-980e-3c851a49428b\"}, \"retry_after_ms\": null, \"schema_version\": 1, \"server_instance_id\": \"fasthost.powerpc_darwin_org:concurrency-ledger\", \"status\": \"OK\"}\nFRONTIER={\"completed_at\": \"2026-10-06T15:05:11.477278Z\", \"error\": null, \"evidence_refs\": [], \"idempotency_replayed\": false, \"ledger_seq\": null, \"ok\": true, \"operation\": \"ledger_frontier_get\", \"protocol\": \"concurrency-ledger/1\", \"receipt_ref\": null, \"request_id\": \"chatgpt-session-request-c3c4ae6682c54606a1354118edb9726c\", \"result\": {\"blockers\": [], \"conflicts\": [], \"counts\": {\"blockers\": 0, \"conflicts\": 0, \"handoffs\": 0, \"leases\": 0, \"receipt_refs\": 0, \"tasks\": 0}, \"filters\": {\"limit\": 20, \"owner_actor_id\": null}, \"handoffs\": [], \"invariants\": [\"SUMMARY_IS_NOT_AUTHORITY\", \"READY_UNCLAIMED_IS_NOT_CLAIM_ADMISSION\", \"LEASE_SUMMARY_OMITS_FENCING_TOKEN\", \"CROSS_PROJECT_DEPENDENCY_IDENTITY_IS_HIDDEN\", \"DESTINATION_RUNTIME_TRUTH_NOT_ASSERTED\", \"TERMINAL_TASKS_ARE_HISTORY_NOT_LIVE_FRONTIER\"], \"leases\": [], \"project_id\": \"concurrency.orchestration\", \"receipt_refs\": [], \"tasks\": []}, \"retry_after_ms\": null, \"schema_version\": 1, \"server_instance_id\": \"fasthost.powerpc_darwin_org:concurrency-ledger\", \"status\": \"OK\"}\nCONFLICTS={\"completed_at\": \"2026-10-06T15:05:11.621209Z\", \"error\": null, \"evidence_refs\": [], \"idempotency_replayed\": false, \"ledger_seq\": null, \"ok\": true, \"operation\": \"ledger_conflicts_get\", \"protocol\": \"concurrency-ledger/1\", \"receipt_ref\": null, \"request_id\": \"chatgpt-session-request-013d84bef9ef40838276034597dafee1\", \"result\": {\"filters\": {\"limit\": 20, \"status\": null, \"task_id\": null}, \"items\": [], \"project_id\": \"concurrency.orchestration\", \"returned\": 0}, \"retry_after_ms\": null, \"schema_version\": 1, \"server_instance_id\": \"fasthost.powerpc_darwin_org:concurrency-ledger\", \"status\": \"OK\"}\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261006-session-bootstrap-evenio-01",
+    "unresolved": []
+  }
+}
