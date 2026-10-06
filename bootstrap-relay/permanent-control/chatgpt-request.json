@@ -1,13 +1,13 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261006-model-profile-diagnose-01",
+  "request_id": "cg-20261006-session-refresh-evenio-03",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu\nROOT=/home/storage/781/4477781/user/webapp\necho '=== OLLAMA_PS ==='\ncurl -fsS http://127.0.0.1:11434/api/ps || true\necho\necho '=== LOAD ==='\nuptime\necho '=== CAGENT_STATUS ==='\n$ROOT/bin/powerpc-control cagent-status || true\necho '=== OPENWEBUI_RELEVANT_LOG ==='\ntail -n 500 $ROOT/openwebui-runtime.log 2>/dev/null | grep -E 'ahsoka|gemma3:270m-core|RemoteDisconnected|ERROR|Exception|Traceback' | tail -n 120 || true\necho '=== OLLAMA_RELEVANT_LOG ==='\ntail -n 700 $ROOT/ollama-runtime.log 2>/dev/null | grep -E 'gemma3:270m-core|error|panic|runner|loading|memory|killed' | tail -n 140 || true",
-    "timeout_ms": 15000
+    "command": "set -eu; W=/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session; SURFACE=chatgpt-ios-evenio-architecture-20261006T190700Z; OPEN=$(\"$W\" open \"$SURFACE\"); SID=$(printf '%s' \"$OPEN\" | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"result\"][\"session_id\"])'); printf 'OPEN=%s\\n' \"$OPEN\"; \"$W\" heartbeat \"$SURFACE\" \"$SID\"; printf 'SESSION_ID=%s\\n' \"$SID\"; printf 'FRONTIER='; \"$W\" frontier \"$SURFACE\" \"$SID\" 20; printf 'CONFLICTS='; \"$W\" conflicts \"$SURFACE\" \"$SID\" 20",
+    "timeout_ms": 20000
   },
-  "authority_ceiling": "read_only",
+  "authority_ceiling": "bounded_operator",
   "ttl": 300,
   "result_visibility": "public_plaintext"
 }
