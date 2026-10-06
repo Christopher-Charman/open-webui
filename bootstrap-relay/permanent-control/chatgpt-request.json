@@ -1,11 +1,11 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261006-session-bootstrap-evenio-01",
+  "request_id": "cg-20261006-wireguard-ledger-open-01",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
   "tool": "terminal_exec",
   "arguments": {
-    "command": "set -eu; W=/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session; SURFACE=chatgpt-ios-evenio-architecture-20261006T145900Z; OPEN=\"$(\"$W\" open \"$SURFACE\")\"; SID=\"$(printf '%s' \"$OPEN\" | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"result\"][\"session_id\"])')\"; printf 'OPEN=%s\\n' \"$OPEN\"; printf 'SESSION_ID=%s\\n' \"$SID\"; printf 'HEARTBEAT='; \"$W\" heartbeat \"$SURFACE\" \"$SID\"; printf 'FRONTIER='; \"$W\" frontier \"$SURFACE\" \"$SID\" 20; printf 'CONFLICTS='; \"$W\" conflicts \"$SURFACE\" \"$SID\" 20",
-    "timeout_ms": 20000
+    "command": "/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session open chatgpt-ios-wireguard-headscale-20261006",
+    "timeout_ms": 10000
   },
   "authority_ceiling": "bounded_operator",
   "ttl": 300,
