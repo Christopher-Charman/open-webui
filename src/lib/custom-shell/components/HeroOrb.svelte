@@ -13,7 +13,7 @@
 
 	$: visual = resolveShellVisualState(phase, detail);
 	$: palette = SHELL_TONE_PALETTES[visual.tone];
-	$: heroState = visual.orbState;
+	$: heroState = phase === 'ready' ? 'connecting' : visual.orbState;
 	$: canvasSize = Math.round(size * 0.9);
 </script>
 
