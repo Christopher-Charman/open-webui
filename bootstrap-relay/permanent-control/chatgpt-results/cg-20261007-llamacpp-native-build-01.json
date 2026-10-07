@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "bounded_operator",
+  "completion_state": "FAILED",
+  "encrypted_result": {
+    "bytes": 1487,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261007-llamacpp-native-build-01.json",
+    "envelope": {
+      "ciphertext_b64": "PvUnHuurdVV7nA7doJbwAz9R8q9ew1tcDfqpe7xv2w2jsohj37fnsGAr-Mq0B0gxD9frQzxD84vJ6k4AxgJvBcOyaS1lOjHNbnJ8mV4V8GVMr09hPLUBwtw6fENFcTnvIW7B2lbvi2fCwod_4WNM_imf_S4A5c1QkbMqvKK1rBCVZSCB8ybO5cCpi3q6GKfSxSSGRRigxBNtt129X2d057ISahFYcORKdSTWQyM9FQ7LCQSjkAuDYRYgKlh5VjEyX33mgBzd6UQuPSBQnopAbQ7RVH--vcr01q1NcBKqsGe7KUJ41yjDFJg6lsFUAJAXLSsKDSeVhbQCF6ADiy6r17i96vK1HRP8iAKMC3zX7e4MHb3yvTratX6bUKRX43Jr7QYe9CAACvPVnzh6mo7CkL6pjjonxk4qPl3ddJiTpQIrGPt7Zv8FbdTOQhsBW-OPv4OvY_FIlwoJ2jlr8hgErwyISbQ-0-w5ihkTof6eb5QaOOEMDEk7f4P6XSodDwaE_Zfj91po6GExPPaZj1Km03gNpn1sFsgd3KPrF1Y1JwgCzQyakNubQrWle3QkwFCqaBvhLNE6Z9boYeDX6mmiQaA5XIRHwU3Qll4HWdQZH52WlJqM0fWSAKwSnrZMltQoPuj76vwsdSQuHY1ZAwP5T74joG8g_2BjrSTOtql3LaKZ1Qz9gfsLaYsZaFviv2t0WSGl9XtUbNRKrlXc8qiPvKJKvPF0Uu6pPz5aEGS57WmEECjWi6Lw4v4lifzjbrfEfkX6C-mJPcQrO_VBKRggWV8V9B21892Jx-fKiS5NPPkY6AWNSmIW84TfuMs2FTTneCADIJXDDtNqujjclxSgtvT2wx5s0PtPG2irFUlktLU2ZyNCPMHpnsMolkm7F4FbATMe3ZVaPDSvEmVMc4MLTb_rj2_XlitXSRYZOb-D_ovKc2Sl1u-_7q1xO9MJTTfvCcGhvawhDTVLElwNMEUszcqfHJlHjzj4ngpK-lWZf52kA-ftruUsG_XQbNIHCMmSAMdWeO2viPaZhhUYziNwjj7RZmWKteSvjCah4PQe41dfULwE1KWbQx08bwOKO-whIlrDwBI-oqH277IZTHX3aLxf-NnRSHTlb8qPiS6cOsZih4LYVor1UZ7x_5E",
+      "kind": "result",
+      "nonce_b64": "Ov77bCG7RmRcnfk0",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791397606,
+      "signature_b64": "LeZiPhBN4wF2sXgVBF4K7KkcSaPtlfe0s4j8rDXN1EIlQZxWIWPazQLTgnOf7-osQoy-JawV5rAjEXrfEkCODQ",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261007-llamacpp-native-build-01",
+      "version": 1
+    },
+    "sha256": "737ef6693ffaa57962f4ec38f0fb96f2850f4f35c92702f087cc415dab8482aa"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261007-llamacpp-native-build-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261007-llamacpp-native-build-01",
+  "tool": "terminal_exec",
+  "verified_at": 1791397607,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "0d808b440eddd6661b883be8e83a17c50a68d05911cc5ab645784c56c470878b",
+        "capability": "terminal_exec"
+      }
+    ],
+    "completion_state": "FAILED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool terminal_exec: Number must be less than or equal to 30000 at timeout_ms",
+          "type": "text"
+        }
+      ],
+      "isError": true
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261007-llamacpp-native-build-01",
+    "unresolved": []
+  }
+}
