@@ -1,13 +1,13 @@
 {
-  "schema":"chatgpt-owned-control-request-v1",
-  "request_id":"cg-20261006-session-frontier-evenio-09",
-  "target_runtime_id":"fasthost.powerpc_darwin_org",
-  "tool":"terminal_exec",
-  "arguments":{
-    "command":"set -eu; W=/home/storage/781/4477781/user/webapp/bin/concurrency-ledger-chatgpt-session; SURFACE=chatgpt-ios-evenio-architecture-20261006T190700Z; SID=01a112b0-70ec-7822-952c-d9ae201c1446; printf 'HEARTBEAT='; \"$W\" heartbeat \"$SURFACE\" \"$SID\"; printf 'FRONTIER='; \"$W\" frontier \"$SURFACE\" \"$SID\" 20; printf 'CONFLICTS='; \"$W\" conflicts \"$SURFACE\" \"$SID\" 20",
-    "timeout_ms":20000
+  "schema": "chatgpt-owned-control-request-v1",
+  "request_id": "cg-20261007-llamacpp-native-build-01",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "tool": "terminal_exec",
+  "arguments": {
+    "command": "set -eu; ROOT=/home/storage/781/4477781/user/webapp/workbench/llama.cpp-native-20261007; SRC=\"$ROOT/src\"; BUILD=\"$ROOT/build\"; CONDA=/home/storage/781/4477781/user/webapp/miniconda; COMMIT=50a6c5cf7c09ea5ea9c1937e4895ce88331c2869; mkdir -p \"$ROOT\"; if [ ! -d \"$SRC/.git\" ]; then \"$CONDA/bin/git\" clone --filter=blob:none https://github.com/ggml-org/llama.cpp \"$SRC\"; fi; cd \"$SRC\"; \"$CONDA/bin/git\" fetch --depth 1 origin \"$COMMIT\"; \"$CONDA/bin/git\" checkout --detach \"$COMMIT\"; \"$CONDA/bin/git\" reset --hard \"$COMMIT\"; rm -rf \"$BUILD\"; \"$CONDA/bin/cmake\" -S \"$SRC\" -B \"$BUILD\" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=\"$CONDA/bin/gcc\" -DCMAKE_CXX_COMPILER=\"$CONDA/bin/g++\" -DCMAKE_BUILD_RPATH=\"$CONDA/lib;$CONDA/lib/gcc/x86_64-conda-linux-gnu/16.2.0\" -DGGML_NATIVE=ON -DGGML_OPENMP=ON -DGGML_LTO=OFF -DBUILD_SHARED_LIBS=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TOOLS=ON -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_APP=OFF -DLLAMA_BUILD_UI=OFF -DLLAMA_OPENSSL=OFF; \"$CONDA/bin/cmake\" --build \"$BUILD\" --parallel 4; printf '\\n=== BUILD COMMIT ===\\n'; \"$CONDA/bin/git\" rev-parse HEAD; printf '\\n=== LLAMA VERSION ===\\n'; \"$BUILD/bin/llama-cli\" --version; printf '\\n=== SERVER VERSION ===\\n'; \"$BUILD/bin/llama-server\" --version; printf '\\n=== CMAKE CPU OPTIONS ===\\n'; grep -E '^(GGML_NATIVE|GGML_OPENMP|GGML_LTO|BUILD_SHARED_LIBS):' \"$BUILD/CMakeCache.txt\" || true",
+    "timeout_ms": 540000
   },
-  "authority_ceiling":"bounded_operator",
-  "ttl":300,
-  "result_visibility":"public_plaintext"
+  "authority_ceiling": "bounded_operator",
+  "ttl": 900,
+  "result_visibility": "public_plaintext"
 }
