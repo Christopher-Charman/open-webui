@@ -8,6 +8,6 @@
     "timeout_ms": 540000
   },
   "authority_ceiling": "bounded_operator",
-  "ttl": 900,
+  "ttl": 600,
   "result_visibility": "public_plaintext"
 }
