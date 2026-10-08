@@ -23,6 +23,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-archive-schema-health-20261008-01",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "PlnVzE_ZPBS1rcf3SjxxJVDjGpjTqpcJW3tSKe7_cbo6g39qAt2qC3jvB6AU0lJjdrw_Q-tE-pd48qbYFjpDWNd_m5TpGl7sXnZyXpG53bgMey51Zxbctvi75Dgg_ve8GUpOEBF23_LXBFlGdCai9xTdu_FCvYj4m7ANA5ITpmzPpU5-paLMrVOWGjubuqLEcWUvllsmeWI0nZ0p7uwImCy0rv6pQaix11DAiC1-outp7Ms0JIgeZ0oMg9WtfCurd8WVeZLAbT7QB_RrQtITkG6pS5H7XsIurzwHYwIMRBXaorfYaTeDSyQrakrT1oscw-zVKhXr_DYQQQA4R-aibJAysacEUu7Gmj2qEUD6ZfsTPPnqwPbxhd7BOQTSTyQ9IXG9_A",
+      "created_at": 1791448902,
+      "expires_at": 1791449502,
+      "nonce_b64": "LBtSnManwIj3ZqKH",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAsYh3069F8pg6Sl5sG94xzItYtAkGw30lbXjpPp3jL2I",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "ppc-archive-schema-runtime-health-20261008-04",
+      "version": 1
     }
   ]
 }
