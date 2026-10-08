@@ -1,0 +1,65 @@
+{
+  "authority_ceiling": "read_only",
+  "completion_state": "COMPLETED",
+  "encrypted_result": {
+    "bytes": 2418,
+    "carrier_path": "/static/powerpc-control-v1/results/chatgpt-cg-20261008-archive-prov-health-01.json",
+    "envelope": {
+      "ciphertext_b64": "IPflPxq80phN0nIe_YQGSiNN_11AzkGP3b4CV0m4b7MdPb7h2Pj-Hp0RJrZr_Ytez2PYiADZVT8R8sRjimE0jYh1vp61TbuRVhWh5Bbfui1hDsZSGD7X87zYB0fnvcY5Uuennigtrqx7WgMuj1rVAdzpPe-zOPfMTdUQFC1XiSUn0Kc4vKMc6O2YPh_BngRcCL4Dn1LqXfsO5L47EfM6u95WEwtAHN561oqXGRAtRRZp-H8ycM3maAWSnl465sKqZb0KQrzuln-HreFLUCBOkGtuguvV8X5JMOdIW60cN59QSViZ7_kCfjfmlUunT-s9v82uWdeiFhbwqalqnouryvFuYxHTXgVpTSfGbJWlYntnHFn71MpfZ3WRsJzHHEAZ32atOvk2mN1k8UEjLN3TLt_jZi2JRqlOCOwj8s2WWjZAH7yh4TXLL4P8AYziH_USsA8MeNTjJVFubFfyDHvAnje2vqmKXzLUKowF8DThy1QFkI-jysDKxAgIr0FRsQq2is5RPIII8wjM4vQaDDlfaU-YF3Y72G0pkc3mf93RrWaYckS-lBj4lBPH75KUSUFOq2nyR6t43BdgOUN29PNWTJG-k3QzWAhvLpeFZtEJxZbTufyyBY96mrLSIgZzCbx0Hvufq9m3xDHSlg1ohbGnelhu5SV9xhZTpvF6WucM2g-Ak0cCgQ_FwYhxaNGHZOQt0OkWwDin2Cw9Okj9RPyoJHQOA2iMbGObl4AtBJI3vSB2by4oEbF4sgzPVpqnvneVCDB1gxRhp5BC828flrh7Vp6k7TQQ2GcgCUFmVH1kHrPvP_VyrH9ySbRbR13eJzbAc3BRffGEW-002nqCSE8dAMzVPvhSjmKero6IaJFfCP86GwbrC61y37n_TFbigK5gLD6Y74sWxOfUXzilx1vGBY3xSPXvsWtR3woxvxLMRFkoK4KrL1eee2c9Ckk14sOOmuqYe3IjCo7m9zwbBhgISzoAHIsJ3L9HOGoH4ByDucxrrxkjsGJgf_XlS-zde8GN7i4vZoCrraXaRYybVGzMF2c8poq-yItw8btyYNW_KMp6Xl-8LaHkEaWDVIkCEMYqzmb-ZoWLqwUaoO6bNZ_6x_DyW_k3X_mPFY-QYiTteKHdz604ie3fcubg3mDv9TYccMpTkBG_gsRyT6cpE8GXtrY8swL07OjGePfBU9TOcLZitmD7-HccxIBVu4Svm5Vde6YI0rm6R_s8jKqpNChZlHg0FEcuBQcl7fhH8nwW_ipfnCvmEb6dINbAe71CuU0RT--W6mlaJQ11pygQ8-l0JldLCLjMaZFTywDZBuKDoenDmOP9rUxVBo53YDnBH8MuAHLfAGWk-Si9VejxeSgZwlpd96bm-HudaPZUSgIe237uX5XuhqSgwEjENGZiDnyuElTdTBhpgvH_jzUvSSw8e4kuk7rxXL4x2NiVzfHbv5zCwUxCevIOu2ERsIPjSuNRM28kbvPcXdyH5k1H30nOFmeAtfQ2FjyECJVGw-pRdh5eImcoJChfzx52QggT2UxqSoVsttzCdjruaChuOVF9FpZx_5zNCaYtppPNHUqSbf_q4qRbWfy4F4t8Nn6dq8u_UvI6sgwojD3iuu7nJ4IYTqrDKzv-01WJASZcOtcJ_1FcIIf-KtsYxFyIjiUe-QwH7ytfH3nfFhoN3UCDbR0_bIcwyB16m6RJMgxHb3GyX4sqP5jXr5niiwtcYkaS6eVu1z-fWBLIKyzDaWWU08z4Zz4aLT5Flz6qIKAZOzfvOc_FZYqotuKggZQp1bwdOee_sPQUhr-btbbRGf4ElB-VmCAT4JO4EP2DSm9A0Z3ygpsCW3RhuIHmaYyWd4d1MIu0jr4Jyq-K8iJI3AaiXiGUrHfbcpTScnOgpWaPk8x6b3EZn5oeLHwJPxKzAxO9gEbhB33Bvg9tAdEwn5RFicXaeNBjBcVhR4Qb1uJ5ayBw8CbCMkOjiQnzGd9W7Or5YV8iZRdPek3hN38egccSpLe9QmGLCOKtJyKA-2HAvs9gabt2eBSw5r8kH8za7bU9focF35wP29QIe7K__L_y_TpvLdHTp_G__5ef",
+      "kind": "result",
+      "nonce_b64": "I49WXfb8HwrAtsNc",
+      "protocol": "powerpc-control-v1",
+      "published_at": 1791424330,
+      "signature_b64": "lkvVUR2a9bZKOxe_462LP6sqOr_W1X8Xp0w31NUKPspdCaEmMVv-dZgV9kWJKCvEiqum2G1SU4pS1OiePnYECQ",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "chatgpt-cg-20261008-archive-prov-health-01",
+      "version": 1
+    },
+    "sha256": "5bc3008f6e3f00249ba08fb6dc433976cccde80d5fcbb4dd2dd720f9f38feaaa"
+  },
+  "identity_fingerprint": "SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI",
+  "legacy_protocol_runtime_id": "fasthost.powerpc",
+  "request_id": "cg-20261008-archive-prov-health-01",
+  "result_visibility": "public_plaintext",
+  "schema": "chatgpt-owned-control-result-v1",
+  "target_runtime_id": "fasthost.powerpc_darwin_org",
+  "task_id": "chatgpt-cg-20261008-archive-prov-health-01",
+  "tool": "runtime_health",
+  "verified_at": 1791424333,
+  "verified_receipt": {
+    "actions": [
+      {
+        "arguments_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "capability": "runtime_health"
+      }
+    ],
+    "completion_state": "COMPLETED",
+    "evidence_refs": [],
+    "executor_identity": {
+      "hostname": "hp3-rr-1024747.hostingp3.local",
+      "runtime_id": "fasthost.powerpc",
+      "uid": 2257347,
+      "user": "csh3280350"
+    },
+    "resource_usage": {
+      "local_mcp_calls": 1,
+      "transport": "github-poll+https-result"
+    },
+    "result": {
+      "content": [
+        {
+          "text": "ARCHITECTURE HEALTH\nOpenWebUI            PASS 200\nOpenAI-broker        PASS 200\nKokoro-TTS           PASS 200\nPocket-voice         PASS 200\nOpen-Terminal        PASS 200\nTerminal-gateway     PASS 200\nOllama               PASS 200\nCONTROL_PLANE.md     PASS present\nENVIRONMENT_MATRIX.md PASS present\nSTATE_POLICY.md      PASS present\nRECOVERY_POLICY.md   PASS present\nRESOURCE_COORDINATION.md PASS present\nWORKER_ROUTING.md    PASS present\nDRIFT_REGISTER.md    PASS present\n-- resource snapshot --\n 02:52:10 up 6 days, 46 min,  0 users,  load average: 0.37, 0.39, 0.51\n              total        used        free      shared  buff/cache   available\nMem:            11G        5.1G        997M        708M        5.3G        5.3G\nSwap:          2.0G        1.4G        604M\n/dev/sdc1       493G  318G  150G  68% /home\n",
+          "type": "text"
+        }
+      ],
+      "isError": false
+    },
+    "runtime_receipt": {
+      "local_mcp": "/home/storage/781/4477781/user/webapp/bin/local-mcp",
+      "namespace": "/home/storage/781/4477781/user",
+      "webapp": "/home/storage/781/4477781/user/webapp"
+    },
+    "task_id": "chatgpt-cg-20261008-archive-prov-health-01",
+    "unresolved": []
+  }
+}
