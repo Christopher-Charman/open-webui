@@ -34,17 +34,6 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-archive-schema-health-20261008-02",
       "version": 1
-    },
-    {
-      "ciphertext_b64": "aDc667tLvcvskDtStRkko4ZFu3e2otdv64lPb0HTlG9aWrkiNbVgwzdvz33zEUXJ-R25uBmXybWsaALjHphF5hiuXZ-5_7UTjrnxuzKQYOoGp953-RyQfodXa4Ibt18w4kZ2o8MVbW99Bp0Z0CmaunOt_9-JuKS7Zs-j6QKMpTGeSqvWzvYhI6uBor6YmOFIoCcUUxfo12-pSB7QZ4S6RCARvgR9Vw8l-Ql_ygvB4d48xtHaLDIDGac-liVGUAMnAwU0XkUa1JPuxKOBhXy3vomYSxmz9VlYkq4fzo2Pk-IFrAumq3as4vP_BY-iSGpCiLRFJvAWuDAnUwcujFqhpDdXUX77dGB_-uiwf7hA2s6vv7FeyAf0jlutBdIvC0MWvq62q9jKk37omwrc8EEU5M9RH5Kqo_WIkk4ioq9FZNneC07wJTyl",
-      "created_at": 1791447950,
-      "expires_at": 1791448550,
-      "nonce_b64": "16JkRPMfxFC566xR",
-      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAmC1it13dYzZ-KbA5NvQ1gdOGLLxBINI78oxETswaSAQ",
-      "protocol": "powerpc-control-v1",
-      "target_runtime_id": "fasthost.powerpc",
-      "task_id": "ppc-archive-schema-transport-probe-20261008-01",
-      "version": 1
     }
   ]
 }
