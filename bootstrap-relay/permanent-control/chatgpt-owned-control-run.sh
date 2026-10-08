@@ -9,6 +9,9 @@ QUEUE="$DIR/queue.json"
 CLIENT="$DIR/origin-client.py"
 IDENTITY_URL="${PPC_CHATGPT_IDENTITY_URL:-https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json}"
 RESULT_BASE="${PPC_CHATGPT_RESULT_BASE:-https://www.powerpc-darwin.org/static/powerpc-control-v1/results}"
+# Trust anchor from the accepted owned-control binding; never derive it from
+# the fetched identity or a request. Rotation requires authenticated evidence.
+EXPECTED_FINGERPRINT="SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI"
 WORK="$(mktemp -d)"
 IDENTITY="$WORK/identity.json"
 ENVELOPE="$WORK/envelope.json"
@@ -95,7 +98,7 @@ fi
 
 curl -fsSL --connect-timeout 10 --max-time 30 "$IDENTITY_URL?t=$(date +%s%N)" -o "$IDENTITY"
 
-PREP_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --task-id "$TASK_ID"   --tool "$TOOL"   --arguments "$ARGS"   --authority "$AUTHORITY"   --ttl "$TTL"   --output "$ENVELOPE"   --context "$CONTEXT")"
+PREP_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --expected-fingerprint "$EXPECTED_FINGERPRINT"   --task-id "$TASK_ID"   --tool "$TOOL"   --arguments "$ARGS"   --authority "$AUTHORITY"   --ttl "$TTL"   --output "$ENVELOPE"   --context "$CONTEXT")"
 FP="$(printf '%s\n' "$PREP_OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n1)"
 [ -n "$FP" ] || { echo "identity verification failed" >&2; exit 1; }
 echo "::add-mask::$FP"
