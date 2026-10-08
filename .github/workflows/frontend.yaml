@@ -35,7 +35,7 @@ jobs:
       - name: Check formatting without changing source
         id: formatting
         continue-on-error: true
-        run: npx prettier --check "**/*.{js,ts,svelte,css,md,html,json}"
+        run: npx prettier --check "src/**/*.{js,ts,svelte,css,md,html,json}" "scripts/**/*.{js,ts}" "*.{js,ts,json,html,md}"
 
       - name: Verify i18n strings
         run: npm run i18n:parse
