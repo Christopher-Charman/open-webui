@@ -17,9 +17,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── Format, i18n, and production build ────────────────────────────────────
-  format-and-build:
-    name: Format & Build
+  # ── Format and i18n validation; never rewrite unrelated source/receipts ──
+  format-and-i18n:
+    name: Format & i18n audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -29,17 +29,38 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies
-        run: npm install --force
+      - name: Install dependencies (frozen lockfile)
+        run: npm ci --force
 
-      - name: Verify code formatting
-        run: npm run format
+      - name: Check formatting without changing source
+        id: formatting
+        continue-on-error: true
+        run: npx prettier --check "**/*.{js,ts,svelte,css,md,html,json}"
 
       - name: Verify i18n strings
         run: npm run i18n:parse
 
-      - name: Ensure working tree is clean
-        run: git diff --exit-code
+      - name: Verify generated translations are unchanged
+        run: git diff --exit-code -- src/lib/i18n
+
+      - name: Enforce formatting result
+        if: ${{ steps.formatting.outcome == 'failure' }}
+        run: exit 1
+
+  # ── Independent production build; formatting debt must not skip compilation ─
+  production-build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install dependencies (frozen lockfile)
+        run: npm ci --force
 
       - name: Production build
         run: npm run build
