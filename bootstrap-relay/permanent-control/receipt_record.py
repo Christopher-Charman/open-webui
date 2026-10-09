@@ -34,8 +34,8 @@ def build_record(
     verified_at: int | None = None,
     encrypted_result_bytes: bytes | None = None,
 ) -> dict[str, Any]:
-    if visibility not in {"summary", "public_plaintext"}:
-        raise ValueError("visibility must be summary or public_plaintext")
+    if visibility != "summary":
+        raise ValueError("public result visibility must be summary")
     if receipt.get("task_id") != task_id:
         raise ValueError("receipt task_id mismatch")
     if encrypted_result.get("task_id") != task_id:
@@ -79,14 +79,6 @@ def build_record(
         },
     }
 
-    if visibility == "public_plaintext":
-        return {
-            "schema": "chatgpt-owned-control-result-v1",
-            **common,
-            "result_visibility": "public_plaintext",
-            "verified_receipt": receipt,
-        }
-
     executor = receipt.get("executor_identity") or {}
     actions = receipt.get("actions") or []
     usage = receipt.get("resource_usage") or {}
@@ -97,7 +89,7 @@ def build_record(
         "completion_state": receipt.get("completion_state"),
         "executor_identity": {
             key: executor[key]
-            for key in ("runtime_id", "uid")
+            for key in ("runtime_id",)
             if key in executor
         },
         "actions": [

@@ -15,20 +15,20 @@ Treat these as the durable identity binding for PowerPC runtime work:
 
 - canonical project/runtime label: `fasthost.powerpc_darwin_org`
 - legacy wire protocol runtime identifier: `fasthost.powerpc` (preserved for protocol compatibility)
-- Unix identity: `csh3280350`
+- Unix identity: `<POWERPC_UNIX_USER>`
 - UID: `2257347`
 - GID: `500`
-- namespace root: `/home/storage/781/4477781/user`
-- webapp root: `/home/storage/781/4477781/user/webapp`
+- namespace root: `<POWERPC_NAMESPACE_ROOT>`
+- webapp root: `<POWERPC_WEBAPP_ROOT>`
 - managed runtime host: `hp3-rr-1024747.hostingp3.local`
 - provider SSH gateway host: `hp3-ssh.hostingp3.local`
 
 Public/provider service addresses:
 
 - web: `77.68.64.13`
-- SSH: `77.68.64.22:22`
+- SSH: `<PROVIDER_SSH_ENDPOINT>`
 - SFTP: `77.68.64.36`
-- FTP/content: `213.171.193.5`
+- FTP/content: `<PROVIDER_TRANSFER_ENDPOINT>`
 
 Known loopback services on the managed runtime:
 
@@ -78,13 +78,13 @@ Never infer that shared Fasthost front doors imply shared identity or authority.
 Evenio is independent:
 
 - runtime label: `fasthost.evenio`
-- Unix identity: `csh3461042`
+- Unix identity: `<EVENIO_UNIX_USER>`
 - UID: `2283676`
 - GID: `500`
-- namespace root: `/home/storage/368/4910368/user`
+- namespace root: `<EVENIO_NAMESPACE_ROOT>`
 - managed application node may also be `hp3-rr-1024747.hostingp3.local`, but under the separate Unix identity
-- SSH gateway: `77.68.64.22:22` -> `hp3-ssh.hostingp3.local`
-- content/transfer endpoint: `213.171.193.5`
+- SSH gateway: `<PROVIDER_SSH_ENDPOINT>` -> `hp3-ssh.hostingp3.local`
+- content/transfer endpoint: `<PROVIDER_TRANSFER_ENDPOINT>`
 - local inference endpoint: `127.0.0.1:11435`
 
 The SSH gateway namespace is not the Passenger managed-runtime namespace. Matching provider hosts or public service IPs never merge PowerPC and Evenio credentials, filesystems, mutable runtime state, or project authority.

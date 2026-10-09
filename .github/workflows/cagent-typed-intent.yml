@@ -1,0 +1,30 @@
+name: cagent-typed-intent
+
+on:
+  pull_request:
+    paths:
+      - "bootstrap-relay/permanent-control/delegate-cagent.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py"
+      - ".github/workflows/cagent-typed-intent.yml"
+  push:
+    branches: [main]
+    paths:
+      - "bootstrap-relay/permanent-control/delegate-cagent.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py"
+
+permissions:
+  contents: read
+
+jobs:
+  typed-intent-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run C-Agent admission regressions
+        run: |
+          python -m unittest -v             bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py             bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py
