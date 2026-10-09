@@ -47,7 +47,7 @@ Known loopback services on the managed runtime:
 
 The canonical local MCP is:
 
-`/home/storage/781/4477781/user/webapp/bin/local-mcp`
+`PPC_WEBAPP_ROOT/bin/local-mcp`
 
 Expected bounded tools:
 
