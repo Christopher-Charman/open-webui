@@ -2,7 +2,7 @@
 set -eu
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 WEBAPP="$ACCOUNT/webapp"
 STATE="$WEBAPP/.control-plane-bootstrap"
 PPC_INSTALL_COMMIT="94ddb66145f3e8397f7496ce4b74a0433f2855ec"
