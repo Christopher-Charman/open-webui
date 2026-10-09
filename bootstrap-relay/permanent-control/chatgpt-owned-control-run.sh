@@ -77,7 +77,7 @@ elif auth!="read_only":
 ttl=d.get("ttl",300)
 assert isinstance(ttl,int) and 30 <= ttl <= 600
 visibility=d.get("result_visibility","summary")
-assert visibility in {"summary","public_plaintext"}
+assert visibility=="summary"
 PY
 
 REQUEST_ID="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'"))["request_id"])')"
