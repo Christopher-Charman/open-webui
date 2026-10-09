@@ -1,4 +1,4 @@
-#!/home/storage/781/4477781/user/webapp/envs/open-terminal/bin/python
+#!/usr/bin/env python3
 from __future__ import print_function
 
 import hashlib
@@ -12,7 +12,7 @@ import tempfile
 import time
 from pathlib import Path
 
-HOME = Path('/home/storage/781/4477781/user')
+HOME = Path(os.environ.get("PPC_ACCOUNT", str(Path.home())))
 BASE = HOME / 'webapp'
 CONTROLLER = BASE / 'passenger_wsgi.py'
 MODULE = BASE / 'chatgpt_bootstrap_control.py'
@@ -21,8 +21,8 @@ TOKENFILE = KEYDIR / 'chatgpt-bootstrap.token'
 EXPIREFILE = KEYDIR / 'chatgpt-bootstrap.expires'
 BACKUP = BASE / 'passenger_wsgi.py.pre-chatgpt-bootstrap-control-v1'
 PYC = BASE / 'passenger_wsgi.pyc'
-EXPECTED_USER = 'csh3280350'
-EXPECTED_UID = 2257347
+EXPECTED_USER = os.environ.get("PPC_EXPECTED_USER", pwd.getpwuid(os.getuid()).pw_name)
+EXPECTED_UID = int(os.environ.get("PPC_EXPECTED_UID", str(os.getuid())))
 TTL_SECONDS = 7200
 MARKER = 'CHATGPT_BOOTSTRAP_CONTROL_V1'
 
@@ -36,7 +36,7 @@ import pwd
 import subprocess
 import time
 
-HOME = "/home/storage/781/4477781/user"
+HOME = os.environ.get("PPC_ACCOUNT", os.path.expanduser("~"))
 BASE = HOME + "/webapp"
 TOKENFILE = HOME + "/.key/chatgpt-bootstrap.token"
 EXPIREFILE = HOME + "/.key/chatgpt-bootstrap.expires"
@@ -122,8 +122,8 @@ def _read_json(environ):
 def _exec(command, cwd, timeout):
     env = {
         "HOME": HOME,
-        "USER": "csh3280350",
-        "LOGNAME": "csh3280350",
+        "USER": os.environ.get("USER", ""),
+        "LOGNAME": os.environ.get("LOGNAME", os.environ.get("USER", "")),
         "PATH": BASE + "/envs/open-terminal/bin:" + BASE + "/miniconda/bin:/usr/local/bin:/usr/bin:/bin",
         "LANG": "C",
         "LC_ALL": "C",
