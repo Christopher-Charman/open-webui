@@ -229,7 +229,7 @@ class ContinuityAgentLedgerSessionTests(unittest.TestCase):
         first_line = SCRIPT.read_text(encoding="utf-8").splitlines()[0]
         self.assertEqual(
             first_line,
-            "#!/home/storage/781/4477781/user/webapp/miniconda/bin/python3.12",
+            "#!/usr/bin/env python3",
         )
 
     def test_claim_model_request_has_fixed_deterministic_seed(self):
