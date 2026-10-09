@@ -96,7 +96,7 @@ FP="$(printf '%s\n' "$PREP_OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n
 [ -n "$FP" ] || { echo "identity verification failed" >&2; exit 1; }
 echo "::add-mask::$FP"
 
-for attempt in 1 2 3 4 5; do
+python3 "$DIR/receipt_record.py" "$PLAIN_RESULT" "$ENCRYPTED_RESULT" "$WORK/adapter-result.json" "$TASK_ID" "$FP" "$REQUEST_ID" "$TOOL" "$AUTHORITY"\n\nfor attempt in 1 2 3 4 5; do
   git fetch origin main >/dev/null 2>&1
   git reset --hard origin/main >/dev/null 2>&1
   if [ -f "$RESULT_PATH" ]; then
