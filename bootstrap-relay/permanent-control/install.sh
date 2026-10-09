@@ -2,7 +2,7 @@
 set -eu
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 WEBAPP="$ACCOUNT/webapp"
 HTDOCS="$ACCOUNT/htdocs"
 STATE="$ACCOUNT/.powerpc-control-v1"
@@ -11,8 +11,10 @@ DELEGATE="$WEBAPP/bin/delegate-cagent"
 VERIFY_DELEGATION="$WEBAPP/bin/verify-continuity-delegation"
 DELEGATION_STATE="$ACCOUNT/.continuity-delegation"
 DELEGATION_ACCEPTANCE="$DELEGATION_STATE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json"
-PIN="3cfb96399fa6bc6ee29f137672d4356c1f373425"
+PIN="d1ca2801e72e39b502095209683e06fa177067b8"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
+TAILSCALE_BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/gateway-tailscale"
+TAILSCALE_SERVICE="$WEBAPP/bin/tailscale-service"
 
 [ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
 [ -d "$WEBAPP" ] && [ -d "$HTDOCS" ] || { echo "REFUSED canonical runtime paths missing" >&2; exit 2; }
@@ -32,10 +34,11 @@ chmod 700 "$STATE" "$DELEGATION_STATE"
 curl -fsSL --retry 4 "$BASE/daemon.py" -o "$STATE/daemon.py"
 curl -fsSL --retry 4 "$BASE/local-mcp-call.mjs" -o "$STATE/local-mcp-call.mjs"
 curl -fsSL --retry 4 "$BASE/powerpc-control-service" -o "$BIN"
+curl -fsSL --retry 4 "$TAILSCALE_BASE/tailscale-service" -o "$TAILSCALE_SERVICE"
 curl -fsSL --retry 4 "$BASE/delegate-cagent.py" -o "$DELEGATE"
 curl -fsSL --retry 4 "$BASE/verify-continuity-delegation.py" -o "$VERIFY_DELEGATION"
 curl -fsSL --retry 4 "$BASE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_20261001.json" -o "$DELEGATION_ACCEPTANCE"
-chmod 700 "$STATE/daemon.py" "$STATE/local-mcp-call.mjs" "$BIN" "$DELEGATE" "$VERIFY_DELEGATION"
+chmod 700 "$STATE/daemon.py" "$STATE/local-mcp-call.mjs" "$BIN" "$TAILSCALE_SERVICE" "$DELEGATE" "$VERIFY_DELEGATION"
 chmod 600 "$DELEGATION_ACCEPTANCE"
 
 "$PY" -m py_compile "$STATE/daemon.py" "$DELEGATE" "$VERIFY_DELEGATION"

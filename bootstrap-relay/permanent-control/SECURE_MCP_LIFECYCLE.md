@@ -8,7 +8,7 @@ Purpose: keep the existing OpenAI Secure MCP runtime `powerpc-local-mcp` indepen
 
 The stdio MCP at:
 
-`/home/storage/781/4477781/user/webapp/bin/local-mcp`
+`<POWERPC_WEBAPP_ROOT>/bin/local-mcp`
 
 remains a bounded stdio child. It is **not** converted into a network daemon.
 
@@ -26,8 +26,8 @@ The keepalive therefore does **not** wrap `tunnel-client run` in `nohup` or `tmu
 
 Host targets:
 
-- controller: `/home/storage/781/4477781/user/webapp/bin/secure-mcp-keepalive`
-- private state: `/home/storage/781/4477781/user/webapp/.secure-mcp-keepalive/`
+- controller: `<POWERPC_WEBAPP_ROOT>/bin/secure-mcp-keepalive`
+- private state: `<POWERPC_WEBAPP_ROOT>/.secure-mcp-keepalive/`
 - runtime key: private `0600` file under that state directory
 - tunnel-client binary hint: private file under that state directory
 

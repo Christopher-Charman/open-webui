@@ -2,7 +2,7 @@
 set -eu
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 WEBAPP="$ACCOUNT/webapp"
 STATE="$ACCOUNT/.powerpc-control-v1"
 DAEMON="$STATE/daemon.py"
@@ -16,6 +16,8 @@ DELEGATION_ACCEPTANCE="$DELEGATION_STATE/CONTINUITY_AGENT_DELEGATION_ACCEPTANCE_
 DELEGATION_VERIFY="$WEBAPP/bin/verify-continuity-delegation"
 CAGENT_WATCH_STATE="$STATE/cagent-watch.state"
 CAGENT_WATCH_INTERVAL="${PPC_CONTROL_CAGENT_WATCH_SECONDS:-300}"
+TAILSCALE_SERVICE="$WEBAPP/bin/tailscale-service"
+TAILSCALE_WATCH_LOG="$STATE/tailscale-watch.log"
 
 PY=""
 for p in \
@@ -112,6 +114,11 @@ start_one() {
   wait_healthy
 }
 
+tailscale_watch() {
+  [ -x "$TAILSCALE_SERVICE" ] || return 0
+  "$TAILSCALE_SERVICE" ensure >>"$TAILSCALE_WATCH_LOG" 2>&1
+}
+
 do_ensure() {
   [ ! -e "$DISABLED" ] || return 0
   mkdir -p "$STATE"
@@ -121,6 +128,7 @@ do_ensure() {
     flock -n 9 || return 0
   fi
   if healthy; then
+    tailscale_watch || true
     cagent_watch || true
     return 0
   fi
@@ -129,6 +137,7 @@ do_ensure() {
     stop_one
   fi
   start_one
+  tailscale_watch || true
   cagent_watch || true
 }
 

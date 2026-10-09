@@ -1,0 +1,9 @@
+{
+  "schema": "chatgpt-owned-control-request-v1",
+  "request_id": "cg-evenio-20261007-paperclip-preactivation-audit-04",
+  "target_runtime_id": "fasthost.evenio",
+  "tool": "runtime_audit",
+  "arguments": {},
+  "authority_ceiling": "read_only",
+  "ttl": 300
+}
