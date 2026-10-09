@@ -1,0 +1,35 @@
+name: ChatGPT adapter identity contract
+
+on:
+  pull_request:
+    paths:
+      - 'bootstrap-relay/permanent-control/chatgpt-owned-control-run.sh'
+      - 'bootstrap-relay/permanent-control/origin-client.py'
+      - 'bootstrap-relay/permanent-control/tests/test_chatgpt_identity_pin.py'
+      - '.github/workflows/chatgpt-adapter-identity-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'bootstrap-relay/permanent-control/chatgpt-owned-control-run.sh'
+      - 'bootstrap-relay/permanent-control/origin-client.py'
+      - 'bootstrap-relay/permanent-control/tests/test_chatgpt_identity_pin.py'
+      - '.github/workflows/chatgpt-adapter-identity-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  identity-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install cryptography
+      - name: Reject substituted identities before queue access
+        working-directory: bootstrap-relay/permanent-control
+        run: |
+          bash -n chatgpt-owned-control-run.sh
+          python -B -m unittest discover -s tests -p test_chatgpt_identity_pin.py -v

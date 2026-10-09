@@ -3,7 +3,7 @@
     "displayName": "PowerPC Local MCP",
     "shortDescription": "Owned webspace runtime access",
     "longDescription": "Verified owned access to powerpc-darwin.org through GitHub and the host's encrypted control receiver. No Desktop Commander or paid relay is required. Includes runtime identity, private-operation handling and bounded MCP contracts.",
-    "developerName": "Christopher Charman",
+    "developerName": "Christopher-Charman",
     "category": "Developer Tools",
     "capabilities": [
       "Interactive"
@@ -17,7 +17,7 @@
   "version": "0.1.2",
   "description": "Access the powerpc-darwin.org managed runtime through its verified owned GitHub transport and bounded local MCP tools.",
   "author": {
-    "name": "Christopher Charman"
+    "name": "Christopher-Charman"
   },
   "keywords": [],
   "skills": "./skills"
