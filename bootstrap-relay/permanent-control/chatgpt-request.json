@@ -1,13 +1,10 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261009-codex-doctor-home-01",
+  "request_id": "cg-20261008-archive-schema-refresh-health-02",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "terminal_exec",
-  "arguments": {
-    "command": "printf 'home=%s\\n' \"$HOME\"; /home/storage/781/4477781/user/webapp/.local/bin/codex doctor --json",
-    "timeout_ms": 30000
-  },
-  "authority_ceiling": "bounded_operator",
+  "tool": "runtime_health",
+  "arguments": {},
+  "authority_ceiling": "read_only",
   "ttl": 300,
   "result_visibility": "public_plaintext"
 }
