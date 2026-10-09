@@ -145,26 +145,7 @@ done
 
 python3 "$CLIENT" decode --result "$ENCRYPTED_RESULT" --context "$CONTEXT" --output "$PLAIN_RESULT" >/dev/null
 
-python3 - "$PLAIN_RESULT" "$WORK/adapter-result.json" "$TASK_ID" "$FP" "$REQUEST_ID" "$TOOL" "$AUTHORITY" <<'PY'
-import json,sys,time
-plain_path,out_path,task_id,fp,request_id,tool,authority=sys.argv[1:8]
-receipt=json.load(open(plain_path,encoding="utf-8"))
-assert receipt.get("task_id")==task_id
-out={
-  "schema":"chatgpt-owned-control-result-v1",
-  "request_id":request_id,
-  "target_runtime_id":"fasthost.evenio",
-  "task_id":task_id,
-  "tool":tool,
-  "authority_ceiling":authority,
-  "identity_fingerprint":fp,
-  "verified_at":int(time.time()),
-  "completion_state":receipt.get("completion_state"),
-  "verified_receipt":receipt,
-}
-with open(out_path,"w",encoding="utf-8") as f:
-    json.dump(out,f,indent=2,sort_keys=True); f.write("\n")
-PY
+python3 "$DIR/receipt_record.py" "$PLAIN_RESULT" "$ENCRYPTED_RESULT" "$WORK/adapter-result.json" "$TASK_ID" "$FP" "$REQUEST_ID" "$TOOL" "$AUTHORITY"
 
 for attempt in 1 2 3 4 5; do
   git fetch origin main >/dev/null 2>&1 || continue
