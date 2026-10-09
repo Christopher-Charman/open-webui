@@ -1,12 +1,9 @@
 {
   "schema": "chatgpt-owned-control-request-v1",
-  "request_id": "cg-20261009-codex-daemon-settings-01",
+  "request_id": "cg-20261008-archive-schema-refresh-health-02",
   "target_runtime_id": "fasthost.powerpc_darwin_org",
-  "tool": "read_text",
-  "arguments": {
-    "path": ".codex/app-server-daemon/settings.json",
-    "max_bytes": 32768
-  },
+  "tool": "runtime_health",
+  "arguments": {},
   "authority_ceiling": "read_only",
   "ttl": 300,
   "result_visibility": "public_plaintext"
