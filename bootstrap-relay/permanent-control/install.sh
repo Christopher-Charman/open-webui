@@ -2,7 +2,7 @@
 set -eu
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 WEBAPP="$ACCOUNT/webapp"
 HTDOCS="$ACCOUNT/htdocs"
 STATE="$ACCOUNT/.powerpc-control-v1"

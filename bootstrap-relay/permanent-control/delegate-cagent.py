@@ -1,4 +1,4 @@
-#!/home/storage/781/4477781/user/webapp/miniconda/bin/python3.12
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -18,7 +18,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-ACCOUNT = Path("/home/storage/781/4477781/user")
+ACCOUNT = Path(os.environ.get("PPC_ACCOUNT", str(Path.home())))
 WEBAPP = ACCOUNT / "webapp"
 STATE = ACCOUNT / ".continuity-delegation"
 NODE = WEBAPP / ".local" / "node22-glibc217" / "bin" / "node"
@@ -91,7 +91,7 @@ def atomic_json(path: Path, obj: Any) -> None:
 def runtime_receipt() -> dict[str, Any]:
     return {
         "runtime_id": RUNTIME_ID,
-        "user": "csh3280350",
+        "user": os.environ.get("USER", "unknown"),
         "uid": os.getuid(),
         "hostname": socket.gethostname(),
         "namespace": str(ACCOUNT),
