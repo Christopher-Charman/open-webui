@@ -11,7 +11,8 @@ on:
       - '.github/workflows/ci-release-policy-validation.yml'
       - '.github/ci/test_ci_release_policy.py'
   push:
-    branches: [main]
+    # Narrow read-only pre-merge validation for issue #100; no publishing jobs.
+    branches: [main, 'repair/issue-100-*']
     paths:
       - '.github/workflows/docker.yaml'
       - '.github/workflows/release.yml'
