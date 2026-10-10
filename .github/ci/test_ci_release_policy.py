@@ -53,8 +53,67 @@ class WorkflowPolicy(unittest.TestCase):
         publisher = next(s for s in steps if s.get('id') == 'publication')
         self.assertIn('version_delta.outputs.changed', publisher['if'])
         dispatch = next(s for s in steps if s.get('name') == 'Trigger Docker build')
-        self.assertIn('publication.outputs.dispatched', dispatch['if'])
+        self.assertIn('publication.outputs.created', dispatch['if'])
         self.assertIn("await github.rest.actions.createWorkflowDispatch({", dispatch['with']['script'])
+
+    def test_existing_release_requires_explicit_dispatch_reconciliation(self):
+        # Exercise the release shell step against an isolated fake gh executable.
+        publisher = next(s for s in self.release['jobs']['publish']['steps'] if s.get('id') == 'publication')
+        body = publisher['run'].replace('        v = yaml.load((WORKFLOWS / 'ci-release-policy-validation.yml').read_text(), Loader=yaml.BaseLoader)
+        self.assertIn('workflow_dispatch', v['on'])
+        self.assertEqual(v['permissions'], {'contents': 'read'})
+        self.assertEqual(list(v['jobs']), ['policy'])
+
+    def test_script_real_git_history(self):
+        run('bash', '-n', str(VERSION_SCRIPT), cwd=ROOT)
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            run('git', 'init', '-q', cwd=repo)
+            run('git', 'config', 'user.name', 'CI Test', cwd=repo)
+            run('git', 'config', 'user.email', 'ci-test@example.invalid', cwd=repo)
+            target = repo / 'package.json'
+            target.write_text(json.dumps({'version': '1.2.3'}) + '\n')
+            run('git', 'add', 'package.json', cwd=repo)
+            run('git', 'commit', '-qm', 'baseline', cwd=repo)
+            prev = run('git', 'rev-parse', 'HEAD', cwd=repo).stdout.strip()
+            # unchanged package version is not a publishing event
+            self.assertEqual(run('bash', str(VERSION_SCRIPT), prev, cwd=repo).stdout.strip(), 'changed=false')
+            target.write_text(json.dumps({'version': '1.2.4'}) + '\n')
+            self.assertEqual(run('bash', str(VERSION_SCRIPT), prev, cwd=repo).stdout.strip(), 'changed=true')
+            for invalid in ['0' * 40, 'f' * 40, '', 'not-a-sha']:
+                self.assertNotEqual(run('bash', str(VERSION_SCRIPT), invalid, cwd=repo, check=False).returncode, 0)
+            target.write_text(json.dumps({'version': 123}) + '\n')
+            self.assertNotEqual(run('bash', str(VERSION_SCRIPT), prev, cwd=repo, check=False).returncode, 0)
+            target.write_text('{invalid-json\n')
+            self.assertNotEqual(run('bash', str(VERSION_SCRIPT), prev, cwd=repo, check=False).returncode, 0)
+
+
+if __name__ == '__main__':
+    unittest.main()
+ + '{{ steps.pkg.outputs.version }}', '9.8.7')
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            gh = work / 'gh'
+            gh.write_text('''#!/bin/bash
+if [[ "$1 $2" == "release view" ]]; then exit "$VIEW_STATUS"; fi
+if [[ "$1 $2" == "release create" ]]; then exit 0; fi
+exit 91
+''')
+            gh.chmod(0o755)
+            output = work / 'output'
+            for exists in [True, False]:
+                output.write_text('')
+                environment = dict(os.environ, PATH=str(work) + os.pathsep + os.environ.get('PATH', ''),
+                                   VIEW_STATUS='0' if exists else '1', GITHUB_OUTPUT=str(output))
+                proc = subprocess.run(['bash', '-e', '-c', body], cwd=work, env=environment,
+                                      capture_output=True, text=True)
+                if exists:
+                    self.assertNotEqual(proc.returncode, 0, 'Existing release must not be accepted as Docker dispatch proof')
+                    self.assertIn('Docker dispatch state is unresolved', proc.stderr)
+                    self.assertNotIn('created=true', output.read_text())
+                else:
+                    self.assertEqual(proc.returncode, 0, proc.stderr)
+                    self.assertEqual(output.read_text().strip(), 'created=true')
 
     def test_manual_validation_is_read_only(self):
         v = yaml.load((WORKFLOWS / 'ci-release-policy-validation.yml').read_text(), Loader=yaml.BaseLoader)
