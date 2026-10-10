@@ -459,6 +459,11 @@ def _validate_payload(task: dict[str, Any], payload: dict[str, Any]) -> None:
         raise TaskReject("authority_ceiling_reject", "NEEDS_AUTHORITY")
     if ceiling == "read_only" and tool == "terminal_exec":
         raise TaskReject("authority_attenuation_reject", "NEEDS_AUTHORITY")
+    # Even encrypted, authenticated bounded_operator envelopes do not prove
+    # a live destination claim/run/fence/CAS. The provider's task transport
+    # and the owner-scoped mutation authority are separate admission layers.
+    if tool == "terminal_exec":
+        raise TaskReject("destination_mutation_admission_unverified", "BLOCKED")
     if not isinstance(payload.get("arguments", {}), dict):
         raise ValueError("arguments_not_object")
 
@@ -558,6 +563,44 @@ def _failure_result(task: dict[str, Any], error: str, completion_state: str = "F
     }
 
 
+def _commit_task_final_state(
+    conn: sqlite3.Connection, task_id: str, state: str,
+    result_path: str | None = None, *, attempts: int = 3,
+) -> bool:
+    """Bounded DB finalization. Never rerun an already attempted tool.
+
+    A private signed result may have been published even if the DB commit is
+    unavailable. In that case preserve the original 'claimed' record as an
+    outcome requiring reconciliation. No retry of the destination effect.
+    """
+    for attempt in range(attempts):
+        try:
+            if result_path is None:
+                conn.execute("UPDATE tasks SET state=? WHERE task_id=?",
+                             (state, task_id))
+            else:
+                conn.execute(
+                    "UPDATE tasks SET state=?,completed_at=?,result_path=? WHERE task_id=?",
+                    (state, int(time.time()), result_path, task_id),
+                )
+            conn.commit()
+            return True
+        except sqlite3.Error as exc:
+            # A failed commit can retain an open SQLite transaction; retrying
+            # without rollback can self-deadlock even after external locks end.
+            try:
+                conn.rollback()
+            except sqlite3.Error:
+                _log("db_rollback_unresolved=" + task_id)
+                return False
+            _log("db_finalization_unresolved=" + task_id + ":" + type(exc).__name__)
+            if not isinstance(exc, sqlite3.OperationalError) or "locked" not in str(exc).lower():
+                return False
+            if attempt + 1 < attempts:
+                time.sleep(min(0.1 * (attempt + 1), 0.3))
+    return False
+
+
 def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection) -> None:
     valid, why = _validate_outer(task)
     task_id = task.get("task_id") if isinstance(task.get("task_id"), str) else ""
@@ -567,7 +610,11 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection) 
         return
 
     envelope_hash = hashlib.sha256(_canon(task)).hexdigest()
-    row = conn.execute("SELECT envelope_sha256,state FROM tasks WHERE task_id=?", (task_id,)).fetchone()
+    try:
+        row = conn.execute("SELECT envelope_sha256,state FROM tasks WHERE task_id=?", (task_id,)).fetchone()
+    except sqlite3.Error as exc:
+        _log("db_claim_read_unresolved=" + task_id + ":" + type(exc).__name__)
+        return
     if row:
         if row[0] == envelope_hash:
             return
@@ -595,6 +642,14 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection) 
         )
         conn.commit()
     except sqlite3.IntegrityError:
+        return
+    except sqlite3.Error as exc:
+        try:
+            conn.rollback()
+        except sqlite3.Error:
+            pass
+        _log("db_claim_write_unresolved=" + task_id + ":" + type(exc).__name__)
+        # A failed durable claim must never advance to local-MCP execution.
         return
 
     if initial_state == "expired":
@@ -631,16 +686,23 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection) 
 
     try:
         result_path = _publish_result(task, shared, spriv, receipt)
-        conn.execute(
-            "UPDATE tasks SET state=?,completed_at=?,result_path=? WHERE task_id=?",
-            (receipt["completion_state"].lower(), int(time.time()), result_path, task_id),
-        )
-        conn.commit()
+    except Exception as exc:
+        # Do not let a second SQLite failure in the error handler terminate
+        # the entire daemon or invite blind tool re-execution.
+        persisted = _commit_task_final_state(conn, task_id, "publish_failed")
+        _log("publish_error=" + task_id + ":" + type(exc).__name__
+             + (" persisted" if persisted else " db_unresolved"))
+        return
+
+    persisted = _commit_task_final_state(
+        conn, task_id, receipt["completion_state"].lower(), result_path
+    )
+    if persisted:
         _log("task=" + task_id + " state=" + receipt["completion_state"])
-    except Exception as e:
-        conn.execute("UPDATE tasks SET state=? WHERE task_id=?", ("publish_failed", task_id))
-        conn.commit()
-        _log("publish_error=" + task_id + ":" + type(e).__name__)
+    else:
+        # Published result is durable, but metadata is not. Existing claimed
+        # task_id suppresses replay until separately verified reconciliation.
+        _log("result_published_db_unresolved=" + task_id)
 
 
 def _signal(_signum, _frame):
