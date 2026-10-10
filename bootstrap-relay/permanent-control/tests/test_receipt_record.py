@@ -59,10 +59,9 @@ class ReceiptRecordTests(unittest.TestCase):
         self.assertEqual(summary["unresolved_count"], 0)
         self.assertEqual(record["encrypted_result"]["envelope"], self.encrypted)
 
-    def test_explicit_public_plaintext_mode_keeps_receipt(self):
-        record = self.build("public_plaintext")
-        self.assertEqual(record["schema"], "chatgpt-owned-control-result-v1")
-        self.assertIn(self.secret_text, json.dumps(record))
+    def test_public_plaintext_mode_is_rejected_to_prevent_secret_disclosure(self):
+        with self.assertRaises(ValueError):
+            self.build("public_plaintext")
 
     def test_task_mismatch_fails_closed(self):
         bad = dict(self.receipt, task_id="wrong-task")

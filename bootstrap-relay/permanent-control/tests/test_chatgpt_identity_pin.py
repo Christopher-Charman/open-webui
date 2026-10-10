@@ -50,7 +50,7 @@ class ChatGPTIdentityPinTests(unittest.TestCase):
             root = Path(temporary)
             control = root / "bootstrap-relay/permanent-control"
             control.mkdir(parents=True)
-            for name in ("chatgpt-owned-control-run.sh", "origin-client.py"):
+            for name in ("chatgpt-owned-control-run.sh", "origin-client.py", "public_safe_request.py"):
                 shutil.copyfile(CONTROL / name, control / name)
             (control / "chatgpt-request.json").write_text(json.dumps({
                 "schema": "chatgpt-owned-control-request-v1",
