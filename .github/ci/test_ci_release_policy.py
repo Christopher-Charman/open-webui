@@ -55,6 +55,12 @@ class WorkflowPolicy(unittest.TestCase):
         dispatch = next(s for s in steps if s.get('name') == 'Trigger Docker build')
         self.assertIn('publication.outputs.dispatched', dispatch['if'])
 
+    def test_manual_validation_is_read_only(self):
+        v = yaml.load((WORKFLOWS / 'ci-release-policy-validation.yml').read_text(), Loader=yaml.BaseLoader)
+        self.assertIn('workflow_dispatch', v['on'])
+        self.assertEqual(v['permissions'], {'contents': 'read'})
+        self.assertEqual(list(v['jobs']), ['policy'])
+
     def test_script_real_git_history(self):
         run('bash', '-n', str(VERSION_SCRIPT), cwd=ROOT)
         with tempfile.TemporaryDirectory() as tmp:
