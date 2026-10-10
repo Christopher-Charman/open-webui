@@ -63,9 +63,18 @@ LOGFILE = STATE / "daemon.log"
 X25519_PRIV = STATE / "x25519-private.pem"
 ED25519_PRIV = STATE / "ed25519-private.pem"
 HELPER = Path(os.environ.get("PPC_CONTROL_MCP_HELPER", str(STATE / "local-mcp-call.mjs")))
+# Runtime task data is intentionally separate from PR-protected source main.
+# The only supported alternate is a dedicated owner-controlled, encrypted
+# runtime queue branch. No arbitrary transport/ref selected by model content.
+QUEUE_BRANCH = os.environ.get(
+    "PPC_CONTROL_QUEUE_BRANCH", "runtime-queue-powerpc-darwin-org-v1"
+)
+if QUEUE_BRANCH not in {"main", "runtime-queue-powerpc-darwin-org-v1"}:
+    raise ValueError("unregistered_owned_queue_branch")
 QUEUE_URL = os.environ.get(
     "PPC_CONTROL_QUEUE_URL",
-    "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json",
+    "https://raw.githubusercontent.com/Christopher-Charman/open-webui/"
+    + QUEUE_BRANCH + "/bootstrap-relay/permanent-control/queue.json",
 )
 QUEUE_REFS_URL = os.environ.get(
     "PPC_CONTROL_QUEUE_REFS_URL",
@@ -77,7 +86,8 @@ QUEUE_IMMUTABLE_URL_TEMPLATE = os.environ.get(
 )
 QUEUE_API_URL = os.environ.get(
     "PPC_CONTROL_QUEUE_API_URL",
-    "https://api.github.com/repos/Christopher-Charman/open-webui/contents/bootstrap-relay/permanent-control/queue.json?ref=main",
+    "https://api.github.com/repos/Christopher-Charman/open-webui/contents/"
+    "bootstrap-relay/permanent-control/queue.json?ref=" + QUEUE_BRANCH,
 )
 POLL_SECONDS = float(os.environ.get("PPC_CONTROL_POLL_SECONDS", "7"))
 API_FALLBACK_SECONDS = float(os.environ.get("PPC_CONTROL_API_FALLBACK_SECONDS", "75"))
@@ -256,7 +266,7 @@ def _parse_queue_bytes(raw: bytes) -> dict[str, Any]:
     return obj
 
 
-def _resolve_queue_main_sha() -> str | None:
+def _resolve_queue_branch_sha() -> str | None:
     req = urllib.request.Request(
         QUEUE_REFS_URL,
         headers={
@@ -271,12 +281,13 @@ def _resolve_queue_main_sha() -> str | None:
         matches = {
             item.decode("ascii")
             for item in re.findall(
-                rb"([0-9a-f]{40}) refs/heads/main(?:\x00|\n)",
+                rb"([0-9a-f]{40}) refs/heads/"
+                + re.escape(QUEUE_BRANCH.encode("ascii")) + rb"(?:\x00|\n)",
                 raw,
             )
         }
         if len(matches) != 1:
-            raise ValueError("queue_main_ref_ambiguous")
+            raise ValueError("queue_branch_ref_ambiguous")
         return next(iter(matches))
     except Exception as e:
         _log("queue_ref_error=" + type(e).__name__)
@@ -284,7 +295,7 @@ def _resolve_queue_main_sha() -> str | None:
 
 
 def _fetch_queue_immutable() -> dict[str, Any] | None:
-    sha = _resolve_queue_main_sha()
+    sha = _resolve_queue_branch_sha()
     if sha is None:
         return None
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
