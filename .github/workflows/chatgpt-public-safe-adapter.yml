@@ -1,6 +1,7 @@
 name: ChatGPT public-safe carrier contract
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - "bootstrap-relay/permanent-control/chatgpt-owned-control-run.sh"
