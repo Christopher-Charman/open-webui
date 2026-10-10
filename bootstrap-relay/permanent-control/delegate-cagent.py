@@ -52,6 +52,10 @@ INTENT_CLASS_BY_TOOL = {
     "terminal_exec": "bounded_operator_command",
 }
 SUPPORTED_INTENT_CLASSES = frozenset(INTENT_CLASS_BY_TOOL.values())
+# This receiver has verified session/frontier READ rights, not destination
+# mutation admission. Effect-capable tools must never use session visibility or
+# a model-generated CLAIM to infer a task/claim/run/lease/fence/CAS grant.
+EFFECT_CAPABLE_TOOLS = frozenset({"terminal_exec"})
 AUTHORITY_RANK = {"read_only": 0, "bounded_operator": 1}
 TASK_RE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 
@@ -296,6 +300,19 @@ def make_receipt(
         "resource_usage": resource_usage or {},
         "completion_state": completion_state,
     }
+
+
+def require_destination_effect_admission(validated: dict[str, Any]) -> None:
+    """Block effect-capable dispatch until a trusted destination gate exists.
+
+    This is a user-owned receiver gate, not an OpenAI/ChatGPT hook. The
+    currently accepted C-Agent Ledger binding is session + project read only.
+    No request/model/transport field can supply destination mutation authority.
+    A future allow path requires independently verified Ledger claim/run,
+    destination-specific ownership, fencing and atomic version-CAS readback.
+    """
+    if validated.get("tool") in EFFECT_CAPABLE_TOOLS:
+        raise Reject("destination_mutation_admission_unverified", "BLOCKED")
 
 
 def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, Any]:
@@ -581,6 +598,9 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
         ledger_calls = 0
         try:
             validated = validate_envelope(env)
+            # Stop before even opening a Ledger read session; a project-scoped
+            # frontier does not confer destination write authority.
+            require_destination_effect_admission(validated)
             remaining = min(
                 float(validated["wall_seconds"]),
                 float(validated["deadline"] - int(time.time())),
