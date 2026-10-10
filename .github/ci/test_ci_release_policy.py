@@ -54,6 +54,7 @@ class WorkflowPolicy(unittest.TestCase):
         self.assertIn('version_delta.outputs.changed', publisher['if'])
         dispatch = next(s for s in steps if s.get('name') == 'Trigger Docker build')
         self.assertIn('publication.outputs.dispatched', dispatch['if'])
+        self.assertIn("await github.rest.actions.createWorkflowDispatch({", dispatch['with']['script'])
 
     def test_manual_validation_is_read_only(self):
         v = yaml.load((WORKFLOWS / 'ci-release-policy-validation.yml').read_text(), Loader=yaml.BaseLoader)
