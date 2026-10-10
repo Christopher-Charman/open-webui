@@ -51,6 +51,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           if gh release view "v${{ steps.pkg.outputs.version }}" &>/dev/null; then
             # The release exists, but this does not prove that Docker dispatch occurred.
             # GitHub workflow_dispatch has no idempotency key; a blind retry can
@@ -58,7 +59,19 @@ jobs:
             echo "::error::Release v${{ steps.pkg.outputs.version }} already exists; Docker dispatch state is unresolved. Inspect the exact tag\'s Docker run before manual recovery." >&2
             exit 1
           fi
+          # Pin release tags to this workflow's triggering commit; never
+          # silently publish a later default-branch revision.
+          set +e
+          git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.pkg.outputs.version }}" >/dev/null 2>&1
+          tag_check_status=$?
+          set -e
+          case "$tag_check_status" in
+            2) ;; # Exact tag absent: creation permitted.
+            0) echo "::error::Tag v${{ steps.pkg.outputs.version }} already exists without a verified release; refuse to repoint or publish." >&2; exit 1 ;;
+            *) echo "::error::Could not verify remote release-tag absence; refusing publication." >&2; exit 1 ;;
+          esac
           gh release create "v${{ steps.pkg.outputs.version }}" \
+            --target "$GITHUB_SHA" \
             --title "v${{ steps.pkg.outputs.version }}" \
             --notes-file /tmp/release-notes.md
           echo 'created=true' >> "$GITHUB_OUTPUT"
