@@ -1,0 +1,39 @@
+name: CI release policy regression
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/docker.yaml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/release-pypi.yml'
+      - '.github/scripts/version-transition.sh'
+      - '.github/workflows/ci-release-policy-validation.yml'
+      - '.github/ci/test_ci_release_policy.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/docker.yaml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/release-pypi.yml'
+      - '.github/scripts/version-transition.sh'
+      - '.github/workflows/ci-release-policy-validation.yml'
+      - '.github/ci/test_ci_release_policy.py'
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install tiny YAML parser
+        run: python -m pip install --disable-pip-version-check 'PyYAML==6.0.2'
+      - name: Verify jq prerequisite
+        run: command -v jq
+      - name: Test real version transition and release policy
+        run: python -m unittest discover -s .github/ci -p 'test_ci_release_policy.py' -v
