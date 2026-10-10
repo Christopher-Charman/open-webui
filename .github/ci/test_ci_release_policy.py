@@ -57,32 +57,62 @@ class WorkflowPolicy(unittest.TestCase):
         self.assertIn("await github.rest.actions.createWorkflowDispatch({", dispatch['with']['script'])
 
     def test_existing_release_requires_explicit_dispatch_reconciliation(self):
-        # Execute publisher shell against an isolated fake gh executable.
+        # Use isolated fake gh/git programs: no release or remote mutation.
         publisher = next(s for s in self.release['jobs']['publish']['steps'] if s.get('id') == 'publication')
         body = publisher['run'].replace('$' + '{{ steps.pkg.outputs.version }}', '9.8.7')
+        triggering_sha = '0123456789abcdef0123456789abcdef01234567'
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
             gh = work / 'gh'
             gh.write_text('''#!/bin/bash
 if [[ "$1 $2" == "release view" ]]; then exit "$VIEW_STATUS"; fi
-if [[ "$1 $2" == "release create" ]]; then exit 0; fi
+if [[ "$1 $2" == "release create" ]]; then printf '%s\\n' "$@" > "$CAPTURE_ARGS"; exit 0; fi
 exit 91
 ''')
             gh.chmod(0o755)
-            output = work / 'output'
-            for exists in [True, False]:
+            fake_git = work / 'git'
+            fake_git.write_text('''#!/bin/bash
+if [[ "$1" == "ls-remote" ]]; then exit "$TAG_STATUS"; fi
+exit 92
+''')
+            fake_git.chmod(0o755)
+            output, args_file = work / 'output', work / 'args'
+            scenarios = [
+                # release_exists, tag_status, success_expected
+                (True, 2, False),
+                (False, 2, True),
+                (False, 0, False),
+                (False, 128, False),
+            ]
+            for release_exists, tag_status, expected_success in scenarios:
                 output.write_text('')
-                environment = dict(os.environ, PATH=str(work) + os.pathsep + os.environ.get('PATH', ''),
-                                   VIEW_STATUS='0' if exists else '1', GITHUB_OUTPUT=str(output))
-                proc = subprocess.run(['bash', '-e', '-c', body], cwd=work, env=environment,
-                                      capture_output=True, text=True)
-                if exists:
-                    self.assertNotEqual(proc.returncode, 0, 'Existing release must not be accepted as Docker dispatch proof')
-                    self.assertIn('Docker dispatch state is unresolved', proc.stderr)
-                    self.assertNotIn('created=true', output.read_text())
-                else:
+                args_file.unlink(missing_ok=True)
+                environment = dict(
+                    os.environ,
+                    PATH=str(work) + os.pathsep + os.environ.get('PATH', ''),
+                    VIEW_STATUS='0' if release_exists else '1',
+                    TAG_STATUS=str(tag_status),
+                    CAPTURE_ARGS=str(args_file),
+                    GITHUB_SHA=triggering_sha,
+                    GITHUB_OUTPUT=str(output),
+                )
+                proc = subprocess.run(['bash', '-e', '-c', body], cwd=work,
+                                      env=environment, capture_output=True, text=True)
+                if expected_success:
                     self.assertEqual(proc.returncode, 0, proc.stderr)
                     self.assertEqual(output.read_text().strip(), 'created=true')
+                    args = args_file.read_text().splitlines()
+                    self.assertIn('--target', args)
+                    self.assertEqual(args[args.index('--target') + 1], triggering_sha)
+                else:
+                    self.assertNotEqual(proc.returncode, 0, proc.stderr)
+                    self.assertNotIn('created=true', output.read_text())
+                    self.assertFalse(args_file.exists())
+                    self.assertTrue(
+                        'Docker dispatch state is unresolved' in proc.stderr
+                        or 'Tag v9.8.7 already exists' in proc.stderr
+                        or 'Could not verify remote release-tag absence' in proc.stderr
+                    )
 
     def test_manual_validation_is_read_only(self):
         v = yaml.load((WORKFLOWS / 'ci-release-policy-validation.yml').read_text(), Loader=yaml.BaseLoader)
