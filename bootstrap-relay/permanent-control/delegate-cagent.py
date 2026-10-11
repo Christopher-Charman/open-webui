@@ -483,6 +483,9 @@ def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, 
         raise Reject("invalid_tool_arguments", "FAILED")
 
     intent_class = env.get("intent_class")
+    context_requirement = env.get("context_requirement", "none")
+    if context_requirement not in ("none", "historical"):
+        raise Reject("invalid_context_requirement", "FAILED")
     claim_mode = "model"
     if intent_class is not None:
         if (
@@ -531,6 +534,7 @@ def validate_envelope(env: dict[str, Any], now: int | None = None) -> dict[str, 
         "authority": authority,
         "intent_class": intent_class,
         "claim_mode": claim_mode,
+        "context_required": context_requirement == "historical",
         "model_call_budget": model_calls,
         "wall_seconds": wall_seconds,
         "deadline": deadline,
@@ -693,8 +697,11 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
         ledger_evidence: list[str] = []
         ledger_calls = 0
         historical_context = None
+        context_status = None
         try:
             validated = validate_envelope(env)
+            if validated["context_required"] and not CONTEXT_ENABLED:
+                raise Reject("required_historical_context_disabled", "BLOCKED")
             # Stop before even opening a Ledger read session; a project-scoped
             # frontier does not confer destination write authority.
             require_destination_effect_admission(validated)
@@ -742,8 +749,14 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 raise Reject("expired_after_ledger_frontier", "EXPIRED")
 
             if CONTEXT_ENABLED:
-                historical_context = read_historical_context(env, remaining)
-                ledger_evidence.append("historical_context_sha256:" + sha256_obj(historical_context))
+                try:
+                    historical_context = read_historical_context(env, min(12.0, remaining / 2))
+                    ledger_evidence.append("historical_context_sha256:" + sha256_obj(historical_context))
+                    context_status = "HISTORICAL_EVIDENCE_ONLY"
+                except Reject:
+                    if validated["context_required"]:
+                        raise
+                    context_status = "UNAVAILABLE_NOT_REQUIRED"
                 remaining = min(
                     float(validated["wall_seconds"]) - (time.monotonic() - started),
                     float(validated["deadline"] - int(time.time())),
@@ -849,6 +862,8 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
 
         if historical_context is not None:
             receipt["historical_context"] = historical_context
+        if context_status is not None:
+            receipt["historical_context_status"] = context_status
         atomic_json(record_path, {"envelope_sha256": envelope_sha, "receipt": receipt})
         return receipt
 

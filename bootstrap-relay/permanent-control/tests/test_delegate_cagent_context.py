@@ -117,12 +117,14 @@ class ContextTests(unittest.TestCase):
         read.assert_called_once()
 
     def test_context_failure_prevents_model_and_tool(self):
+        self.env['context_requirement'] = 'historical'
         def fail(*a): raise delegate.Reject('historical_context_unavailable_or_untrusted', 'BLOCKED')
         receipt, events, _ = self.run_receiver(enabled=True, reader=fail)
         self.assertEqual(events, ['frontier', 'context'])
         self.assertEqual(receipt['completion_state'], 'BLOCKED')
 
     def test_untyped_context_failure_prevents_claim_model(self):
+        self.env['context_requirement'] = 'historical'
         self.env.pop('intent_class')
         self.env['resource_budget']['model_calls'] = 1
         def fail(*a): raise delegate.Reject('historical_context_unavailable_or_untrusted', 'BLOCKED')
@@ -134,6 +136,20 @@ class ContextTests(unittest.TestCase):
         receipt, events, read = self.run_receiver(enabled=False, reader=lambda *a: None)
         self.assertEqual(events, ['frontier', 'mcp'])
         self.assertNotIn('historical_context', receipt)
+        read.assert_not_called()
+
+    def test_independent_read_continues_when_history_unavailable(self):
+        def fail(*a): raise delegate.Reject('historical_context_unavailable_or_untrusted', 'BLOCKED')
+        receipt, events, _ = self.run_receiver(enabled=True, reader=fail)
+        self.assertEqual(events, ['frontier', 'context', 'mcp'])
+        self.assertEqual(receipt['completion_state'], 'COMPLETED')
+        self.assertEqual(receipt['historical_context_status'], 'UNAVAILABLE_NOT_REQUIRED')
+
+    def test_required_context_cannot_silently_pass_when_disabled(self):
+        self.env['context_requirement'] = 'historical'
+        receipt, events, read = self.run_receiver(enabled=False, reader=lambda *a: None)
+        self.assertEqual(events, [])
+        self.assertEqual(receipt['unresolved'], ['required_historical_context_disabled'])
         read.assert_not_called()
 
 
