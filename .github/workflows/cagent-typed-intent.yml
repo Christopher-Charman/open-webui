@@ -7,6 +7,7 @@ on:
       - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py"
       - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py"
       - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_mutation_ingress.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_context.py"
       - ".github/workflows/cagent-typed-intent.yml"
   push:
     branches: [main]
@@ -15,6 +16,7 @@ on:
       - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py"
       - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py"
       - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_mutation_ingress.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_context.py"
 
 permissions:
   contents: read

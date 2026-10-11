@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import hashlib
 import json
 import os
@@ -58,6 +58,102 @@ SUPPORTED_INTENT_CLASSES = frozenset(INTENT_CLASS_BY_TOOL.values())
 EFFECT_CAPABLE_TOOLS = frozenset({"terminal_exec"})
 AUTHORITY_RANK = {"read_only": 0, "bounded_operator": 1}
 TASK_RE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+CONTEXT_READER = WEBAPP / "bin" / "chatgpt-owned-context-reader"
+CONTEXT_TARGET = "runtime:fasthost.powerpc_darwin_org"
+CONTEXT_MAX_BYTES = 32768
+# Owner process configuration only; envelopes cannot enable or redirect this.
+CONTEXT_ENABLED = os.environ.get("CAGENT_ARCHIVE_CONTEXT", "0") == "1"
+SECRET_PATTERN = re.compile(
+    r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|"
+    r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|"
+    r"sk-(?:proj-)?[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16})\b|"
+    r"(?i:authorization\s*:\s*bearer\s+\S+|"
+    r"(?:password|api[_ -]?key|access[_ -]?token)\s*[:=]\s*[^\s]{8,})"
+)
+
+
+def read_historical_context(env: dict[str, Any], timeout: float) -> dict[str, Any]:
+    """Fetch private historical evidence before admission, never classifier authority.
+
+    Raw records return only to the authenticated origin via its existing receipt.
+    They are not sent to the CLAIM model, added to tool arguments, or published.
+    Known credential patterns are rejected; this is not a comprehensive DLP claim.
+    """
+    task = env["objective"][:512]
+    until = datetime.fromtimestamp(env["deadline"], timezone.utc).date()
+    arguments = {"task": task, "since": (until - timedelta(days=92)).isoformat(),
+                 "until": until.isoformat(), "limit": 5}
+    request = {"schema": "chatgpt-owned-readonly-v1",
+               "request_id": "cagent-context-" + sha256_obj(env)[:48],
+               "target": CONTEXT_TARGET, "tool": "session_context",
+               "arguments": arguments}
+    if timeout <= 0:
+        raise Reject("historical_context_budget_exhausted", "BLOCKED")
+    try:
+        with tempfile.TemporaryFile() as output:
+            proc = subprocess.run(
+                [str(CONTEXT_READER)], input=canon(request), stdout=output,
+                stderr=subprocess.DEVNULL, cwd=str(WEBAPP),
+                timeout=min(12.0, timeout), check=False,
+            )
+            if proc.returncode != 0 or output.tell() > CONTEXT_MAX_BYTES:
+                raise ValueError("reader failed or output exceeded bound")
+            output.seek(0)
+            receipt = json.loads(output.read(CONTEXT_MAX_BYTES + 1))
+        packet = validate_historical_context(receipt, request)
+    except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired) as exc:
+        # Never echo archive text, process output or exception details into errors.
+        raise Reject("historical_context_unavailable_or_untrusted", "BLOCKED") from exc
+    return packet
+
+
+def validate_historical_context(receipt: Any, request: dict[str, Any]) -> dict[str, Any]:
+    if (not isinstance(receipt, dict)
+            or receipt.get("request_id") != request["request_id"]
+            or receipt.get("state") != "EXECUTED_READ_ONLY"
+            or receipt.get("return_code") != 0
+            or receipt.get("effectful_destination_mutation") is not False):
+        raise ValueError("reader receipt mismatch")
+    packet = receipt.get("output")
+    args = request["arguments"]
+    if (not isinstance(packet, dict)
+            or packet.get("schema") != "owned-session-context-v1"
+            or packet.get("state") != "HISTORICAL_EVIDENCE_ONLY"
+            or packet.get("task_sha256") != hashlib.sha256(args["task"].encode()).hexdigest()
+            or packet.get("window") != {"since": args["since"], "until": args["until"]}
+            or packet.get("assistant_messages_are_unverified_claims") is not True
+            or any(packet.get(k) is not False for k in (
+                "current_library_verified", "live_destination_verified",
+                "task_ownership_verified", "instructions_from_archive_authoritative",
+                "archive_coverage_complete", "automatic_session_injection"))
+            or type(packet.get("history_gap_after_index")) is not bool):
+        raise ValueError("context binding or authority mismatch")
+    stamp = packet.get("archive_index_generated_at")
+    if not isinstance(stamp, str):
+        raise ValueError("missing index provenance")
+    index_day = datetime.fromisoformat(stamp.replace("Z", "+00:00")).date()
+    until = datetime.fromisoformat(args["until"]).date()
+    if index_day > until or packet["history_gap_after_index"] is not True:
+        raise ValueError("archive freshness contradicts requested window")
+    if packet["history_gap_after_index"] and "POST_INDEX_CONVERSATIONS_OR_CURRENT_CHAT" not in packet.get("required_next_evidence", []):
+        raise ValueError("history gap omitted")
+    records = packet.get("records")
+    if not isinstance(records, list) or len(records) > args["limit"] or packet.get("returned") != len(records):
+        raise ValueError("record bound mismatch")
+    for record in records:
+        if (not isinstance(record, dict) or record.get("role") not in {"user", "assistant"}
+                or any(not isinstance(record.get(k), str) or not record[k] for k in ("message_id", "conversation_id", "sha256"))
+                or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])
+                or not isinstance(record.get("text"), str) or len(record["text"]) > 1600
+                or not isinstance(record.get("evidence_refs"), list) or not record["evidence_refs"]
+                or any(not isinstance(ref, str) or not ref for ref in record["evidence_refs"])
+                or type(record.get("text_truncated")) is not bool
+                or not args["since"] <= record.get("date", "") <= args["until"]):
+            raise ValueError("record provenance mismatch")
+    encoded = canon(packet)
+    if len(encoded) > 18000 or SECRET_PATTERN.search(encoded.decode()):
+        raise ValueError("context size or privacy rejection")
+    return packet
 
 
 class Reject(Exception):
@@ -596,6 +692,7 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
         model_id: str | None = None
         ledger_evidence: list[str] = []
         ledger_calls = 0
+        historical_context = None
         try:
             validated = validate_envelope(env)
             # Stop before even opening a Ledger read session; a project-scoped
@@ -643,6 +740,16 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             )
             if remaining <= 0:
                 raise Reject("expired_after_ledger_frontier", "EXPIRED")
+
+            if CONTEXT_ENABLED:
+                historical_context = read_historical_context(env, remaining)
+                ledger_evidence.append("historical_context_sha256:" + sha256_obj(historical_context))
+                remaining = min(
+                    float(validated["wall_seconds"]) - (time.monotonic() - started),
+                    float(validated["deadline"] - int(time.time())),
+                )
+                if remaining <= 0:
+                    raise Reject("expired_after_historical_context", "EXPIRED")
 
             if validated["claim_mode"] == "deterministic":
                 claim = {
@@ -740,6 +847,8 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 completion_state="FAILED",
             )
 
+        if historical_context is not None:
+            receipt["historical_context"] = historical_context
         atomic_json(record_path, {"envelope_sha256": envelope_sha, "receipt": receipt})
         return receipt
 
