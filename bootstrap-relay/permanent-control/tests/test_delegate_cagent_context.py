@@ -70,6 +70,17 @@ class ContextTests(unittest.TestCase):
             with self.subTest(item=item), self.assertRaises(ValueError):
                 delegate.validate_historical_context(item, self.request)
 
+    def test_reader_failure_output_bound_and_timeout_fail_closed(self):
+        import subprocess
+        for payload, code in [(b'not-json', 0), (b'x'*(delegate.CONTEXT_MAX_BYTES+1), 0), (b'{}', 1)]:
+            def process(argv, **kw):
+                kw['stdout'].write(payload)
+                return type('Process', (), {'returncode': code})()
+            with patch.object(delegate.subprocess, 'run', side_effect=process), self.assertRaises(delegate.Reject):
+                delegate.read_historical_context(self.env, 1)
+        with patch.object(delegate.subprocess, 'run', side_effect=subprocess.TimeoutExpired('reader', 1)), self.assertRaises(delegate.Reject):
+            delegate.read_historical_context(self.env, 1)
+
     def test_older_archive_is_historical_with_explicit_gap_not_current_authority(self):
         receipt = fixture(self.request)
         receipt['output']['archive_index_generated_at'] = '2026-08-01'
