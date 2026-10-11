@@ -28,9 +28,12 @@ export function deriveShellPhase(activity: OpenWebUiActivity): ShellPhase {
 	const action = latest?.action ?? '';
 	const description = String(latest?.description ?? '').toLowerCase();
 
+	const hasActiveTasks = (activity.taskCount ?? 0) > 0;
+	// Status history is retained after a tool run; it must not override current activity.
+	if (!activity.generating && !hasActiveTasks) return 'ready';
+	if (activity.generating && typeof message?.content === 'string' && message.content.trim())
+		return 'composing';
 	if (SEARCH_ACTIONS.has(action) || description.includes('search')) return 'searching';
-	if (activity.generating && String(message?.content ?? '').trim()) return 'composing';
 	if (activity.generating) return 'thinking';
-	if ((activity.taskCount ?? 0) > 0) return 'working';
-	return 'ready';
+	return 'working';
 }
