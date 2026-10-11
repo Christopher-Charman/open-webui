@@ -132,6 +132,13 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(events, ['frontier', 'context'])
         self.assertEqual(receipt['completion_state'], 'BLOCKED')
 
+    def test_existing_objective_gate_is_preserved(self):
+        self.env['owned_objective_completion_gate'] = True
+        receipt, events, _ = self.run_receiver(enabled=False, reader=lambda *a: None)
+        self.assertEqual(receipt['completion_state'], 'COMPLETED')
+        self.assertFalse(receipt['owned_objective_assessment']['can_terminate_as_complete'])
+        self.assertEqual(receipt['owned_objective_assessment']['scope'], 'objective_not_action')
+
     def test_off_preserves_baseline(self):
         receipt, events, read = self.run_receiver(enabled=False, reader=lambda *a: None)
         self.assertEqual(events, ['frontier', 'mcp'])
