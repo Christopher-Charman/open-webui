@@ -7,6 +7,8 @@ name: Release
 on:
   push:
     branches: [main]
+    paths:
+      - package.json
 
 concurrency:
   group: release-${{ github.ref }}
@@ -22,37 +24,60 @@ jobs:
       actions: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Abort if package.json unchanged
-        run: |
-          git diff --cached --diff-filter=d package.json || {
-            echo "package.json not modified — skipping release"
-            exit 1
-          }
+      - name: Verify actual package-version transition
+        id: version_delta
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: bash .github/scripts/version-transition.sh "$BEFORE_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Read version
+        if: steps.version_delta.outputs.changed == 'true'
         id: pkg
         run: echo "version=$(jq -r '.version' package.json)" >> $GITHUB_OUTPUT
 
       - name: Extract release notes from CHANGELOG
+        if: steps.version_delta.outputs.changed == 'true'
         run: |
           VER="${{ steps.pkg.outputs.version }}"
           awk "/^## \[${VER}\]/{found=1; next} /^## \[/{if(found) exit} found{print}" \
             CHANGELOG.md > /tmp/release-notes.md
 
       - name: Publish GitHub release
+        if: steps.version_delta.outputs.changed == 'true'
+        id: publication
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           if gh release view "v${{ steps.pkg.outputs.version }}" &>/dev/null; then
-            echo "Release v${{ steps.pkg.outputs.version }} already exists — skipping creation"
-          else
-            gh release create "v${{ steps.pkg.outputs.version }}" \
-              --title "v${{ steps.pkg.outputs.version }}" \
-              --notes-file /tmp/release-notes.md
+            # The release exists, but this does not prove that Docker dispatch occurred.
+            # GitHub workflow_dispatch has no idempotency key; a blind retry can
+            # launch another ten-image matrix or cancel a running tag build.
+            echo "::error::Release v${{ steps.pkg.outputs.version }} already exists; Docker dispatch state is unresolved. Inspect the exact tag\'s Docker run before manual recovery." >&2
+            exit 1
           fi
+          # Pin release tags to this workflow's triggering commit; never
+          # silently publish a later default-branch revision.
+          set +e
+          git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.pkg.outputs.version }}" >/dev/null 2>&1
+          tag_check_status=$?
+          set -e
+          case "$tag_check_status" in
+            2) ;; # Exact tag absent: creation permitted.
+            0) echo "::error::Tag v${{ steps.pkg.outputs.version }} already exists without a verified release; refuse to repoint or publish." >&2; exit 1 ;;
+            *) echo "::error::Could not verify remote release-tag absence; refusing publication." >&2; exit 1 ;;
+          esac
+          gh release create "v${{ steps.pkg.outputs.version }}" \
+            --target "$GITHUB_SHA" \
+            --title "v${{ steps.pkg.outputs.version }}" \
+            --notes-file /tmp/release-notes.md
+          echo 'created=true' >> "$GITHUB_OUTPUT"
 
       - name: Archive source
+        if: steps.version_delta.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: release-archive
@@ -63,10 +88,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger Docker build
+        if: steps.version_delta.outputs.changed == 'true' && steps.publication.outputs.created == 'true'
         uses: actions/github-script@v8
         with:
           script: |
-            github.rest.actions.createWorkflowDispatch({
+            await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'docker.yaml',

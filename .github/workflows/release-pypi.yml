@@ -5,9 +5,45 @@ on:
     branches:
       - main # or whatever branch you want to use
       - pypi-release
+    paths-ignore:
+      - '.github/**'
+      - 'docs/**'
+      - '**/*.md'
+      - '**/*.mdx'
 
 jobs:
+  version_gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      publish: ${{ steps.check.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Verify main version bump or explicit release branch
+        id: check
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == 'refs/heads/pypi-release' ]]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == 'refs/heads/main' ]]; then
+            bash .github/scripts/version-transition.sh "$BEFORE_SHA" >> "$GITHUB_OUTPUT"
+            if grep -Fxq 'changed=true' "$GITHUB_OUTPUT"; then
+              echo 'publish=true' >> "$GITHUB_OUTPUT"
+            else
+              echo 'publish=false' >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo 'publish=false' >> "$GITHUB_OUTPUT"
+          fi
+
   release:
+    needs: [version_gate]
+    if: needs.version_gate.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
