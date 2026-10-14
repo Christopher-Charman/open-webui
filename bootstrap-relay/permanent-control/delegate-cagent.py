@@ -63,6 +63,10 @@ CONTEXT_TARGET = "runtime:fasthost.powerpc_darwin_org"
 CONTEXT_MAX_BYTES = 32768
 # Owner process configuration only; envelopes cannot enable or redirect this.
 CONTEXT_ENABLED = os.environ.get("CAGENT_ARCHIVE_CONTEXT", "0") == "1"
+MNEMO_PYTHON = WEBAPP / "miniconda" / "bin" / "python3.12"
+MNEMO_READER = WEBAPP / "runtime-domains" / "mnemosyne" / "context.py"
+MNEMO_ENABLED = os.environ.get("CAGENT_MNEMOSYNE_CONTEXT", "0") == "1"
+MNEMO_MAX_BYTES = 65536
 SECRET_PATTERN = re.compile(
     r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|"
     r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|"
@@ -153,6 +157,73 @@ def validate_historical_context(receipt: Any, request: dict[str, Any]) -> dict[s
     encoded = canon(packet)
     if len(encoded) > 18000 or SECRET_PATTERN.search(encoded.decode()):
         raise ValueError("context size or privacy rejection")
+    return packet
+
+
+def read_owned_mnemosyne_context(env: dict[str, Any], timeout: float) -> dict[str, Any]:
+    """Return reviewed derived memory only to the authenticated origin.
+
+    The existing historical reader, CLAIM model, Ledger and MCP arguments
+    are independent: memory is NEVER fed into authority/claim decisions.
+    """
+    if timeout <= 0:
+        raise Reject("mnemo_budget_exhausted", "BLOCKED")
+    until = datetime.fromtimestamp(env["deadline"], timezone.utc).date()
+    request = {
+        "schema": "owned-mnemosyne-context-request-v1",
+        "request_id": "cagent-mnemo-" + sha256_obj(env)[:40],
+        "query": env["objective"][:256],
+        "since": (until - timedelta(days=92)).isoformat(),
+        "until": until.isoformat(),
+        "limit": 3,
+    }
+    try:
+        with tempfile.TemporaryFile() as output:
+            proc = subprocess.run(
+                [str(MNEMO_PYTHON), str(MNEMO_READER)], input=canon(request), stdout=output,
+                stderr=subprocess.DEVNULL, cwd=str(WEBAPP),
+                timeout=min(10.0, timeout), check=False)
+            if proc.returncode or output.tell() > MNEMO_MAX_BYTES:
+                raise ValueError("memory reader failed or exceeded bound")
+            output.seek(0)
+            response = json.loads(output.read(MNEMO_MAX_BYTES + 1))
+        if (not isinstance(response, dict)
+            or response.get("schema") != "owned-mnemosyne-context-v1"
+            or response.get("request_id") != request["request_id"]
+            or response.get("state") != "READ_ONLY_CONTEXT"
+            or response.get("runtime_id") != "fasthost.powerpc_darwin_org"
+            or response.get("domain") != "shared-architecture"
+            or response.get("derived_memory_authority") != "DERIVED_CONTEXT_ONLY"
+            or response.get("current_project_authority_verified") is not False
+            or response.get("automatic_agent_injection") is not False
+            or response.get("memory_ingestion") is not False
+            or response.get("sync_enabled") is not False):
+            raise ValueError("memory authority/effect contract mismatch")
+        records = response.get("mnemosyne")
+        if not isinstance(records, list) or len(records) > 3:
+            raise ValueError("memory bound mismatch")
+        for item in records:
+            if (not isinstance(item, dict)
+                or item.get("kind") != "VERIFIED_DERIVED_MEMORY"
+                or item.get("authority") != "DERIVED_CONTEXT_ONLY"
+                or not isinstance(item.get("record_id"), str)
+                or not TASK_RE.fullmatch(item["record_id"])
+                or not isinstance(item.get("text"), str) or len(item["text"]) > 1600
+                or not isinstance(item.get("source_ref"), str)
+                or not item["source_ref"].startswith("git:")
+                or not isinstance(item.get("source_version"), str)
+                or re.fullmatch(r"[a-f0-9]{40}", item["source_version"]) is None
+                or type(item.get("text_truncated")) is not bool):
+                raise ValueError("memory record provenance invalid")
+        packet = {"schema": "owned-cagent-architecture-memory-v1",
+                  "authority": "DERIVED_CONTEXT_ONLY",
+                  "verified_current_project_authority": False,
+                  "count": len(records), "records": records}
+        encoded = canon(packet)
+        if len(encoded) > 14000 or SECRET_PATTERN.search(encoded.decode("utf-8")):
+            raise ValueError("memory content privacy bound")
+    except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired) as exc:
+        raise Reject("mnemosyne_context_unavailable_or_untrusted", "BLOCKED") from exc
     return packet
 
 
@@ -698,6 +769,8 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
         ledger_calls = 0
         historical_context = None
         context_status = None
+        mnemo_context = None
+        mnemo_context_status = None
         try:
             validated = validate_envelope(env)
             if validated["context_required"] and not CONTEXT_ENABLED:
@@ -763,6 +836,24 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 )
                 if remaining <= 0:
                     raise Reject("expired_after_historical_context", "EXPIRED")
+
+            if MNEMO_ENABLED:
+                # New private context source; it never enters the CLAIM model,
+                # Ledger or MCP tool arguments.
+                try:
+                    mnemo_context = read_owned_mnemosyne_context(
+                        env, min(10.0, remaining / 3))
+                    ledger_evidence.append(
+                        "owned_memory_context_sha256:" + sha256_obj(mnemo_context))
+                    mnemo_context_status = "DERIVED_CONTEXT_ONLY"
+                except Reject:
+                    mnemo_context_status = "UNAVAILABLE_NOT_REQUIRED"
+                remaining = min(
+                    float(validated["wall_seconds"]) - (time.monotonic() - started),
+                    float(validated["deadline"] - int(time.time())),
+                )
+                if remaining <= 0:
+                    raise Reject("expired_after_mnemosyne_context", "EXPIRED")
 
             if validated["claim_mode"] == "deterministic":
                 claim = {
@@ -864,6 +955,10 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             receipt["historical_context"] = historical_context
         if context_status is not None:
             receipt["historical_context_status"] = context_status
+        if mnemo_context is not None:
+            receipt["owned_memory_context"] = mnemo_context
+        if mnemo_context_status is not None:
+            receipt["owned_memory_context_status"] = mnemo_context_status
         # Owned objective completion is separate from this bounded action result.
         # Never accept objective-completion evidence from the untrusted envelope.
         if env.get("owned_objective_completion_gate") is True:
