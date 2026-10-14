@@ -20,3 +20,4 @@ There is no automatic memory injection into every OpenWebUI turn.
 No new public listener, private transcript import, cross-machine sync,
 or external embedding calls. Activation requires live host canary and
 rollback verification; unit-test success alone does not justify enablement.
+\nThe launcher uses the pinned owner Miniconda Python 3.12 interpreter; it does not rely on host /usr/bin/env python3 (Python 3.6.8).\n

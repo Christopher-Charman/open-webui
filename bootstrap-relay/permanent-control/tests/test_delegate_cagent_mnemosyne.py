@@ -23,7 +23,7 @@ class MnemoContextTests(unittest.TestCase):
         self.env=typed_envelope()
     def fake(self, function):
         def call(argv,**kwargs):
-            self.assertEqual(argv,[str(delegate.MNEMO_READER)])
+            self.assertEqual(argv,[str(delegate.MNEMO_PYTHON),str(delegate.MNEMO_READER)])
             self.assertLessEqual(kwargs["timeout"],10)
             r=json.loads(kwargs["input"])
             self.assertEqual(r["query"],self.env["objective"][:256])

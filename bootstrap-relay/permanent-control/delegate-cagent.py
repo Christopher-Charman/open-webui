@@ -63,6 +63,7 @@ CONTEXT_TARGET = "runtime:fasthost.powerpc_darwin_org"
 CONTEXT_MAX_BYTES = 32768
 # Owner process configuration only; envelopes cannot enable or redirect this.
 CONTEXT_ENABLED = os.environ.get("CAGENT_ARCHIVE_CONTEXT", "0") == "1"
+MNEMO_PYTHON = WEBAPP / "miniconda" / "bin" / "python3.12"
 MNEMO_READER = WEBAPP / "runtime-domains" / "mnemosyne" / "context.py"
 MNEMO_ENABLED = os.environ.get("CAGENT_MNEMOSYNE_CONTEXT", "0") == "1"
 MNEMO_MAX_BYTES = 65536
@@ -179,7 +180,7 @@ def read_owned_mnemosyne_context(env: dict[str, Any], timeout: float) -> dict[st
     try:
         with tempfile.TemporaryFile() as output:
             proc = subprocess.run(
-                [str(MNEMO_READER)], input=canon(request), stdout=output,
+                [str(MNEMO_PYTHON), str(MNEMO_READER)], input=canon(request), stdout=output,
                 stderr=subprocess.DEVNULL, cwd=str(WEBAPP),
                 timeout=min(10.0, timeout), check=False)
             if proc.returncode or output.tell() > MNEMO_MAX_BYTES:
