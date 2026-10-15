@@ -12,7 +12,7 @@ import tempfile
 import time
 from pathlib import Path
 
-HOME = Path(os.environ.get("PPC_ACCOUNT", str(Path.home())))
+HOME = Path(os.environ.get('PPC_ACCOUNT', str(Path.home())))
 BASE = HOME / 'webapp'
 CONTROLLER = BASE / 'passenger_wsgi.py'
 MODULE = BASE / 'chatgpt_bootstrap_control.py'
@@ -21,12 +21,12 @@ TOKENFILE = KEYDIR / 'chatgpt-bootstrap.token'
 EXPIREFILE = KEYDIR / 'chatgpt-bootstrap.expires'
 BACKUP = BASE / 'passenger_wsgi.py.pre-chatgpt-bootstrap-control-v1'
 PYC = BASE / 'passenger_wsgi.pyc'
-EXPECTED_USER = os.environ.get("PPC_EXPECTED_USER", pwd.getpwuid(os.getuid()).pw_name)
-EXPECTED_UID = int(os.environ.get("PPC_EXPECTED_UID", str(os.getuid())))
+EXPECTED_USER = os.environ.get('PPC_EXPECTED_USER', pwd.getpwuid(os.getuid()).pw_name)
+EXPECTED_UID = int(os.environ.get('PPC_EXPECTED_UID', str(os.getuid())))
 TTL_SECONDS = 7200
 MARKER = 'CHATGPT_BOOTSTRAP_CONTROL_V1'
 
-MODULE_TEXT = r'''# CHATGPT_BOOTSTRAP_CONTROL_V1
+MODULE_TEXT = r"""# CHATGPT_BOOTSTRAP_CONTROL_V1
 from __future__ import print_function
 import base64
 import hmac
@@ -200,14 +200,15 @@ def handle(environ, start_response):
             "output_b64": base64.b64encode(out).decode("ascii"),
         })
     return _json(start_response, "404 Not Found", {"ok": False, "error": "not_found"})
-'''
+"""
 
 IMPORT_LINE = 'import chatgpt_bootstrap_control as _chatgpt_bootstrap_control\n'
-ROUTE_BLOCK = '''
+ROUTE_BLOCK = """
     # CHATGPT_BOOTSTRAP_CONTROL_V1: temporary machine bootstrap route.
     if path.startswith("/__chatgpt_bootstrap/"):
         return _chatgpt_bootstrap_control.handle(environ, start_response)
-'''
+"""
+
 
 def sha256(path):
     h = hashlib.sha256()
@@ -215,6 +216,7 @@ def sha256(path):
         for chunk in iter(lambda: f.read(1024 * 1024), b''):
             h.update(chunk)
     return h.hexdigest()
+
 
 def atomic_write(path, data, mode):
     path = Path(path)
@@ -227,12 +229,16 @@ def atomic_write(path, data, mode):
         os.chmod(tmpname, mode)
         os.replace(tmpname, str(path))
     finally:
-        try: os.unlink(tmpname)
-        except OSError: pass
+        try:
+            os.unlink(tmpname)
+        except OSError:
+            pass
+
 
 def fail(msg):
     print('ERROR=' + msg)
     raise SystemExit(1)
+
 
 def main():
     print('CHATGPT_BOOTSTRAP_CONTROL_INSTALL_V1')
@@ -275,7 +281,8 @@ def main():
         atomic_write(CONTROLLER, source.encode('utf-8'), 0o704)
         subprocess.check_call(['/usr/bin/python', '-m', 'py_compile', str(CONTROLLER)])
         try:
-            if PYC.exists(): PYC.unlink()
+            if PYC.exists():
+                PYC.unlink()
         except Exception:
             pass
     restart_dir = BASE / 'tmp'
@@ -291,6 +298,7 @@ def main():
     print('public_health=https://powerpc-darwin.org/__chatgpt_bootstrap/health')
     print('public_exec=https://powerpc-darwin.org/__chatgpt_bootstrap/exec')
     print('CHATGPT_BOOTSTRAP_CONTROL=INSTALLED')
+
 
 if __name__ == '__main__':
     main()
