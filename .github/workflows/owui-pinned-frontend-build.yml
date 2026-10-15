@@ -47,8 +47,8 @@ jobs:
           CYPRESS_INSTALL_BINARY: '0'
         run: npm ci --force --no-audit --no-fund
 
-      - name: Test activity state
-        run: npx vitest run src/lib/custom-shell/state/openWebUiState.test.ts --pool=forks --maxWorkers=1 --minWorkers=1
+      - name: Frontend regression tests
+        run: npx vitest run --pool=forks --maxWorkers=1 --minWorkers=1
 
       - name: Production frontend build
         env:
