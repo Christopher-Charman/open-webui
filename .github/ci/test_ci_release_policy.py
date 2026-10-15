@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Regression check for issue #100 CI trigger and version-transition policy."""
+
 import json
 import os
 from pathlib import Path
@@ -54,7 +55,7 @@ class WorkflowPolicy(unittest.TestCase):
         self.assertIn('version_delta.outputs.changed', publisher['if'])
         dispatch = next(s for s in steps if s.get('name') == 'Trigger Docker build')
         self.assertIn('publication.outputs.created', dispatch['if'])
-        self.assertIn("await github.rest.actions.createWorkflowDispatch({", dispatch['with']['script'])
+        self.assertIn('await github.rest.actions.createWorkflowDispatch({', dispatch['with']['script'])
 
     def test_existing_release_requires_explicit_dispatch_reconciliation(self):
         # Use isolated fake gh/git programs: no release or remote mutation.
@@ -64,17 +65,17 @@ class WorkflowPolicy(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
             gh = work / 'gh'
-            gh.write_text('''#!/bin/bash
+            gh.write_text("""#!/bin/bash
 if [[ "$1 $2" == "release view" ]]; then exit "$VIEW_STATUS"; fi
 if [[ "$1 $2" == "release create" ]]; then printf '%s\\n' "$@" > "$CAPTURE_ARGS"; exit 0; fi
 exit 91
-''')
+""")
             gh.chmod(0o755)
             fake_git = work / 'git'
-            fake_git.write_text('''#!/bin/bash
+            fake_git.write_text("""#!/bin/bash
 if [[ "$1" == "ls-remote" ]]; then exit "$TAG_STATUS"; fi
 exit 92
-''')
+""")
             fake_git.chmod(0o755)
             output, args_file = work / 'output', work / 'args'
             scenarios = [
@@ -96,8 +97,9 @@ exit 92
                     GITHUB_SHA=triggering_sha,
                     GITHUB_OUTPUT=str(output),
                 )
-                proc = subprocess.run(['bash', '-e', '-c', body], cwd=work,
-                                      env=environment, capture_output=True, text=True)
+                proc = subprocess.run(
+                    ['bash', '-e', '-c', body], cwd=work, env=environment, capture_output=True, text=True
+                )
                 if expected_success:
                     self.assertEqual(proc.returncode, 0, proc.stderr)
                     self.assertEqual(output.read_text().strip(), 'created=true')
