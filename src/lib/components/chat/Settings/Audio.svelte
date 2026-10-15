@@ -374,19 +374,17 @@
 					label={$i18n.t('Set Voice')}
 					description={$i18n.t('Choose the configured text-to-speech service voice.')}
 				>
-					<input
-						list="voice-list"
-						class={inputClass}
+					<SettingsSelect
 						bind:value={voice}
-						aria-label={$i18n.t('Voice')}
+						className="w-full"
+						ariaLabel={$i18n.t('Voice')}
 						placeholder={$i18n.t('Select a voice')}
-					/>
-
-					<datalist id="voice-list">
-						{#each voices as voice}
-							<option value={voice.id}>{voice.name}</option>
+					>
+						<option value="">{$i18n.t('Default')}</option>
+						{#each voices as _voice}
+							<option value={_voice.id}>{_voice.name}</option>
 						{/each}
-					</datalist>
+					</SettingsSelect>
 				</UserSettingField>
 			</UserSettingSection>
 		{/if}
