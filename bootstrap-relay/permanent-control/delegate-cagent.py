@@ -1177,6 +1177,7 @@ def main() -> int:
             unresolved=['invalid_json:' + type(e).__name__],
             completion_state='FAILED',
         )
+        receipt = assess_objective_receipt('INVALID', receipt)
         sys.stdout.buffer.write(canon(receipt) + b'\n')
         return 2
     receipt = run(env)
