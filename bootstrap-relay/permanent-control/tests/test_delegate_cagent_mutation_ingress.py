@@ -77,6 +77,31 @@ class ReceiverMutationIngressTests(unittest.TestCase):
                 second = receiver.run(env)
                 self.assertEqual(second, receipt)
 
+    def test_objective_assessment_cannot_be_opted_out_by_envelope(self):
+        """Real consuming denial path must attach objective, not only action, state."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with (
+                patch.object(receiver, 'STATE', Path(tmp)),
+                patch.object(receiver, 'open_ledger_session',
+                             side_effect=AssertionError('ledger called')),
+                patch.object(receiver, 'call_local_mcp',
+                             side_effect=AssertionError('effect called')),
+            ):
+                for i, hint in enumerate((None, False, True)):
+                    with self.subTest(hint=hint):
+                        env = envelope(task_id=f'objective-gate-test-{i}-20261018')
+                        if hint is not None:
+                            env['owned_objective_completion_gate'] = hint
+                        receipt = receiver.run(env)
+                        self.assertEqual(receipt['completion_state'], 'BLOCKED')
+                        assessment = receipt.get('owned_objective_assessment')
+                        self.assertIsInstance(assessment, dict)
+                        self.assertIn(assessment['phase'], ('active', 'blocked'))
+                        self.assertIs(assessment['can_terminate_as_complete'], False)
+                        self.assertEqual(assessment['scope'], 'objective_not_action')
+                        self.assertEqual(receipt['resource_usage']['ledger_calls'], 0)
+                        self.assertEqual(receipt['actions'], [])
+
     def test_readonly_tool_admitted_by_destination_filter(self):
         validated = receiver.validate_envelope(envelope('runtime_health'))
         self.assertIsNone(receiver.require_destination_effect_admission(validated))
