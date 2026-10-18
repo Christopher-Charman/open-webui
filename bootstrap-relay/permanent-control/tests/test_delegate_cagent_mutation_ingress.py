@@ -122,8 +122,13 @@ class ReceiverMutationIngressTests(unittest.TestCase):
                     'envelope_sha256': receiver.sha256_obj(env), 'receipt': stored})
                 observed = receiver.run(env)
                 self.assertEqual(observed['completion_state'], 'COMPLETED')
-                self.assertEqual(observed['owned_objective_assessment']['phase'], 'active')
+                # Hosted CI has no owner runtime completion module and must
+                # fail closed instead of claiming an objective is complete.
+                self.assertIn(observed['owned_objective_assessment']['phase'],
+                              ('active', 'blocked'))
                 self.assertIs(observed['owned_objective_assessment']['can_terminate_as_complete'], False)
+                self.assertEqual(observed['owned_objective_assessment']['scope'],
+                                 'objective_not_action')
                 # The receipt change is durable, and a second replay still
                 # performs no original action.
                 persisted = receiver.load_record(record_path)
