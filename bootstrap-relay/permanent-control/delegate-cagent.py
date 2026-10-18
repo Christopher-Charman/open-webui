@@ -776,6 +776,48 @@ def load_record(path: Path) -> dict[str, Any] | None:
         return None
 
 
+def assess_objective_receipt(task_id: str, receipt: dict[str, Any]) -> dict[str, Any]:
+    """Attach an independent fail-closed objective decision to every return.
+
+    Does not re-execute effects. A replay of a legacy unassessed receipt may
+    add this metadata, but cannot convert action success to objective success.
+    """
+    assessed = dict(receipt)
+    try:
+        import importlib.util
+
+        gate_path = WEBAPP / '.local' / 'objective-completion-gate' / 'completion_gate.py'
+        spec = importlib.util.spec_from_file_location('owned_objective_completion_gate', gate_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError('owned_objective_completion_gate_unavailable')
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        assessment = module.assess(
+            module.Objective(objective_id=task_id),
+            module.Evidence(),  # no independently verified objective evidence
+            blocked_operation=assessed.get('completion_state') != 'COMPLETED',
+            independent_action_available=True,
+        )
+        assessed['owned_objective_assessment'] = {
+            'phase': assessment.phase.value,
+            'missing': list(assessment.missing),
+            'next_action': assessment.next_action,
+            'can_terminate_as_complete': False,
+            'scope': 'objective_not_action',
+        }
+    except Exception as exc:
+        assessed['owned_objective_assessment'] = {
+            'phase': 'blocked',
+            'missing': ['trusted_objective_evidence'],
+            'next_action': 'repair_owned_objective_gate',
+            'can_terminate_as_complete': False,
+            'scope': 'objective_not_action',
+            'error_type': type(exc).__name__,
+        }
+    return assessed
+
+
 def run(env: dict[str, Any]) -> dict[str, Any]:
     task_id = env.get('task_id') if isinstance(env.get('task_id'), str) else 'INVALID'
     envelope_sha = sha256_obj(env)
@@ -790,13 +832,24 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
         record = load_record(record_path)
         if record is not None:
             if record.get('envelope_sha256') == envelope_sha:
-                return record['receipt']
-            return make_receipt(
+                # Older receipts can predate mandatory objective assessment.
+                # Upgrade only the receipt metadata under the existing lock.
+                # Never repeat the action or assert objective completion.
+                original = record['receipt']
+                enriched = assess_objective_receipt(task_id, original)
+                if enriched != original:
+                    atomic_json(record_path, {
+                        'envelope_sha256': record['envelope_sha256'],
+                        'receipt': enriched,
+                    })
+                return enriched
+            conflict = make_receipt(
                 task_id,
                 model_id=None,
                 unresolved=['task_id_conflict'],
                 completion_state='FAILED',
             )
+            return assess_objective_receipt(task_id, conflict)
 
         started = time.monotonic()
         model_id: str | None = None
@@ -994,42 +1047,8 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
             receipt['owned_memory_context_status'] = mnemo_context_status
         # Owned objective completion is separate from this bounded action result.
         # Never accept objective-completion evidence from the untrusted envelope.
-        # Every owned action reports objective state, regardless of request hints.
-        # This assessment never converts operation success into objective completion.
-        try:
-            import importlib.util
-
-            gate_path = WEBAPP / '.local' / 'objective-completion-gate' / 'completion_gate.py'
-            spec = importlib.util.spec_from_file_location('owned_objective_completion_gate', gate_path)
-            if spec is None or spec.loader is None:
-                raise RuntimeError('owned_objective_completion_gate_unavailable')
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[spec.name] = module
-            spec.loader.exec_module(module)
-            assessment = module.assess(
-                module.Objective(objective_id=task_id),
-                module.Evidence(),  # no independently verified objective evidence
-                blocked_operation=receipt.get('completion_state') != 'COMPLETED',
-                independent_action_available=True,
-            )
-            receipt['owned_objective_assessment'] = {
-                'phase': assessment.phase.value,
-                'missing': list(assessment.missing),
-                'next_action': assessment.next_action,
-                'can_terminate_as_complete': False,
-                'scope': 'objective_not_action',
-            }
-        except Exception as exc:
-            # Fail closed for objective completion, preserve the action's
-            # authentic result and durable replay record.
-            receipt['owned_objective_assessment'] = {
-                'phase': 'blocked',
-                'missing': ['trusted_objective_evidence'],
-                'next_action': 'repair_owned_objective_gate',
-                'can_terminate_as_complete': False,
-                'scope': 'objective_not_action',
-                'error_type': type(exc).__name__,
-            }
+        # Mandatory even on a fresh action, regardless of request hints.
+        receipt = assess_objective_receipt(task_id, receipt)
         atomic_json(record_path, {'envelope_sha256': envelope_sha, 'receipt': receipt})
         return receipt
 
