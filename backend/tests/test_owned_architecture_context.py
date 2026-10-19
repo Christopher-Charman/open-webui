@@ -1,5 +1,7 @@
 """No-network synthetic tests for the owner-gated architecture prompt adapter."""
 
+import ast
+import importlib
 import asyncio
 import json
 import os
@@ -117,12 +119,13 @@ class OwnedContextCallerTests(unittest.TestCase):
             calls.append((content, append))
             return [*messages, {'role': 'system', 'content': content}]
 
+        misc = importlib.import_module('open_webui.utils.misc')
         with (
             patch(
                 'open_webui.utils.owned_architecture_context.read_for_owner_async',
                 new=AsyncMock(return_value=context),
             ) as reader,
-            patch('open_webui.utils.misc.add_or_update_system_message', side_effect=append_system_message),
+            patch.object(misc, 'add_or_update_system_message', side_effect=append_system_message),
         ):
             result = asyncio.run(append_for_owner(form_data, user))
 
@@ -131,16 +134,53 @@ class OwnedContextCallerTests(unittest.TestCase):
         self.assertEqual(calls, [(context, True)])
         self.assertEqual(result['messages'][-1], {'role': 'system', 'content': context})
 
+    def test_middleware_injects_after_inlet_filters_and_memory(self):
+        backend = Path(__file__).resolve().parents[1]
+        middleware = ast.parse((backend / 'open_webui/utils/middleware.py').read_text())
+        function = next(
+            node
+            for node in ast.walk(middleware)
+            if isinstance(node, ast.AsyncFunctionDef) and node.name == 'process_chat_payload'
+        )
+        calls = []
+        for node in ast.walk(function):
+            if isinstance(node, ast.Await):
+                value = node.value.func if isinstance(node.value, ast.Call) else node.value
+                name = getattr(value, 'id', None) or getattr(value, 'attr', None)
+                if name in {
+                    'process_pipeline_inlet_filter',
+                    'process_filter_functions',
+                    'add_memory_context',
+                    'append_owned_architecture_context',
+                }:
+                    calls.append((node.lineno, name))
+        lines = {
+            name: min(line for line, found in calls if found == name)
+            for name in {
+                'process_pipeline_inlet_filter',
+                'process_filter_functions',
+                'add_memory_context',
+                'append_owned_architecture_context',
+            }
+        }
+        self.assertLess(lines['process_pipeline_inlet_filter'], lines['append_owned_architecture_context'])
+        self.assertLess(lines['process_filter_functions'], lines['append_owned_architecture_context'])
+        self.assertLess(lines['add_memory_context'], lines['append_owned_architecture_context'])
+
+        memory = (backend / 'open_webui/utils/memory.py').read_text()
+        self.assertNotIn('read_for_owner_async', memory)
+
     def test_missing_owner_context_leaves_pre_model_messages_unchanged(self):
         user = SimpleNamespace(id='synthetic-admin-id', role='admin')
         messages = [{'role': 'user', 'content': 'retrieve architecture context'}]
         form_data = {'messages': list(messages)}
+        misc = importlib.import_module('open_webui.utils.misc')
         with (
             patch(
                 'open_webui.utils.owned_architecture_context.read_for_owner_async',
                 new=AsyncMock(return_value=''),
             ),
-            patch('open_webui.utils.misc.add_or_update_system_message') as append,
+            patch.object(misc, 'add_or_update_system_message') as append,
         ):
             result = asyncio.run(append_for_owner(form_data, user))
 

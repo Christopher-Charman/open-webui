@@ -2515,9 +2515,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         except Exception:
             pass
 
-    form_data = append_owned_objective_context(form_data, metadata)
-    form_data = await append_owned_architecture_context(form_data, user)
-
     form_data = await convert_url_images_to_base64(form_data, user=user)
 
     event_emitter = await get_event_emitter(metadata)
@@ -2727,6 +2724,11 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         form_data['messages'],
                         append=True,
                     )
+
+    # Keep owner-derived context out of configurable pipeline/plugin inlet filters.
+    # Add it after ordinary memory processing so each request reads it only once.
+    form_data = append_owned_objective_context(form_data, metadata)
+    form_data = await append_owned_architecture_context(form_data, user)
 
     tool_ids = form_data.pop('tool_ids', None)
     terminal_id = form_data.pop('terminal_id', None)
