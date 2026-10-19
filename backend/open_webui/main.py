@@ -1250,6 +1250,7 @@ async def chat_completion(
             'assistant_message_id': form_data.pop('assistant_message_id', None),
             'session_id': form_data.pop('session_id', None),
             'automation_id': automation_id,
+            'owned_objective_id': form_data.pop('owned_objective_id', None) if user.role == 'admin' else None,
             'folder_id': form_data.pop('folder_id', None),
             'filter_ids': form_data.pop('filter_ids', []),
             'tool_ids': form_data.get('tool_ids', None),
