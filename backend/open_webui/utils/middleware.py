@@ -122,6 +122,10 @@ from open_webui.utils.misc import (
     set_last_user_message_content,
     strip_empty_content_blocks,
 )
+from open_webui.utils.owned_objective_admission import (
+    append_owned_objective_context,
+    bind_owned_objective_readback,
+)
 from open_webui.utils.payload import apply_params_to_form_data, apply_system_prompt_to_body, resolve_system_prompt
 from open_webui.utils.plugin import load_function_module_by_id
 from open_webui.utils.response import merge_usage, normalize_usage
@@ -2363,56 +2367,7 @@ async def connect_mcp_server(
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    # Optional owned-runtime objective context. This does not grant mutation authority.
-    # Bound to authenticated admin and an operator-set host-side executable; default off.
-    if metadata.get("owned_objective_id") is not None:
-        import subprocess as _objective_subprocess
-
-        _objective_id = metadata["owned_objective_id"]
-        _objective_ingress = os.environ.get("OWNED_OBJECTIVE_INGRESS_PATH", "")
-        if getattr(user, "role", None) != "admin":
-            raise HTTPException(status_code=403, detail="OWNED_OBJECTIVE_ADMIN_REQUIRED")
-        if (
-            not isinstance(_objective_id, str)
-            or re.fullmatch(r"[a-z0-9][a-z0-9-]{2,127}", _objective_id) is None
-        ):
-            raise HTTPException(status_code=400, detail="OWNED_OBJECTIVE_ID_INVALID")
-        if not _objective_ingress or not os.path.isfile(_objective_ingress) or not os.access(_objective_ingress, os.X_OK):
-            raise HTTPException(status_code=503, detail="OWNED_OBJECTIVE_INGRESS_NOT_BOUND")
-        try:
-            _objective_result = await asyncio.to_thread(
-                _objective_subprocess.run,
-                [_objective_ingress],
-                input=json.dumps({"objective_id": _objective_id}),
-                text=True,
-                capture_output=True,
-                check=False,
-                timeout=3,
-            )
-            _objective_readback = json.loads(_objective_result.stdout[:16384])
-            if not isinstance(_objective_readback, dict):
-                raise ValueError('OWNER_OBJECTIVE_READBACK_INVALID')
-            _objective_decision = _objective_readback.get('decision') or {}
-            if not isinstance(_objective_decision, dict):
-                raise ValueError('OWNER_OBJECTIVE_READBACK_INVALID')
-            if (
-                _objective_result.returncode not in (0, 3)
-                or _objective_readback.get("objective_id") != _objective_id
-                or _objective_readback.get("state") not in {"OBJECTIVE_COMPLETE", "CONTINUATION_REQUIRED"}
-            ):
-                raise ValueError("OWNER_OBJECTIVE_READBACK_INVALID")
-        except (OSError, ValueError, TypeError, _objective_subprocess.TimeoutExpired):
-            raise HTTPException(status_code=503, detail="OWNED_OBJECTIVE_READBACK_UNAVAILABLE")
-        metadata["owned_objective_admission"] = {
-            "objective_id": _objective_id,
-            "state": _objective_readback["state"],
-            "next_action": _objective_readback.get("next_action"),
-            "next_requirement_id": _objective_decision.get("next_requirement_id"),
-            "handoff_status": _objective_readback.get("handoff_status", "NOT_DISPATCHED"),
-            "execution_attempted": _objective_readback.get("execution_attempted") is True,
-            "objective_complete": _objective_readback.get("objective_complete") is True,
-            "mutation_authority": False,
-        }
+    await bind_owned_objective_readback(metadata, user)
     # Ensure chat_id is always a string — external API clients may omit it.
     if not isinstance(metadata.get('chat_id'), str):
         metadata['chat_id'] = ''
@@ -2559,22 +2514,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         except Exception:
             pass
 
-    # Deliver the verified owner *status* to the model, not only to metadata.
-    # This remains explicitly non-authoritative and cannot dispatch by itself.
-    _objective_context = metadata.get("owned_objective_admission")
-    if isinstance(_objective_context, dict):
-        _owner_status = {
-            key: _objective_context.get(key)
-            for key in ("objective_id", "state", "next_action", "next_requirement_id",
-                        "handoff_status", "execution_attempted", "objective_complete")
-        }
-        form_data["messages"] = add_or_update_system_message(
-            "[OWNED OBJECTIVE STATUS READBACK; NOT EXECUTION AUTHORITY]\n"
-            + json.dumps(_owner_status, sort_keys=True)
-            + "\nThis does not prove execution or completion. Continue only through independently admitted owner tools and readback.",
-            form_data.get("messages", []),
-            append=True,
-        )
+    form_data = append_owned_objective_context(form_data, metadata)
 
     form_data = await convert_url_images_to_base64(form_data, user=user)
 
