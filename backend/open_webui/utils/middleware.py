@@ -2563,9 +2563,9 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         "handoff_status", "execution_attempted", "objective_complete")
         }
         form_data["messages"] = add_or_update_system_message(
-            "[OWNED OBJECTIVE STATUS READBACK; NOT EXECUTION AUTHORITY]\\n"
+            "[OWNED OBJECTIVE STATUS READBACK; NOT EXECUTION AUTHORITY]\n"
             + json.dumps(_owner_status, sort_keys=True)
-            + "\\nThis does not prove execution or completion. Continue only through independently admitted owner tools and readback.",
+            + "\nThis does not prove execution or completion. Continue only through independently admitted owner tools and readback.",
             form_data.get("messages", []),
             append=True,
         )
