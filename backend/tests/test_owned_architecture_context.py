@@ -8,10 +8,11 @@ import sys
 import tempfile
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from open_webui.utils.owned_architecture_context import (
+    append_for_owner,
     owner_enabled,
     read_for_owner,
     read_for_owner_async,
@@ -103,6 +104,49 @@ class OwnedContextTests(unittest.TestCase):
     def test_async_owner_gate(self):
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(asyncio.run(read_for_owner_async('test', self.user)), '')
+
+
+class OwnedContextCallerTests(unittest.TestCase):
+    def test_verified_context_is_added_to_pre_model_messages(self):
+        user = SimpleNamespace(id='synthetic-admin-id', role='admin')
+        form_data = {'messages': [{'role': 'user', 'content': 'retrieve architecture context'}]}
+        context = '[Source-verified architecture context: DERIVED_CONTEXT_ONLY]'
+        calls = []
+
+        def append_system_message(content, messages, append=False):
+            calls.append((content, append))
+            return [*messages, {'role': 'system', 'content': content}]
+
+        with (
+            patch(
+                'open_webui.utils.owned_architecture_context.read_for_owner_async',
+                new=AsyncMock(return_value=context),
+            ) as reader,
+            patch('open_webui.utils.misc.add_or_update_system_message', side_effect=append_system_message),
+        ):
+            result = asyncio.run(append_for_owner(form_data, user))
+
+        self.assertIs(result, form_data)
+        self.assertEqual(reader.await_args.args, ('retrieve architecture context', user))
+        self.assertEqual(calls, [(context, True)])
+        self.assertEqual(result['messages'][-1], {'role': 'system', 'content': context})
+
+    def test_missing_owner_context_leaves_pre_model_messages_unchanged(self):
+        user = SimpleNamespace(id='synthetic-admin-id', role='admin')
+        messages = [{'role': 'user', 'content': 'retrieve architecture context'}]
+        form_data = {'messages': list(messages)}
+        with (
+            patch(
+                'open_webui.utils.owned_architecture_context.read_for_owner_async',
+                new=AsyncMock(return_value=''),
+            ),
+            patch('open_webui.utils.misc.add_or_update_system_message') as append,
+        ):
+            result = asyncio.run(append_for_owner(form_data, user))
+
+        self.assertIs(result, form_data)
+        self.assertEqual(result['messages'], messages)
+        append.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -122,6 +122,7 @@ from open_webui.utils.misc import (
     set_last_user_message_content,
     strip_empty_content_blocks,
 )
+from open_webui.utils.owned_architecture_context import append_for_owner as append_owned_architecture_context
 from open_webui.utils.owned_objective_admission import (
     append_owned_objective_context,
     bind_owned_objective_readback,
@@ -2515,6 +2516,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
             pass
 
     form_data = append_owned_objective_context(form_data, metadata)
+    form_data = await append_owned_architecture_context(form_data, user)
 
     form_data = await convert_url_images_to_base64(form_data, user=user)
 

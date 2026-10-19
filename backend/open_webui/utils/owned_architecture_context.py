@@ -139,3 +139,15 @@ async def read_for_owner_async(query: str, user) -> str:
     if not owner_enabled(user):
         return ''
     return await asyncio.to_thread(read_for_owner, query, user)
+
+
+async def append_for_owner(form_data: dict, user) -> dict:
+    """Append bounded owner memory to the messages consumed by the next model call."""
+    from open_webui.utils.misc import add_or_update_system_message, get_last_user_message
+
+    messages = form_data.get('messages', [])
+    query = get_last_user_message(messages)
+    context = await read_for_owner_async(query, user)
+    if context:
+        form_data['messages'] = add_or_update_system_message(context, messages, append=True)
+    return form_data
