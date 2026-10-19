@@ -838,10 +838,13 @@ def run(env: dict[str, Any]) -> dict[str, Any]:
                 original = record['receipt']
                 enriched = assess_objective_receipt(task_id, original)
                 if enriched != original:
-                    atomic_json(record_path, {
-                        'envelope_sha256': record['envelope_sha256'],
-                        'receipt': enriched,
-                    })
+                    atomic_json(
+                        record_path,
+                        {
+                            'envelope_sha256': record['envelope_sha256'],
+                            'receipt': enriched,
+                        },
+                    )
                 return enriched
             conflict = make_receipt(
                 task_id,

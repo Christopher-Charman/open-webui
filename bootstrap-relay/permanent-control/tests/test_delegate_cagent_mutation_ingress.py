@@ -82,10 +82,8 @@ class ReceiverMutationIngressTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with (
                 patch.object(receiver, 'STATE', Path(tmp)),
-                patch.object(receiver, 'open_ledger_session',
-                             side_effect=AssertionError('ledger called')),
-                patch.object(receiver, 'call_local_mcp',
-                             side_effect=AssertionError('effect called')),
+                patch.object(receiver, 'open_ledger_session', side_effect=AssertionError('ledger called')),
+                patch.object(receiver, 'call_local_mcp', side_effect=AssertionError('effect called')),
             ):
                 for i, hint in enumerate((None, False, True)):
                     with self.subTest(hint=hint):
@@ -107,28 +105,22 @@ class ReceiverMutationIngressTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with (
                 patch.object(receiver, 'STATE', Path(tmp)),
-                patch.object(receiver, 'open_ledger_session',
-                             side_effect=AssertionError('ledger must not reopen')),
-                patch.object(receiver, 'call_local_mcp',
-                             side_effect=AssertionError('MCP must not reexecute')),
+                patch.object(receiver, 'open_ledger_session', side_effect=AssertionError('ledger must not reopen')),
+                patch.object(receiver, 'call_local_mcp', side_effect=AssertionError('MCP must not reexecute')),
             ):
                 env = envelope(task_id='legacy-objective-replay-20261018')
-                stored = receiver.make_receipt(
-                    env['task_id'], model_id=None, completion_state='COMPLETED')
+                stored = receiver.make_receipt(env['task_id'], model_id=None, completion_state='COMPLETED')
                 self.assertNotIn('owned_objective_assessment', stored)
                 record_path, _ = receiver.state_paths(env['task_id'])
                 record_path.parent.mkdir(parents=True, exist_ok=True)
-                receiver.atomic_json(record_path, {
-                    'envelope_sha256': receiver.sha256_obj(env), 'receipt': stored})
+                receiver.atomic_json(record_path, {'envelope_sha256': receiver.sha256_obj(env), 'receipt': stored})
                 observed = receiver.run(env)
                 self.assertEqual(observed['completion_state'], 'COMPLETED')
                 # Hosted CI has no owner runtime completion module and must
                 # fail closed instead of claiming an objective is complete.
-                self.assertIn(observed['owned_objective_assessment']['phase'],
-                              ('active', 'blocked'))
+                self.assertIn(observed['owned_objective_assessment']['phase'], ('active', 'blocked'))
                 self.assertIs(observed['owned_objective_assessment']['can_terminate_as_complete'], False)
-                self.assertEqual(observed['owned_objective_assessment']['scope'],
-                                 'objective_not_action')
+                self.assertEqual(observed['owned_objective_assessment']['scope'], 'objective_not_action')
                 # The receipt change is durable, and a second replay still
                 # performs no original action.
                 persisted = receiver.load_record(record_path)
@@ -140,18 +132,14 @@ class ReceiverMutationIngressTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with (
                 patch.object(receiver, 'STATE', Path(tmp)),
-                patch.object(receiver, 'open_ledger_session',
-                             side_effect=AssertionError('ledger must not open')),
-                patch.object(receiver, 'call_local_mcp',
-                             side_effect=AssertionError('MCP must not execute')),
+                patch.object(receiver, 'open_ledger_session', side_effect=AssertionError('ledger must not open')),
+                patch.object(receiver, 'call_local_mcp', side_effect=AssertionError('MCP must not execute')),
             ):
                 base = envelope(task_id='objective-conflict-task-20261018')
-                prior = receiver.make_receipt(base['task_id'], model_id=None,
-                                              completion_state='COMPLETED')
+                prior = receiver.make_receipt(base['task_id'], model_id=None, completion_state='COMPLETED')
                 path, _ = receiver.state_paths(base['task_id'])
                 path.parent.mkdir(parents=True, exist_ok=True)
-                receiver.atomic_json(path, {
-                    'envelope_sha256': receiver.sha256_obj(base), 'receipt': prior})
+                receiver.atomic_json(path, {'envelope_sha256': receiver.sha256_obj(base), 'receipt': prior})
                 changed = dict(base, objective='A different request with same task ID')
                 conflict = receiver.run(changed)
                 self.assertIn('task_id_conflict', conflict['unresolved'])
