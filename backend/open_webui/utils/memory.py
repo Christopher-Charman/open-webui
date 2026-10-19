@@ -10,7 +10,6 @@ from open_webui.models.config import Config
 from open_webui.models.memories import Memories
 from open_webui.utils.json_codec import JSONCodec
 from open_webui.utils.misc import add_or_update_system_message, get_content_from_message
-from open_webui.utils.owned_architecture_context import read_for_owner_async
 
 log = logging.getLogger(__name__)
 
@@ -369,11 +368,6 @@ async def add_memory_context(request, form_data: dict, user, model: dict | None 
         if sections[key]:
             ordered = sorted(sections[key], key=lambda memory: (memory.casefold(), memory))
             parts.append(f'[{title}]\n' + '\n'.join(f'- {memory}' for memory in ordered))
-    # Owner-controlled, source-verified derived context is presentation-only:
-    # it never modifies Memories, grants authority, or reaches local MCP tools.
-    architecture_context = await read_for_owner_async(query, user)
-    if architecture_context:
-        parts.insert(0, architecture_context)
     if not parts:
         return form_data
 
