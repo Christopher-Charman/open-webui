@@ -2380,7 +2380,8 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         if not _objective_ingress or not os.path.isfile(_objective_ingress) or not os.access(_objective_ingress, os.X_OK):
             raise HTTPException(status_code=503, detail="OWNED_OBJECTIVE_INGRESS_NOT_BOUND")
         try:
-            _objective_result = _objective_subprocess.run(
+            _objective_result = await asyncio.to_thread(
+                _objective_subprocess.run,
                 [_objective_ingress],
                 input=json.dumps({"objective_id": _objective_id}),
                 text=True,
@@ -2389,6 +2390,11 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                 timeout=3,
             )
             _objective_readback = json.loads(_objective_result.stdout[:16384])
+            if not isinstance(_objective_readback, dict):
+                raise ValueError('OWNER_OBJECTIVE_READBACK_INVALID')
+            _objective_decision = _objective_readback.get('decision') or {}
+            if not isinstance(_objective_decision, dict):
+                raise ValueError('OWNER_OBJECTIVE_READBACK_INVALID')
             if (
                 _objective_result.returncode not in (0, 3)
                 or _objective_readback.get("objective_id") != _objective_id
@@ -2401,7 +2407,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
             "objective_id": _objective_id,
             "state": _objective_readback["state"],
             "next_action": _objective_readback.get("next_action"),
-            "next_requirement_id": (_objective_readback.get("decision") or {}).get("next_requirement_id"),
+            "next_requirement_id": _objective_decision.get("next_requirement_id"),
             "handoff_status": _objective_readback.get("handoff_status", "NOT_DISPATCHED"),
             "execution_attempted": _objective_readback.get("execution_attempted") is True,
             "objective_complete": _objective_readback.get("objective_complete") is True,
