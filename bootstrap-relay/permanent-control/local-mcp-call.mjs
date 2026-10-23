@@ -1,14 +1,20 @@
 import fs from 'node:fs';
-import { Client } from 'file:///home/storage/781/4477781/user/webapp/runtime-domains/local-mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js';
-import { StdioClientTransport, getDefaultEnvironment } from 'file:///home/storage/781/4477781/user/webapp/runtime-domains/local-mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const root='/home/storage/781/4477781/user/webapp';
+const account=process.env.PPC_ACCOUNT || os.homedir();
+const root=process.env.PPC_WEBAPP_ROOT || path.join(account,'webapp');
+const sdkRoot=path.join(root,'runtime-domains','local-mcp','node_modules','@modelcontextprotocol','sdk','dist','esm','client');
+const { Client }=await import(pathToFileURL(path.join(sdkRoot,'index.js')).href);
+const { StdioClientTransport, getDefaultEnvironment }=await import(pathToFileURL(path.join(sdkRoot,'stdio.js')).href);
+
 const req=JSON.parse(fs.readFileSync(0,'utf8')||'{}');
 const transport=new StdioClientTransport({
-  command:root+'/bin/local-mcp',
+  command:path.join(root,'bin','local-mcp'),
   args:[],
   cwd:root,
-  env:{...getDefaultEnvironment(),HOME:'/home/storage/781/4477781/user'}
+  env:{...getDefaultEnvironment(),HOME:account}
 });
 const client=new Client({name:'powerpc-control-v1',version:'1.0.0'},{capabilities:{}});
 try {
