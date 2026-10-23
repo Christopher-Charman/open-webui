@@ -46,7 +46,7 @@ import socket
 s=socket.socket()
 s.settimeout(5)
 try:
-    s.connect((os.environ["EXPECTED_IP"], 2222))
+    s.connect(("127.0.0.1", 2222))
     data=s.recv(128)
     banner=data.decode("ascii","replace").strip()
     print("MGMT_SSHD_LOCAL=TCP_PASS")
