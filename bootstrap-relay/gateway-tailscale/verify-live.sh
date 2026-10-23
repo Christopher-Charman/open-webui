@@ -38,14 +38,15 @@ printf '%s\n' "$serve"
 echo "TAILSCALE_SERVE_END"
 
 printf '%s\n' "$serve" | grep -F "tcp://${EXPECTED_IP}:22" >/dev/null
-printf '%s\n' "$serve" | grep -F "tcp://127.0.0.1:2222" >/dev/null
+printf '%s\n' "$serve" | grep -F "tcp://${EXPECTED_IP}:2222" >/dev/null
 
-python3 - <<'PY'
+EXPECTED_IP="$EXPECTED_IP" python3 - <<'PY'
+import os
 import socket
 s=socket.socket()
 s.settimeout(5)
 try:
-    s.connect(("127.0.0.1",2222))
+    s.connect((os.environ["EXPECTED_IP"], 2222))
     data=s.recv(128)
     banner=data.decode("ascii","replace").strip()
     print("MGMT_SSHD_LOCAL=TCP_PASS")
