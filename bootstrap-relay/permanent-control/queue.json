@@ -77,6 +77,17 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ownerport-provider-dir-20261023-01",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "o9CEJ9Q6mFxapKZaktrY-pjwZQD-1VdU5lIqrdXqpI6P6spCFsq6Lh4D3e2rr2cvYQoUs209bMBN46SBKJ1_dtAd8Z3bWFOrp50sPS3CvmD6KeFX44KIfjwJLUrqXyencNsbZY8X24tIklH6FgMaA8X-hAayxVC9nFq7waT9Dkj1zUIFF7w3bD7-pXpa4r-3FLFNmj4b0AWhaLJm6xVxO_ina1TOre1zxojqWnbenkEX-s__gqwx4E5UBC-KpUVSzQgBH4X1qDKPtKlg4ustzhqWO1rxrHeY213rZVkim7if-bHvUc9K0wThfjIrm9hsFFBeiVLgQrYpnh7RUk0PkgzMzLGnDJO2bE2k_h0V3_P2T-zqae7u9o7hjxZOu0bm8bNgfS3vGK-DfzEK71IitaQzpDolpnmCC7YgXkl7O7L1GY_EfWJPcfWgu8iG1TPDJ9B1pv3pXiP-he2anXArrM8-AR9vtzEzR87MKx3-qivc7cWATA",
+      "created_at": 1792718396,
+      "expires_at": 1792718696,
+      "nonce_b64": "EtTj-WXBmFT1vxH4",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAgnxeZEoCyGmBFX8GYKbHKm8njtafHZc9_eRqFU91Q3g",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "ppc-ownerport-read-provider-20261023-01",
+      "version": 1
     }
   ],
   "version": 1
