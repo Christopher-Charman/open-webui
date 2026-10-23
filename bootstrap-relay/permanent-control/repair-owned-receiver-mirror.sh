@@ -16,7 +16,11 @@ fail() {
   exit 1
 }
 
-[ "$(id -u)" = "2257347" ] || fail "runtime_identity"
+EXPECTED_UID="${PPC_EXPECTED_UID:?set PPC_EXPECTED_UID from the private owner registry}"
+EXPECTED_HOSTNAME="${PPC_EXPECTED_HOSTNAME:?set PPC_EXPECTED_HOSTNAME from the private owner registry}"
+case "$EXPECTED_UID" in ""|*[!0-9]*) fail "invalid_expected_uid" ;; esac
+[ -n "$EXPECTED_HOSTNAME" ] || fail "invalid_expected_hostname"
+[ "$(id -u)" = "$EXPECTED_UID" ] || fail "runtime_identity"
 [ -d "$WEBAPP" ] || fail "webapp_missing"
 [ -d "$STATE" ] || fail "receiver_state_missing"
 [ -x "$SERVICE" ] || fail "receiver_service_missing"
@@ -58,14 +62,14 @@ fi
 deadline=$(( $(date +%s) + 60 ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
   if [ -s "$MIRROR/identity.json" ] && [ -s "$MIRROR/status.json" ]; then
-    if "$PY" - "$MIRROR/identity.json" "$MIRROR/status.json" <<'PY'
+    if "$PY" - "$MIRROR/identity.json" "$MIRROR/status.json" "$EXPECTED_UID" "$EXPECTED_HOSTNAME" <<'PY'
 import json,sys,time
 i=json.load(open(sys.argv[1]))
 s=json.load(open(sys.argv[2]))
 assert i.get("protocol")=="powerpc-control-v1"
 assert i.get("runtime_id")=="fasthost.powerpc"
-assert i.get("uid")==2257347
-assert i.get("hostname")=="hp3-rr-1024747.hostingp3.local"
+assert i.get("uid")==int(sys.argv[3])
+assert i.get("hostname")==sys.argv[4]
 assert i.get("state")=="ready"
 assert s.get("protocol")=="powerpc-control-v1"
 assert s.get("runtime_id")=="fasthost.powerpc"
@@ -94,12 +98,12 @@ if [ "$LOCAL_CODE" != "200" ]; then
   rm -f "$STATE/mirror-local-check.$$"
   fail "local_static_http_$LOCAL_CODE"
 fi
-"$PY" - "$STATE/mirror-local-check.$$" <<'PY' || fail "local_static_not_identity"
+"$PY" - "$STATE/mirror-local-check.$" "$EXPECTED_UID" <<'PY' || fail "local_static_not_identity"
 import json,sys
 d=json.load(open(sys.argv[1]))
 assert d.get("protocol")=="powerpc-control-v1"
 assert d.get("runtime_id")=="fasthost.powerpc"
-assert d.get("uid")==2257347
+assert d.get("uid")==int(sys.argv[2])
 PY
 rm -f "$STATE/mirror-local-check.$$"
 
