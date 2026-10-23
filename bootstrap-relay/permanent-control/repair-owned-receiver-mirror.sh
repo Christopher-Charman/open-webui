@@ -21,6 +21,7 @@ EXPECTED_HOSTNAME="${PPC_EXPECTED_HOSTNAME:?set PPC_EXPECTED_HOSTNAME from the p
 case "$EXPECTED_UID" in ""|*[!0-9]*) fail "invalid_expected_uid" ;; esac
 [ -n "$EXPECTED_HOSTNAME" ] || fail "invalid_expected_hostname"
 [ "$(id -u)" = "$EXPECTED_UID" ] || fail "runtime_identity"
+[ "$(hostname)" = "$EXPECTED_HOSTNAME" ] || fail "runtime_hostname"
 [ -d "$WEBAPP" ] || fail "webapp_missing"
 [ -d "$STATE" ] || fail "receiver_state_missing"
 [ -x "$SERVICE" ] || fail "receiver_service_missing"
@@ -68,8 +69,7 @@ i=json.load(open(sys.argv[1]))
 s=json.load(open(sys.argv[2]))
 assert i.get("protocol")=="powerpc-control-v1"
 assert i.get("runtime_id")=="fasthost.powerpc"
-assert i.get("uid")==int(sys.argv[3])
-assert i.get("hostname")==sys.argv[4]
+assert not any(key in i for key in ("uid", "hostname", "user"))
 assert i.get("state")=="ready"
 assert s.get("protocol")=="powerpc-control-v1"
 assert s.get("runtime_id")=="fasthost.powerpc"
@@ -103,7 +103,7 @@ import json,sys
 d=json.load(open(sys.argv[1]))
 assert d.get("protocol")=="powerpc-control-v1"
 assert d.get("runtime_id")=="fasthost.powerpc"
-assert d.get("uid")==int(sys.argv[2])
+assert not any(key in d for key in ("uid", "hostname", "user"))
 PY
 rm -f "$STATE/mirror-local-check.$$"
 
