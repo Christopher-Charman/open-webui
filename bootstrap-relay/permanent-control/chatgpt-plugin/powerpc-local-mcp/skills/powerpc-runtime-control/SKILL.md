@@ -1,53 +1,23 @@
 ---
 name: powerpc-runtime-control
-description: Inspect, diagnose, maintain, deploy to, or operate the powerpc-darwin.org managed runtime, including ChatGPT and iOS access through its existing owned GitHub transport and bounded MCP tools.
+description: Inspect, diagnose, maintain, deploy to, or operate the powerpc-darwin.org managed runtime, through the existing owner-approved transport and bounded MCP tools.
 ---
 
-# powerpc-darwin.org runtime control
+# PowerPC runtime control (public-safe reference)
 
-The existing primary route is the owned GitHub queue and encrypted HTTPS result transport into the runtime's local MCP. Read [Owned connection and execution](references/owned-connection.md) before sending a request. Use the authenticated GitHub connector for repository writes. Prefer the encrypted direct-origin route when execution and HTTPS are available; the Actions adapter is only for public-safe operations.
+Use the registered, authenticated owner executor and private owner registry to select the operation-specific runtime route. Public GitHub source is not a credential store or runtime identity registry. Keep public repository carriers restricted to approved public-safe operations and summary-only results.
 
-Do not assume a native server named `powerpc-control` is exposed: this package intentionally has empty MCP declarations. The saved optional Secure MCP Tunnel is not a prerequisite for the working owned route. Do not use Desktop Commander, rebuild the receiver, or invent a public MCP URL merely because native MCP tools are absent. Resolve the owned route first and report the specific missing capability if this session cannot use it.
+This source package intentionally declares no native MCP endpoint. Resolve available authenticated owner executors from the private capability registry, rather than inventing a public MCP endpoint or interpreting the absence of one transport as a lack of runtime access.
 
 ## Runtime identity
 
-Treat these as the durable identity binding for PowerPC runtime work:
-
-- canonical project/runtime label: `fasthost.powerpc_darwin_org`
-- legacy wire protocol runtime identifier: `fasthost.powerpc` (preserved for protocol compatibility)
-- Unix identity: `csh3280350`
-- UID: `2257347`
-- GID: `500`
-- namespace root: ``<POWERPC_NAMESPACE_ROOT>``
-- webapp root: ``PPC_WEBAPP_ROOT``
-- managed runtime host: `hp3-rr-1024747.hostingp3.local`
-- provider SSH gateway host: `hp3-ssh.hostingp3.local`
-
-Public/provider service addresses:
-
-- web: `77.68.64.13`
-- SSH: `77.68.64.22:22`
-- SFTP: `77.68.64.36`
-- FTP/content: `213.171.193.5`
-
-Known loopback services on the managed runtime:
-
-- OpenWebUI: `127.0.0.1:18080`
-- broker: `127.0.0.1:18081`
-- TTS: `127.0.0.1:18082`
-- Pocket: `127.0.0.1:18083`
-- Open Terminal: `127.0.0.1:9900`
-- terminal gateway: `127.0.0.1:19900`
-- Ollama: `127.0.0.1:11434`
-- g4f MCP lineage: `127.0.0.1:8765/mcp`
-- historical bootstrap-control lineage: `127.0.0.1:18765`
-- historical internal management sshd: `127.0.0.1:2222`
+Resolve the exact runtime, user/UID, filesystem namespace, host, service addresses and protocol identifiers from the current **private owner registry** for each operation. This public fork intentionally contains no owner runtime identifiers or addresses. A runtime label alone is not authorization or liveness evidence.
 
 ## Existing MCP tool contract
 
-The canonical local MCP is:
+The canonical local MCP is resolved from the private owner registry:
 
-``PPC_WEBAPP_ROOT/bin/local-mcp``
+`PPC_WEBAPP_ROOT/bin/local-mcp`
 
 Expected bounded tools:
 
@@ -71,26 +41,12 @@ For execution-sensitive work:
 
 Live runtime evidence governs mutable process/service state. Git and Shared Library are durable history/currentness projections, not substitutes for fresh runtime evidence when the current state matters.
 
-## Namespace separation: Evenio
+## Namespace separation: other runtimes
 
-Never infer that shared Fasthost front doors imply shared identity or authority.
-
-Evenio is independent:
-
-- runtime label: `fasthost.evenio`
-- Unix identity: `csh3461042`
-- UID: `2283676`
-- GID: `500`
-- namespace root: ``<EVENIO_NAMESPACE_ROOT>``
-- managed application node may also be `hp3-rr-1024747.hostingp3.local`, but under the separate Unix identity
-- SSH gateway: `77.68.64.22:22` -> `hp3-ssh.hostingp3.local`
-- content/transfer endpoint: `213.171.193.5`
-- local inference endpoint: `127.0.0.1:11435`
-
-The SSH gateway namespace is not the Passenger managed-runtime namespace. Matching provider hosts or public service IPs never merge PowerPC and Evenio credentials, filesystems, mutable runtime state, or project authority.
+Never infer shared identity or authority from a common provider, host or public address. Each runtime's identity, namespace, endpoints and credentials belong in the private owner registry and must be freshly resolved for the requested operation.
 
 ## Security and secrets
 
-This plugin contains no API keys, bearer tokens, cookies, passwords, or private keys. Repository write authorization gates the owned queue; commands and receipts use the existing X25519/AES-GCM and Ed25519 protocol. Keep private origin context and decrypted output out of Git, public artifacts and chat unless the user needs the output. The public Actions adapter stores plaintext requests and results: never send sensitive data through it. Optional tunnel credentials remain on the host.
+Do not publish credentials, private keys, runtime identifiers, decrypted output, control receipts, or provider-specific endpoints through this fork. Preserve the established encryption and signature protections on the authorised private transport. Public repository carriers must use their separately verified public-safe and summary-only contract. Secrets and mutable runtime bindings remain with the private owner.
 
 If a request would expose or rotate a secret, perform only the minimum necessary operation and never echo secret material back into chat unless the user explicitly asks for the secret itself.
