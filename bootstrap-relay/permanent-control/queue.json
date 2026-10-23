@@ -55,6 +55,28 @@
       "target_runtime_id": "fasthost.powerpc",
       "task_id": "ppc-ownerport-path-inventory-20261023-01",
       "version": 1
+    },
+    {
+      "ciphertext_b64": "85qd0XKxeqIXYaI4pzBbMyxSPehQJqK0RlVlngR4Ta1vQ_aQVBUNN3xAxjKrfqNpi_wDFj4W9xucrQux56PRlNutLzjFzryNKTfNMRsRybB72uGknHazDjStq3-2bw5hKLhd8EDVgPJ9cpUozeImR6GO9QfCDOwC3r1gXWhASYH-MZ2l4RhyxrcBThKa-EMYeY94yB9hynpGQITBGEBeRdy5mOxyk8sETUlQ2SzxYrUpXM_lRSS2Rj9nS_QyqnUIAYbzAVRyuAjbJQH6MQZGWxp_LPXD0RlIlM969ty63VN53PYITWVqx-OqZEXc9yrfPbOO_mUBKCGVP-WiaEjtHSVDnHi8LWVyUMRUVazyPfG32zl2ukc_yd755-5KK7w3YqouLJZaaFAFRzJu7Y5rKQ",
+      "created_at": 1792718352,
+      "expires_at": 1792718652,
+      "nonce_b64": "Q3rXZYiXsroaXG1g",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAq03fCrM2RIMxerdme9tJzLftcdN0qIY4NxkdYwUT3k4",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "ppc-ownerport-owner-dir-20261023-01",
+      "version": 1
+    },
+    {
+      "ciphertext_b64": "gVVeDnbNe7_H3VMNuNaIc81GxIDdoJYXN55d8sWEmoNTVbl0JMPTCbay6QTmywBRQfAuoZFMveliM-8qk9mv-UakBAVthDMGpyauTrELqbsiXD8J2qIIqiZVsBz64A8y5rLhBJhX5lw3v2gup3_vA9WvVmn4o9cz_0iy9apoBZ8lwLU8DBFIIcmyHoaOY98HXzTb5KSd2VJtAJasFS-zXGQA6zhuaJsRc5rAPmDBz7we9WqREKdvb_ZhOx7PDALBWnab3FPW6qGm8-EO5LpuncMQIyy44c3ExcKYsMizwAt01FdgYW0woN-429h1muBXZD4eeKyZsWcyWftbOyZ6tWT-L_AIDueJPtAjHt6ALUeIAo1F8zq3XMtaX2Q5GoS78EbasqquYP0EPe7W0foqgWfDmuIeiBUxqnV12X7VfkOKRMfJNYMvMv3M6ZXDncM",
+      "created_at": 1792718352,
+      "expires_at": 1792718652,
+      "nonce_b64": "yli6RVkxO2MaANE-",
+      "origin_ephemeral_x25519_spki_b64": "MCowBQYDK2VuAyEAZM99BYebjaKoDKJgM4yhVWOdfnntfo509q2ZQXxaKW8",
+      "protocol": "powerpc-control-v1",
+      "target_runtime_id": "fasthost.powerpc",
+      "task_id": "ppc-ownerport-provider-dir-20261023-01",
+      "version": 1
     }
   ],
   "version": 1
