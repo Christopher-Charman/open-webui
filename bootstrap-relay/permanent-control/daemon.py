@@ -24,8 +24,8 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 PROTOCOL = "powerpc-control-v1"
 VERSION = 1
 RUNTIME_ID = "fasthost.powerpc"
-EXPECTED_UID = 2257347
-ACCOUNT = Path(os.environ.get("PPC_CONTROL_ACCOUNT", "/home/storage/781/4477781/user"))
+EXPECTED_UID = int(os.environ.get("PPC_CONTROL_EXPECTED_UID", str(os.getuid())))
+ACCOUNT = Path(os.environ.get("PPC_CONTROL_ACCOUNT", str(Path.home())))
 WEBAPP = Path(os.environ.get("PPC_CONTROL_WEBAPP", str(ACCOUNT / "webapp")))
 HTDOCS = Path(os.environ.get("PPC_CONTROL_HTDOCS", str(ACCOUNT / "htdocs")))
 STATE = Path(os.environ.get("PPC_CONTROL_STATE", str(ACCOUNT / ".powerpc-control-v1")))
@@ -161,9 +161,6 @@ def _identity_payload(xpriv, spriv, started_at: int, heartbeat_at: int) -> dict[
         "protocol": PROTOCOL,
         "version": VERSION,
         "runtime_id": RUNTIME_ID,
-        "user": "csh3280350",
-        "uid": os.getuid(),
-        "hostname": socket.gethostname(),
         "state": "ready",
         "started_at": started_at,
         "heartbeat_at": heartbeat_at,
@@ -416,7 +413,7 @@ def _failure_result(task: dict[str, Any], error: str, completion_state: str = "F
         "task_id": task.get("task_id"),
         "executor_identity": {
             "runtime_id": RUNTIME_ID,
-            "user": "csh3280350",
+            "user": os.environ.get("USER", ""),
             "uid": os.getuid(),
             "hostname": socket.gethostname(),
         },
@@ -480,7 +477,7 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection) 
                 "task_id": task_id,
                 "executor_identity": {
                     "runtime_id": RUNTIME_ID,
-                    "user": "csh3280350",
+                    "user": os.environ.get("USER", ""),
                     "uid": os.getuid(),
                     "hostname": socket.gethostname(),
                 },
