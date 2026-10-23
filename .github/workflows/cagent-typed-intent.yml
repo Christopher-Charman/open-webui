@@ -1,0 +1,36 @@
+name: cagent-typed-intent
+
+on:
+  pull_request:
+    paths:
+      - "bootstrap-relay/permanent-control/delegate-cagent.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_mutation_ingress.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_context.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_mnemosyne.py"
+      - ".github/workflows/cagent-typed-intent.yml"
+  push:
+    branches: [main]
+    paths:
+      - "bootstrap-relay/permanent-control/delegate-cagent.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_ledger.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_typed_intent.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_mutation_ingress.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_context.py"
+      - "bootstrap-relay/permanent-control/tests/test_delegate_cagent_mnemosyne.py"
+
+permissions:
+  contents: read
+
+jobs:
+  typed-intent-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run C-Agent admission and destination-mutation regressions
+        run: |
+          python -m unittest discover -s bootstrap-relay/permanent-control/tests -p 'test_delegate_cagent*.py' -v

@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 const account=process.env.PPC_ACCOUNT || os.homedir();
 const root=process.env.PPC_WEBAPP_ROOT || path.join(account,'webapp');
-const sdkRoot=path.join(root,"runtime-domains","local-mcp",'node_modules','@modelcontextprotocol','sdk','dist','esm','client');
+const sdkRoot=path.join(root,'runtime-domains','local-mcp','node_modules','@modelcontextprotocol','sdk','dist','esm','client');
 const { Client }=await import(pathToFileURL(path.join(sdkRoot,'index.js')).href);
 const { StdioClientTransport, getDefaultEnvironment }=await import(pathToFileURL(path.join(sdkRoot,'stdio.js')).href);
 

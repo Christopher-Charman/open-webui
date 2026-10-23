@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WEBAPP_ROOT="/home/storage/781/4477781/user/webapp"
+WEBAPP_ROOT="${PPC_WEBAPP_ROOT:-${HOME}/webapp}"
 TS="$WEBAPP_ROOT/tailscale"
 BIN="$TS/bin"
 STATE="$TS/state"

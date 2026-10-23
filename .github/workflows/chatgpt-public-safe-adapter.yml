@@ -1,0 +1,39 @@
+name: ChatGPT public-safe carrier contract
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "bootstrap-relay/permanent-control/chatgpt-owned-control-run.sh"
+      - "bootstrap-relay/permanent-control/public_safe_request.py"
+      - "bootstrap-relay/permanent-control/receipt_record.py"
+      - "bootstrap-relay/permanent-control/tests/**"
+      - ".github/workflows/chatgpt-public-safe-adapter.yml"
+  push:
+    branches: [main]
+    paths:
+      - "bootstrap-relay/permanent-control/chatgpt-owned-control-run.sh"
+      - "bootstrap-relay/permanent-control/public_safe_request.py"
+      - "bootstrap-relay/permanent-control/receipt_record.py"
+      - "bootstrap-relay/permanent-control/tests/**"
+      - ".github/workflows/chatgpt-public-safe-adapter.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  public-safe-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install crypto regression dependency
+        run: python -m pip install --disable-pip-version-check cryptography
+      - name: Bash syntax
+        run: bash -n bootstrap-relay/permanent-control/chatgpt-owned-control-run.sh
+      - name: Public-safe and identity / delegation regressions
+        env:
+          PYTHONPATH: bootstrap-relay/permanent-control
+        run: python -m unittest discover -s bootstrap-relay/permanent-control/tests -p 'test_*.py' -v

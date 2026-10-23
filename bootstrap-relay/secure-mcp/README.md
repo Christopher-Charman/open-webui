@@ -2,7 +2,7 @@
 
 This installer binds OpenAI's official Secure MCP Tunnel client directly to the existing PowerPC stdio MCP:
 
-`/home/storage/781/4477781/user/webapp/bin/local-mcp`
+`<POWERPC_WEBAPP_ROOT>/bin/local-mcp`
 
 It does not expose the MCP server publicly and does not create a second local MCP.
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 WEBAPP="$ACCOUNT/webapp"
 CONTROL="$WEBAPP/bin/powerpc-control"
 TAILSCALE_SERVICE="$WEBAPP/bin/tailscale-service"

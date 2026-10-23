@@ -2,7 +2,7 @@
 set -euo pipefail
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 BASE="$ACCOUNT/webapp"
 STATE="$BASE/.secure-mcp-tunnel"
 BIN="$BASE/bin/tunnel-client"

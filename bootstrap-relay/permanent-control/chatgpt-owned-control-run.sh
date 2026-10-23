@@ -9,6 +9,9 @@ QUEUE="$DIR/queue.json"
 CLIENT="$DIR/origin-client.py"
 IDENTITY_URL="${PPC_CHATGPT_IDENTITY_URL:-https://www.powerpc-darwin.org/static/powerpc-control-v1/identity.json}"
 RESULT_BASE="${PPC_CHATGPT_RESULT_BASE:-https://www.powerpc-darwin.org/static/powerpc-control-v1/results}"
+# Trust anchor from the accepted owned-control binding; never derive it from
+# the fetched identity or a request. Rotation requires authenticated evidence.
+EXPECTED_FINGERPRINT="SHA256:l7SrivQiY5uhxagCB/L9SR7IvXH3EKcP33HdEgeBaRI"
 WORK="$(mktemp -d)"
 IDENTITY="$WORK/identity.json"
 ENVELOPE="$WORK/envelope.json"
@@ -53,29 +56,7 @@ on_exit() {
 }
 trap on_exit EXIT INT TERM
 
-python3 - "$REQUEST" <<'PY'
-import json,re,sys
-p=sys.argv[1]
-d=json.load(open(p,encoding="utf-8"))
-assert d.get("schema")=="chatgpt-owned-control-request-v1"
-rid=d.get("request_id")
-assert isinstance(rid,str) and re.fullmatch(r"[A-Za-z0-9._-]{8,80}",rid)
-assert d.get("target_runtime_id")=="fasthost.powerpc_darwin_org"
-tool=d.get("tool")
-assert tool in {"runtime_health","read_text","list_dir","terminal_exec"}
-args=d.get("arguments")
-assert isinstance(args,dict)
-auth=d.get("authority_ceiling","read_only")
-assert auth in {"read_only","bounded_operator"}
-if tool=="terminal_exec":
-    assert auth=="bounded_operator"
-elif auth!="read_only":
-    raise AssertionError("non-terminal tools require read_only")
-ttl=d.get("ttl",300)
-assert isinstance(ttl,int) and 30 <= ttl <= 600
-visibility=d.get("result_visibility","summary")
-assert visibility in {"summary","public_plaintext"}
-PY
+python3 "$DIR/public_safe_request.py" "$REQUEST"
 
 REQUEST_ID="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'"))["request_id"])')"
 TOOL="$(python3 -c 'import json; print(json.load(open("'"$REQUEST"'"))["tool"])')"
@@ -95,7 +76,7 @@ fi
 
 curl -fsSL --connect-timeout 10 --max-time 30 "$IDENTITY_URL?t=$(date +%s%N)" -o "$IDENTITY"
 
-PREP_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --task-id "$TASK_ID"   --tool "$TOOL"   --arguments "$ARGS"   --authority "$AUTHORITY"   --ttl "$TTL"   --output "$ENVELOPE"   --context "$CONTEXT")"
+PREP_OUT="$(python3 "$CLIENT" prepare   --identity "$IDENTITY"   --expected-fingerprint "$EXPECTED_FINGERPRINT"   --task-id "$TASK_ID"   --tool "$TOOL"   --arguments "$ARGS"   --authority "$AUTHORITY"   --ttl "$TTL"   --output "$ENVELOPE"   --context "$CONTEXT")"
 FP="$(printf '%s\n' "$PREP_OUT" | sed -n 's/^IDENTITY_FINGERPRINT=//p' | tail -n1)"
 [ -n "$FP" ] || { echo "identity verification failed" >&2; exit 1; }
 echo "::add-mask::$FP"

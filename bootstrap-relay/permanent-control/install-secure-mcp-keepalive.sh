@@ -2,7 +2,7 @@
 set -eu
 umask 077
 
-ACCOUNT="/home/storage/781/4477781/user"
+ACCOUNT="${PPC_ACCOUNT:-${HOME}}"
 WEBAPP="$ACCOUNT/webapp"
 STATE="$WEBAPP/.secure-mcp-keepalive"
 TARGET="$WEBAPP/bin/secure-mcp-keepalive"

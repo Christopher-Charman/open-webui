@@ -5,9 +5,9 @@ description: Inspect, diagnose, maintain, deploy to, or operate the powerpc-darw
 
 # PowerPC runtime control (public-safe reference)
 
-The existing primary route is the owned GitHub queue and encrypted HTTPS result transport into the runtime's local MCP. Read [Owned connection and execution](references/owned-connection.md) before sending a request. Use the authenticated GitHub connector for repository writes. Prefer the encrypted direct-origin route when execution and HTTPS are available; the Actions adapter is only for public-safe operations.
+Use the registered, authenticated owner executor and private owner registry to select the operation-specific runtime route. Public GitHub source is not a credential store or runtime identity registry. Keep public repository carriers restricted to approved public-safe operations and summary-only results.
 
-Do not assume an owner-specific native server is exposed: this package intentionally has empty MCP declarations. The saved optional Secure MCP Tunnel is not a prerequisite for the working owned route. Do not use Desktop Commander, rebuild the receiver, or invent a public MCP URL merely because native MCP tools are absent. Resolve the owned route first and report the specific missing capability if this session cannot use it.
+This source package intentionally declares no native MCP endpoint. Resolve available authenticated owner executors from the private capability registry, rather than inventing a public MCP endpoint or interpreting the absence of one transport as a lack of runtime access.
 
 ## Runtime identity
 
@@ -17,7 +17,7 @@ Resolve the exact runtime, user/UID, filesystem namespace, host, service address
 
 The canonical local MCP is resolved from the private owner registry:
 
-``PPC_WEBAPP_ROOT/bin/local-mcp``
+`PPC_WEBAPP_ROOT/bin/local-mcp`
 
 Expected bounded tools:
 
@@ -47,6 +47,6 @@ Never infer shared identity or authority from a common provider, host or public 
 
 ## Security and secrets
 
-This plugin contains no API keys, bearer tokens, cookies, passwords, or private keys. Repository write authorization gates the owned queue; commands and receipts use the existing X25519/AES-GCM and Ed25519 protocol. Keep private origin context and decrypted output out of Git, public artifacts and chat unless the user needs the output. The public Actions adapter stores plaintext requests and results: never send sensitive data through it. Optional tunnel credentials remain on the host.
+Do not publish credentials, private keys, runtime identifiers, decrypted output, control receipts, or provider-specific endpoints through this fork. Preserve the established encryption and signature protections on the authorised private transport. Public repository carriers must use their separately verified public-safe and summary-only contract. Secrets and mutable runtime bindings remain with the private owner.
 
 If a request would expose or rotate a secret, perform only the minimum necessary operation and never echo secret material back into chat unless the user explicitly asks for the secret itself.

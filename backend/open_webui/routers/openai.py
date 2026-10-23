@@ -45,6 +45,7 @@ from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.headers import get_custom_headers, include_user_info_headers
 from open_webui.utils.json_codec import JSONCodec
 from open_webui.utils.misc import convert_logit_bias_input_to_json
+from open_webui.utils.llamacpp_model_aliases import expand_llamacpp_model_aliases
 from open_webui.utils.model_ids import strip_provider_model_prefix
 from open_webui.utils.payload import (
     apply_model_params_to_body_openai,
@@ -740,6 +741,21 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
             if not isinstance(model_list, list):
                 # Catch non-list responses
                 model_list = []
+
+            # The native llama.cpp router publishes canonical IDs and the
+            # original Ollama identities in its per-model aliases field.
+            # Preserve those identities as discoverable provider models,
+            # without altering any other provider or manually pinned catalog.
+            if (
+                provider == 'llama.cpp'
+                and connection_type == 'local'
+                and not api_config.get('model_ids')
+            ):
+                model_list = expand_llamacpp_model_aliases(model_list)
+                if isinstance(response, list):
+                    response[:] = model_list
+                else:
+                    response['data'] = model_list
 
             for model in model_list:
                 # Remove name key if its value is None #16689
