@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="/home/storage/781/4477781/user/webapp"
+ROOT="${PPC_WEBAPP_ROOT:-${HOME}/webapp}"
 TS="$ROOT/tailscale"
 BIN="$TS/bin"
 STATE="$TS/state"
 SOCK="$STATE/tailscaled.sock"
 PIDFILE="$STATE/tailscaled.pid"
-EXPECTED_IP="100.118.16.80"
+EXPECTED_IP="${POWERPC_TAILSCALE_IP:?set POWERPC_TAILSCALE_IP from private deployment configuration}"
 
 test -x "$BIN/tailscale"
 test -x "$BIN/tailscaled"
@@ -37,7 +37,7 @@ echo "TAILSCALE_SERVE_BEGIN"
 printf '%s\n' "$serve"
 echo "TAILSCALE_SERVE_END"
 
-printf '%s\n' "$serve" | grep -F "tcp://100.118.16.80:22" >/dev/null
+printf '%s\n' "$serve" | grep -F "tcp://${EXPECTED_IP}:22" >/dev/null
 printf '%s\n' "$serve" | grep -F "tcp://127.0.0.1:2222" >/dev/null
 
 python3 - <<'PY'
