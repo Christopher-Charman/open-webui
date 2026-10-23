@@ -18,8 +18,8 @@ Treat these as the durable identity binding for PowerPC runtime work:
 - Unix identity: `csh3280350`
 - UID: `2257347`
 - GID: `500`
-- namespace root: `/home/storage/781/4477781/user`
-- webapp root: `/home/storage/781/4477781/user/webapp`
+- namespace root: ``<POWERPC_NAMESPACE_ROOT>``
+- webapp root: ``PPC_WEBAPP_ROOT``
 - managed runtime host: `hp3-rr-1024747.hostingp3.local`
 - provider SSH gateway host: `hp3-ssh.hostingp3.local`
 
@@ -47,7 +47,7 @@ Known loopback services on the managed runtime:
 
 The canonical local MCP is:
 
-`/home/storage/781/4477781/user/webapp/bin/local-mcp`
+``PPC_WEBAPP_ROOT/bin/local-mcp``
 
 Expected bounded tools:
 
@@ -81,7 +81,7 @@ Evenio is independent:
 - Unix identity: `csh3461042`
 - UID: `2283676`
 - GID: `500`
-- namespace root: `/home/storage/368/4910368/user`
+- namespace root: ``<EVENIO_NAMESPACE_ROOT>``
 - managed application node may also be `hp3-rr-1024747.hostingp3.local`, but under the separate Unix identity
 - SSH gateway: `77.68.64.22:22` -> `hp3-ssh.hostingp3.local`
 - content/transfer endpoint: `213.171.193.5`
