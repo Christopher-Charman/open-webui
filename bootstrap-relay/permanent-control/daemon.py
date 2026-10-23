@@ -200,9 +200,7 @@ def _identity_payload(xpriv, spriv, started_at: int, heartbeat_at: int) -> dict[
         'protocol': PROTOCOL,
         'version': VERSION,
         'runtime_id': RUNTIME_ID,
-        'user': os.environ.get('USER', 'unknown'),
-        'uid': os.getuid(),
-        'hostname': socket.gethostname(),
+        # Public signed discovery excludes operating-system identity.
         'state': 'ready',
         'started_at': started_at,
         'heartbeat_at': heartbeat_at,
