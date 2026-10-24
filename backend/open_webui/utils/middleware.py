@@ -3467,7 +3467,7 @@ async def pause_for_tool_approval(chat_id: str, message_id: str, output: list[di
             elif item.get('status') == 'in_progress':
                 item['status'] = 'queued'
 
-    await Chats.upsert_message_to_chat_by_id_and_message_id(
+    saved_message = await Chats.upsert_message_to_chat_by_id_and_message_id(
         chat_id,
         message_id,
         {
@@ -3489,6 +3489,8 @@ async def pause_for_tool_approval(chat_id: str, message_id: str, output: list[di
         },
         touch=False,
     )
+    if saved_message is None:
+        raise RuntimeError('Pending tool approval could not be saved; unapproved tool calls were not executed.')
 
 
 def get_response_data(response):
