@@ -3305,6 +3305,16 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
                 'arguments': item.get('arguments', '{}'),
             },
         }
+        item['status'] = 'in_progress'
+        saved_message = await Chats.upsert_message_to_chat_by_id_and_message_id(
+            chat_id,
+            message_id,
+            {'done': False, 'output': output},
+            touch=False,
+        )
+        if saved_message is None:
+            raise RuntimeError('Approved tool call could not be persisted; the tool was not executed.')
+
         result = await execute_tool_call_for_output(
             request,
             form_data,
@@ -3335,6 +3345,14 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
                 **({'embeds': result.get('embeds')} if result.get('embeds') else {}),
             }
         )
+        saved_message = await Chats.upsert_message_to_chat_by_id_and_message_id(
+            chat_id,
+            message_id,
+            {'done': False, 'output': output},
+            touch=False,
+        )
+        if saved_message is None:
+            raise RuntimeError('Tool call result could not be persisted after execution; the outcome may be unknown.')
         changed = True
 
     if changed:
