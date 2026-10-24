@@ -5628,15 +5628,40 @@ async def streaming_chat_response_handler(response, ctx):
                             )
 
                     tool_approval_mode = metadata.get('params', {}).get('tool_approval_mode', 'full')
-                    if (
-                        response_tool_calls
-                        and tool_approval_mode == 'ask'
-                        and is_saved_chat_id(metadata.get('chat_id'))
-                        and metadata.get('message_id')
-                    ):
+                    if response_tool_calls and tool_approval_mode == 'ask':
+                        chat_id = metadata.get('chat_id')
+                        message_id = metadata.get('message_id')
+                        if not is_saved_chat_id(chat_id) or not message_id:
+                            call_ids = {tool_call.get('id', '') for tool_call in response_tool_calls}
+                            for item in output:
+                                if item.get('type') == 'function_call' and item.get('call_id') in call_ids:
+                                    item['status'] = 'failed'
+                            output.append(
+                                {
+                                    'type': 'message',
+                                    'id': output_id('msg'),
+                                    'status': 'completed',
+                                    'role': 'assistant',
+                                    'content': [
+                                        {
+                                            'type': 'output_text',
+                                            'text': (
+                                                'Tool approval is enabled, but this conversation cannot store '
+                                                'the pending approval yet. No tool was run. Save the conversation '
+                                                'and retry.'
+                                            ),
+                                        }
+                                    ],
+                                }
+                            )
+                            await event_emitter(
+                                {'type': 'chat:completion', 'data': {'output': full_output()}}
+                            )
+                            return
+
                         await pause_for_tool_approval(
-                            metadata['chat_id'],
-                            metadata['message_id'],
+                            chat_id,
+                            message_id,
                             full_output(),
                             form_data,
                             metadata,
