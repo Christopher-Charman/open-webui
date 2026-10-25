@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 import time
@@ -126,7 +127,15 @@ def prepare(args: argparse.Namespace) -> int:
     ttl = int(args.ttl)
     if ttl < 1 or ttl > 3600:
         raise ValueError('ttl must be 1..3600 seconds')
+    due_at = int(args.due_at) if args.due_at is not None else created_at
+    occurrence_id = args.occurrence_id or task_id
     expires_at = int(args.expires_at) if args.expires_at is not None else created_at + ttl
+    if not created_at <= due_at < expires_at <= created_at + 3600:
+        raise ValueError('due_at must be within the task creation and expiry window')
+    if not (wall_now - 120 <= created_at <= wall_now + 120):
+        raise ValueError('created_at must be within two minutes of current time')
+    if not isinstance(occurrence_id, str) or not re.fullmatch(r'[A-Za-z0-9._-]{8,128}', occurrence_id):
+        raise ValueError('occurrence_id must be 8..128 safe characters')
 
     origin_priv = x25519.X25519PrivateKey.generate()
     origin_pub_der = origin_priv.public_key().public_bytes(
@@ -142,6 +151,8 @@ def prepare(args: argparse.Namespace) -> int:
         'target_runtime_id': RUNTIME_ID,
         'created_at': created_at,
         'expires_at': expires_at,
+        'occurrence_id': occurrence_id,
+        'due_at': due_at,
         'origin_ephemeral_x25519_spki_b64': b64e(origin_pub_der),
     }
     aad = canon(task)
@@ -175,6 +186,8 @@ def prepare(args: argparse.Namespace) -> int:
         'identity_fingerprint': fingerprint,
         'created_at': created_at,
         'expires_at': expires_at,
+        'occurrence_id': occurrence_id,
+        'due_at': due_at,
     }
 
     out = Path(args.output)
@@ -255,6 +268,8 @@ def main() -> int:
     a.add_argument('--allowed', help='comma-separated capability profile; defaults to requested tool')
     a.add_argument('--ttl', type=int, default=600)
     a.add_argument('--created-at', type=int)
+    a.add_argument('--due-at', type=int, help='scheduled occurrence due time as Unix seconds')
+    a.add_argument('--occurrence-id', help='deterministic identity for this scheduled occurrence')
     a.add_argument('--expires-at', type=int)
     a.add_argument('--expected-fingerprint')
     a.add_argument('--negative-contract-test', action='store_true')

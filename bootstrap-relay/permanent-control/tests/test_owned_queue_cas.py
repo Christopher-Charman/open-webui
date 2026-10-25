@@ -50,6 +50,29 @@ class QueueCASContractTests(unittest.TestCase):
         self.assertFalse(changed)
         self.assertEqual(repeated, updated)
 
+    def test_scheduled_occurrence_is_bound_and_unique(self):
+        now = int(time.time())
+        sample = task('scheduled')
+        sample.update(occurrence_id='occurrence-scheduled-01',
+                      due_at=now + 30, expires_at=now + 300)
+        self.assertEqual(cas.validate_encrypted_envelope(sample), sample['task_id'])
+        updated, changed = cas.next_queue(self.empty, sample)
+        self.assertTrue(changed)
+        duplicate = {**task('scheduled-duplicate'),
+                     'occurrence_id': sample['occurrence_id'],
+                     'due_at': sample['due_at']}
+        with self.assertRaisesRegex(cas.QueueError, 'occurrence_id_conflict'):
+            cas.next_queue(updated, duplicate)
+
+    def test_scheduled_occurrence_rejects_invalid_due_time(self):
+        now = int(time.time())
+        sample = task('bad-due')
+        sample.update(occurrence_id='occurrence-bad-due', due_at=now + 30)
+        for due_at in (True, sample['expires_at'], sample['created_at'] - 1):
+            with self.subTest(due_at=due_at):
+                with self.assertRaisesRegex(cas.QueueError, 'occurrence_due_at_invalid'):
+                    cas.validate_encrypted_envelope({**sample, 'due_at': due_at})
+
     def test_same_id_changed_ciphertext_conflicts(self):
         sample = task()
         updated, _ = cas.next_queue(self.empty, sample)

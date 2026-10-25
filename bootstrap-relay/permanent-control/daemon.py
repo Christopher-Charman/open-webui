@@ -16,6 +16,8 @@ import time
 import urllib.request
 from pathlib import Path
 from typing import Any
+from owned_occurrence_ledger import OccurrenceLedger
+from owned_scheduler_occurrence_binding import dispatch_due_occurrence
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519, x25519
@@ -402,6 +404,9 @@ def _aad(task: dict[str, Any]) -> bytes:
         'expires_at': task.get('expires_at'),
         'origin_ephemeral_x25519_spki_b64': task.get('origin_ephemeral_x25519_spki_b64'),
     }
+    if 'occurrence_id' in task or 'due_at' in task:
+        fields['occurrence_id'] = task.get('occurrence_id')
+        fields['due_at'] = task.get('due_at')
     return _canon(fields)
 
 
@@ -436,6 +441,15 @@ def _validate_outer(task: dict[str, Any]) -> tuple[bool, str]:
         return False, 'expired'
     if expires > now + MAX_FUTURE_SECONDS:
         return False, 'expiry_too_far'
+    if 'occurrence_id' in task or 'due_at' in task:
+        occurrence_id, due_at = task.get('occurrence_id'), task.get('due_at')
+        if (not isinstance(occurrence_id, str) or not (8 <= len(occurrence_id) <= 128)
+                or not all(c.isalnum() or c in '._-' for c in occurrence_id)):
+            return False, 'bad_occurrence_id'
+        if type(due_at) is not int or due_at < created or due_at >= expires:
+            return False, 'bad_due_at'
+        if due_at > now + MAX_FUTURE_SECONDS:
+            return False, 'due_at_too_far'
     for key in ('origin_ephemeral_x25519_spki_b64', 'nonce_b64', 'ciphertext_b64'):
         if not isinstance(task.get(key), str) or not task[key]:
             return False, 'missing_' + key
@@ -627,111 +641,270 @@ def _commit_task_final_state(
     return False
 
 
-def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection) -> None:
+def _readback_published_result(task: dict[str, Any], xpriv, spriv) -> dict[str, Any] | None:
+    """Independently verify the signed, encrypted destination result file."""
+    task_id = task.get('task_id')
+    if not isinstance(task_id, str):
+        return None
+    path = RESULTS / (task_id + '.json')
+    try:
+        raw = path.read_bytes()
+        if not raw or len(raw) > 262144:
+            return None
+        envelope = json.loads(raw.decode('utf-8'))
+        if not isinstance(envelope, dict):
+            return None
+        signed = dict(envelope)
+        signature = signed.pop('signature_b64')
+        spriv.public_key().verify(_b64d(signature), _canon(signed))
+        if (signed.get('protocol') != PROTOCOL or signed.get('version') != VERSION
+                or signed.get('task_id') != task_id
+                or signed.get('target_runtime_id') != RUNTIME_ID
+                or signed.get('kind') != 'result'):
+            return None
+        _payload, shared = _decrypt_task(task, xpriv)
+        aad = _canon({'protocol': PROTOCOL, 'version': VERSION, 'task_id': task_id,
+                      'target_runtime_id': RUNTIME_ID, 'kind': 'result'})
+        plain = AESGCM(_derive(shared, task_id, b'result')).decrypt(
+            _b64d(signed['nonce_b64']), _b64d(signed['ciphertext_b64']), aad)
+        receipt = json.loads(plain.decode('utf-8'))
+        if (not isinstance(receipt, dict) or receipt.get('task_id') != task_id
+                or receipt.get('completion_state') not in
+                ('COMPLETED', 'FAILED', 'BLOCKED', 'NEEDS_AUTHORITY', 'EXPIRED')):
+            return None
+        digest = hashlib.sha256(raw).hexdigest()
+        return {'path': str(path), 'receipt_ref': str(path) + '#sha256=' + digest,
+                'receipt': receipt}
+    except Exception:
+        return None
+
+
+def _reconcile_occurrence(task, xpriv, spriv, conn, occurrence_ledger, owner_id,
+                          occurrence_id, status):
+    try:
+        now = int(time.time())
+        if status.get('state') == 'CLAIMED' and status.get('lease_until', now + 1) <= now:
+            status = occurrence_ledger.claim(
+                occurrence_id, owner_id, now, lease_seconds=300)
+        if status.get('state') != 'UNKNOWN':
+            return False
+        observed = _readback_published_result(task, xpriv, spriv)
+        if not observed:
+            return False
+        reconciled = occurrence_ledger.reconcile(
+            occurrence_id, observed['receipt_ref'],
+            lambda _oid, ref: ref == observed['receipt_ref'])
+        if reconciled.get('changed') is True:
+            state = observed['receipt'].get('completion_state', 'FAILED').lower()
+            _commit_task_final_state(conn, task['task_id'], state, observed['path'])
+            _log('occurrence_reconciled=' + occurrence_id + ' state=' + state)
+            return True
+    except Exception as exc:
+        _log('occurrence_reconcile_error=' + occurrence_id + ':' + type(exc).__name__)
+    return False
+
+
+def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
+                  occurrence_ledger: OccurrenceLedger | None = None) -> None:
     valid, why = _validate_outer(task)
     task_id = task.get('task_id') if isinstance(task.get('task_id'), str) else ''
     if not task_id:
         return
     if not valid and why != 'expired':
         return
+    use_occurrence = 'occurrence_id' in task and 'due_at' in task
+    occurrence_id = task.get('occurrence_id') if use_occurrence else task_id
+    due_at = task.get('due_at') if use_occurrence else int(task.get('created_at', 0))
+    owner_id = RUNTIME_ID + ':' + str(os.getuid())
 
     envelope_hash = hashlib.sha256(_canon(task)).hexdigest()
     try:
-        row = conn.execute('SELECT envelope_sha256,state FROM tasks WHERE task_id=?', (task_id,)).fetchone()
+        row = conn.execute('SELECT envelope_sha256,state FROM tasks WHERE task_id=?',
+                           (task_id,)).fetchone()
     except sqlite3.Error as exc:
         _log('db_claim_read_unresolved=' + task_id + ':' + type(exc).__name__)
         return
+    resume_existing = False
     if row:
-        if row[0] == envelope_hash:
+        if row[0] != envelope_hash:
+            try:
+                _payload, shared = _decrypt_task(task, xpriv)
+                receipt = _failure_result(task, 'task_id_conflict', 'FAILED')
+                _publish_result(task, shared, spriv, receipt)
+            except Exception:
+                pass
+            _log('task_conflict=' + task_id)
             return
-        try:
-            _payload, shared = _decrypt_task(task, xpriv)
-            receipt = _failure_result(task, 'task_id_conflict', 'FAILED')
-            _publish_result(task, shared, spriv, receipt)
-        except Exception:
-            pass
-        _log('task_conflict=' + task_id)
-        return
+        if not use_occurrence:
+            return
+        status = occurrence_ledger.inspect(occurrence_id)
+        if status.get('state') == 'COMPLETE':
+            observed = _readback_published_result(task, xpriv, spriv)
+            if observed:
+                _commit_task_final_state(
+                    conn, task_id,
+                    observed['receipt'].get('completion_state', 'FAILED').lower(),
+                    observed['path'])
+            return
+        if status.get('state') == 'UNKNOWN' or status.get('state') == 'CLAIMED':
+            if _reconcile_occurrence(task, xpriv, spriv, conn, occurrence_ledger,
+                                     owner_id, occurrence_id, status):
+                return
+            refreshed = occurrence_ledger.inspect(occurrence_id)
+            if refreshed.get('state') != 'PENDING':
+                return
+        if status.get('state') == 'NOT_FOUND':
+            # The task row proves this occurrence was already claimed. A missing
+            # occurrence ledger cannot prove the destination effect did not run;
+            # fail closed to preserve at-most-once execution.
+            _log('occurrence_ledger_missing_after_claim=' + occurrence_id)
+            return
+        if status.get('state') == 'PENDING':
+            if row[1] not in ('claimed', 'expired'):
+                return
+            resume_existing = True
+        elif status.get('state') != 'PENDING':
+            return
 
     try:
         payload, shared = _decrypt_task(task, xpriv)
-    except Exception as e:
-        _log('decrypt_reject=' + task_id + ':' + type(e).__name__)
+    except Exception as exc:
+        _log('decrypt_reject=' + task_id + ':' + type(exc).__name__)
         return
 
     now = int(time.time())
+    if use_occurrence:
+        if type(due_at) is not int or due_at < 0 or not isinstance(occurrence_id, str):
+            return
+        try:
+            occurrence_ledger.register(occurrence_id, task_id, due_at)
+        except Exception as exc:
+            _log('occurrence_register_error=' + task_id + ':' + type(exc).__name__)
+            return
+        if due_at > now:
+            return
+
     initial_state = 'expired' if not valid and why == 'expired' else 'claimed'
-    try:
-        conn.execute(
-            'INSERT INTO tasks(task_id,envelope_sha256,state,received_at) VALUES(?,?,?,?)',
-            (task_id, envelope_hash, initial_state, now),
-        )
-        conn.commit()
-    except sqlite3.IntegrityError:
-        return
-    except sqlite3.Error as exc:
+    if not resume_existing:
         try:
-            conn.rollback()
-        except sqlite3.Error:
-            pass
-        _log('db_claim_write_unresolved=' + task_id + ':' + type(exc).__name__)
-        # A failed durable claim must never advance to local-MCP execution.
+            conn.execute(
+                'INSERT INTO tasks(task_id,envelope_sha256,state,received_at) VALUES(?,?,?,?)',
+                (task_id, envelope_hash, initial_state, now),
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return
+        except sqlite3.Error as exc:
+            try:
+                conn.rollback()
+            except sqlite3.Error:
+                pass
+            _log('db_claim_write_unresolved=' + task_id + ':' + type(exc).__name__)
+            return
+
+    if not use_occurrence:
+        if initial_state == 'expired':
+            receipt = _failure_result(task, 'expired', 'EXPIRED')
+        else:
+            try:
+                _validate_payload(task, payload)
+                tool = payload['tool']
+                result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
+                receipt = {
+                    'task_id': task_id,
+                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': 'csh3280350',
+                                          'uid': os.getuid(), 'hostname': socket.gethostname()},
+                    'runtime_receipt': {'namespace': str(ACCOUNT), 'webapp': str(WEBAPP),
+                                        'local_mcp': str(WEBAPP / 'bin' / 'local-mcp')},
+                    'actions': [{'capability': tool,
+                                 'arguments_sha256': hashlib.sha256(
+                                     _canon(payload.get('arguments', {}))).hexdigest()}],
+                    'evidence_refs': [], 'result': result_obj, 'unresolved': [],
+                    'resource_usage': {'transport': 'github-poll+https-result',
+                                       'local_mcp_calls': 1},
+                    'completion_state': 'COMPLETED' if not result_obj.get('isError') else 'FAILED',
+                }
+            except TaskReject as exc:
+                receipt = _failure_result(task, str(exc), exc.completion_state)
+            except Exception as exc:
+                receipt = _failure_result(task, type(exc).__name__ + ':' + str(exc)[:1200],
+                                          'FAILED')
+        try:
+            result_path = _publish_result(task, shared, spriv, receipt)
+        except Exception as exc:
+            persisted = _commit_task_final_state(conn, task_id, 'publish_failed')
+            _log('publish_error=' + task_id + ':' + type(exc).__name__
+                 + (' persisted' if persisted else ' db_unresolved'))
+            return
+        persisted = _commit_task_final_state(
+            conn, task_id, receipt['completion_state'].lower(), result_path)
+        if persisted:
+            _log('task=' + task_id + ' state=' + receipt['completion_state'])
+        else:
+            _log('result_published_db_unresolved=' + task_id)
         return
 
-    if initial_state == 'expired':
-        receipt = _failure_result(task, 'expired', 'EXPIRED')
-    else:
-        try:
-            _validate_payload(task, payload)
-            tool = payload['tool']
-            result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
-            receipt = {
-                'task_id': task_id,
-                'executor_identity': {
-                    'runtime_id': RUNTIME_ID,
-                    'user': os.environ.get('USER', 'unknown'),
-                    'uid': os.getuid(),
-                    'hostname': socket.gethostname(),
-                },
-                'runtime_receipt': {
-                    'namespace': str(ACCOUNT),
-                    'webapp': str(WEBAPP),
-                    'local_mcp': str(WEBAPP / 'bin' / 'local-mcp'),
-                },
-                'actions': [
-                    {
-                        'capability': tool,
-                        'arguments_sha256': hashlib.sha256(_canon(payload.get('arguments', {}))).hexdigest(),
-                    }
-                ],
-                'evidence_refs': [],
-                'result': result_obj,
-                'unresolved': [],
-                'resource_usage': {'transport': 'github-poll+https-result', 'local_mcp_calls': 1},
-                'completion_state': 'COMPLETED' if not result_obj.get('isError') else 'FAILED',
-            }
-        except TaskReject as e:
-            receipt = _failure_result(task, str(e), e.completion_state)
-        except Exception as e:
-            receipt = _failure_result(task, type(e).__name__ + ':' + str(e)[:1200], 'FAILED')
+    receipt_holder = {}
+    def dispatch(_packet):
+        if initial_state == 'expired':
+            receipt = _failure_result(task, 'expired', 'EXPIRED')
+        else:
+            try:
+                _validate_payload(task, payload)
+                tool = payload['tool']
+                result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
+                receipt = {
+                    'task_id': task_id,
+                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': 'csh3280350',
+                                          'uid': os.getuid(), 'hostname': socket.gethostname()},
+                    'runtime_receipt': {'namespace': str(ACCOUNT), 'webapp': str(WEBAPP),
+                                        'local_mcp': str(WEBAPP / 'bin' / 'local-mcp')},
+                    'actions': [{'capability': tool,
+                                 'arguments_sha256': hashlib.sha256(
+                                     _canon(payload.get('arguments', {}))).hexdigest()}],
+                    'evidence_refs': [], 'result': result_obj, 'unresolved': [],
+                    'resource_usage': {'transport': 'github-poll+https-result',
+                                       'local_mcp_calls': 1},
+                    'completion_state': 'COMPLETED' if not result_obj.get('isError') else 'FAILED',
+                }
+            except TaskReject as exc:
+                receipt = _failure_result(task, str(exc), exc.completion_state)
+            except Exception as exc:
+                receipt = _failure_result(task, type(exc).__name__ + ':' + str(exc)[:1200],
+                                          'FAILED')
+        path = _publish_result(task, shared, spriv, receipt)
+        receipt_holder['receipt'] = receipt
+        receipt_holder['path'] = path
+        observed = _readback_published_result(task, xpriv, spriv)
+        if not observed or observed['receipt'] != receipt:
+            raise RuntimeError('signed_destination_readback_unverified')
+        return {'receipt_ref': observed['receipt_ref']}
+
+    def verify_destination(_packet, receipt_ref):
+        observed = _readback_published_result(task, xpriv, spriv)
+        return (observed is not None and observed['receipt_ref'] == receipt_ref
+                and observed['receipt'] == receipt_holder.get('receipt'))
 
     try:
-        result_path = _publish_result(task, shared, spriv, receipt)
+        outcome = dispatch_due_occurrence(
+            ledger=occurrence_ledger, occurrence_id=occurrence_id, task_id=task_id,
+            due_at=due_at, owner_id=owner_id, now=now, dispatch=dispatch,
+            verify_destination=verify_destination)
     except Exception as exc:
-        # Do not let a second SQLite failure in the error handler terminate
-        # the entire daemon or invite blind tool re-execution.
-        persisted = _commit_task_final_state(conn, task_id, 'publish_failed')
-        _log('publish_error=' + task_id + ':' + type(exc).__name__ + (' persisted' if persisted else ' db_unresolved'))
+        _log('occurrence_dispatch_error=' + task_id + ':' + type(exc).__name__)
         return
-
-    persisted = _commit_task_final_state(conn, task_id, receipt['completion_state'].lower(), result_path)
-    if persisted:
-        _log('task=' + task_id + ' state=' + receipt['completion_state'])
+    if outcome.get('state') == 'COMPLETE' and receipt_holder:
+        result_path = receipt_holder['path']
+        receipt = receipt_holder['receipt']
+        persisted = _commit_task_final_state(
+            conn, task_id, receipt['completion_state'].lower(), result_path)
+        if persisted:
+            _log('occurrence_complete=' + occurrence_id + ' state=' + receipt['completion_state'])
+        else:
+            _log('occurrence_complete_db_unresolved=' + occurrence_id)
     else:
-        # Published result is durable, but metadata is not. Existing claimed
-        # task_id suppresses replay until separately verified reconciliation.
-        _log('result_published_db_unresolved=' + task_id)
-
+        _log('occurrence_unresolved=' + occurrence_id + ' state='
+             + str(outcome.get('state', 'UNKNOWN')))
 
 def _signal(_signum, _frame):
     global STOP
@@ -758,6 +931,7 @@ def main() -> int:
     os.chmod(STATE, 0o700)
     xpriv, spriv = _load_or_create_keys()
     conn = _db()
+    occurrence_ledger = OccurrenceLedger(STATE / 'occurrences.sqlite3')
     _atomic_write(PIDFILE, (str(os.getpid()) + '\n').encode(), 0o600)
     started = int(time.time())
     last_heartbeat = 0
@@ -774,7 +948,7 @@ def main() -> int:
                     if STOP:
                         break
                     if isinstance(task, dict):
-                        _process_task(task, xpriv, spriv, conn)
+                        _process_task(task, xpriv, spriv, conn, occurrence_ledger)
             time.sleep(POLL_SECONDS)
     finally:
         try:

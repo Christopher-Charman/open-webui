@@ -103,6 +103,13 @@ def validate_encrypted_envelope(task: Any, now: int | None = None) -> str:
         raise QueueError('envelope_times_invalid')
     if not (current - 120 <= created <= current + 120 and current < expires <= current + 3600):
         raise QueueError('envelope_expired_or_out_of_bounds')
+    occurrence_id = task.get('occurrence_id')
+    due_at = task.get('due_at')
+    if occurrence_id is not None or due_at is not None:
+        if not isinstance(occurrence_id, str) or not TASK_ID_RE.fullmatch(occurrence_id):
+            raise QueueError('occurrence_id_invalid')
+        if type(due_at) is not int or not created <= due_at < expires:
+            raise QueueError('occurrence_due_at_invalid')
     # Decrypted payload remains opaque here. Runtime must independently
     # authenticate and deny any effectful request lacking write admission.
     return tid
@@ -116,6 +123,11 @@ def next_queue(current: dict[str, Any], task: dict[str, Any]) -> tuple[dict[str,
         if len(existing) == 1 and existing[0] == task:
             return current, False
         raise QueueError('task_id_conflict')
+    occurrence_id = task.get('occurrence_id')
+    if occurrence_id is not None and any(
+        isinstance(t, dict) and t.get('occurrence_id') == occurrence_id for t in tasks
+    ):
+        raise QueueError('occurrence_id_conflict')
     if len(tasks) >= MAX_QUEUE:
         raise QueueError('queue_full')
     updated = {**current, 'tasks': [*tasks, task]}
