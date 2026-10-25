@@ -681,23 +681,26 @@ def _readback_published_result(task: dict[str, Any], xpriv, spriv) -> dict[str, 
 
 def _reconcile_occurrence(task, xpriv, spriv, conn, occurrence_ledger, owner_id,
                           occurrence_id, status):
-    now = int(time.time())
-    if status.get('state') == 'CLAIMED' and status.get('lease_until', now + 1) <= now:
-        status = occurrence_ledger.claim(
-            occurrence_id, owner_id, now, lease_seconds=300)
-    if status.get('state') != 'UNKNOWN':
-        return False
-    observed = _readback_published_result(task, xpriv, spriv)
-    if not observed:
-        return False
-    reconciled = occurrence_ledger.reconcile(
-        occurrence_id, observed['receipt_ref'],
-        lambda _oid, ref: ref == observed['receipt_ref'])
-    if reconciled.get('changed') is True:
-        state = observed['receipt'].get('completion_state', 'FAILED').lower()
-        _commit_task_final_state(conn, task['task_id'], state, observed['path'])
-        _log('occurrence_reconciled=' + occurrence_id + ' state=' + state)
-        return True
+    try:
+        now = int(time.time())
+        if status.get('state') == 'CLAIMED' and status.get('lease_until', now + 1) <= now:
+            status = occurrence_ledger.claim(
+                occurrence_id, owner_id, now, lease_seconds=300)
+        if status.get('state') != 'UNKNOWN':
+            return False
+        observed = _readback_published_result(task, xpriv, spriv)
+        if not observed:
+            return False
+        reconciled = occurrence_ledger.reconcile(
+            occurrence_id, observed['receipt_ref'],
+            lambda _oid, ref: ref == observed['receipt_ref'])
+        if reconciled.get('changed') is True:
+            state = observed['receipt'].get('completion_state', 'FAILED').lower()
+            _commit_task_final_state(conn, task['task_id'], state, observed['path'])
+            _log('occurrence_reconciled=' + occurrence_id + ' state=' + state)
+            return True
+    except Exception as exc:
+        _log('occurrence_reconcile_error=' + occurrence_id + ':' + type(exc).__name__)
     return False
 
 
@@ -735,6 +738,14 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
         if not use_occurrence:
             return
         status = occurrence_ledger.inspect(occurrence_id)
+        if status.get('state') == 'COMPLETE':
+            observed = _readback_published_result(task, xpriv, spriv)
+            if observed:
+                _commit_task_final_state(
+                    conn, task_id,
+                    observed['receipt'].get('completion_state', 'FAILED').lower(),
+                    observed['path'])
+            return
         if status.get('state') == 'UNKNOWN' or status.get('state') == 'CLAIMED':
             if _reconcile_occurrence(task, xpriv, spriv, conn, occurrence_ledger,
                                      owner_id, occurrence_id, status):
@@ -743,9 +754,9 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
             if refreshed.get('state') != 'PENDING':
                 return
         if status.get('state') in ('PENDING', 'NOT_FOUND'):
+            if row[1] not in ('claimed', 'expired'):
+                return
             resume_existing = True
-        elif status.get('state') == 'COMPLETE':
-            return
         elif status.get('state') != 'PENDING':
             return
 
@@ -759,7 +770,11 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
     if use_occurrence:
         if type(due_at) is not int or due_at < 0 or not isinstance(occurrence_id, str):
             return
-        registered = occurrence_ledger.register(occurrence_id, task_id, due_at)
+        try:
+            occurrence_ledger.register(occurrence_id, task_id, due_at)
+        except Exception as exc:
+            _log('occurrence_register_error=' + task_id + ':' + type(exc).__name__)
+            return
         if due_at > now:
             return
 
