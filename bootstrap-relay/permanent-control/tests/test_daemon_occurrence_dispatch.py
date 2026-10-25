@@ -140,3 +140,31 @@ def test_unknown_result_is_not_replayed_before_reconciliation(tmp_path):
     assert conn.execute("select state from tasks where task_id=?",
                         (item["task_id"],)).fetchone() == ("claimed",)
     conn.close()
+
+
+def test_missing_occurrence_ledger_after_claim_fails_closed(tmp_path):
+    item = task("missing-ledger")
+    result = payload(item)
+    conn = connection()
+    # The task row records that execution was claimed, while the occurrence
+    # ledger is empty (for example after its database was lost or replaced).
+    envelope_hash = daemon.hashlib.sha256(daemon._canon(item)).hexdigest()
+    conn.execute(
+        "insert into tasks(task_id,envelope_sha256,state,received_at) values(?,?,?,?)",
+        (item["task_id"], envelope_hash, "claimed", int(time.time()) - 1),
+    )
+    conn.commit()
+    ledger = OccurrenceLedger(tmp_path / "empty-occurrences.sqlite3")
+    calls = []
+    with (
+        patch.object(daemon, "_decrypt_task", return_value=(result, b"secret")),
+        patch.object(daemon, "_call_local_mcp", side_effect=lambda tool, args:
+                     calls.append(tool) or {"isError": False}),
+    ):
+        daemon._process_task(item, None, None, conn, ledger)
+
+    assert calls == []
+    assert ledger.inspect(item["occurrence_id"])["state"] == "NOT_FOUND"
+    assert conn.execute("select state from tasks where task_id=?",
+                        (item["task_id"],)).fetchone() == ("claimed",)
+    conn.close()
