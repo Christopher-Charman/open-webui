@@ -753,7 +753,13 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
             refreshed = occurrence_ledger.inspect(occurrence_id)
             if refreshed.get('state') != 'PENDING':
                 return
-        if status.get('state') in ('PENDING', 'NOT_FOUND'):
+        if status.get('state') == 'NOT_FOUND':
+            # The task row proves this occurrence was already claimed. A missing
+            # occurrence ledger cannot prove the destination effect did not run;
+            # fail closed to preserve at-most-once execution.
+            _log('occurrence_ledger_missing_after_claim=' + occurrence_id)
+            return
+        if status.get('state') == 'PENDING':
             if row[1] not in ('claimed', 'expired'):
                 return
             resume_existing = True
