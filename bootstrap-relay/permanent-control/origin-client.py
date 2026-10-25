@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 import time
