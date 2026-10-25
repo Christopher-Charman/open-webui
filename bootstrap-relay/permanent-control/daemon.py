@@ -705,7 +705,7 @@ def _reconcile_occurrence(task, xpriv, spriv, conn, occurrence_ledger, owner_id,
 
 
 def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
-                  occurrence_ledger: OccurrenceLedger) -> None:
+                  occurrence_ledger: OccurrenceLedger | None = None) -> None:
     valid, why = _validate_outer(task)
     task_id = task.get('task_id') if isinstance(task.get('task_id'), str) else ''
     if not task_id:
