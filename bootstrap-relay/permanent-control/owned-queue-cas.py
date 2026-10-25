@@ -123,6 +123,11 @@ def next_queue(current: dict[str, Any], task: dict[str, Any]) -> tuple[dict[str,
         if len(existing) == 1 and existing[0] == task:
             return current, False
         raise QueueError('task_id_conflict')
+    occurrence_id = task.get('occurrence_id')
+    if occurrence_id is not None and any(
+        isinstance(t, dict) and t.get('occurrence_id') == occurrence_id for t in tasks
+    ):
+        raise QueueError('occurrence_id_conflict')
     if len(tasks) >= MAX_QUEUE:
         raise QueueError('queue_full')
     updated = {**current, 'tasks': [*tasks, task]}
