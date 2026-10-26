@@ -3271,6 +3271,19 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
         and item.get('approved') is True
         and item.get('call_id') not in result_call_ids
     ]
+    uncertain_calls = [
+        item
+        for item in output
+        if item.get('type') == 'function_call'
+        and item.get('call_id')
+        and item.get('status') == 'in_progress'
+        and item.get('call_id') not in result_call_ids
+    ]
+    if uncertain_calls:
+        raise RuntimeError(
+            'An approved tool call is already in progress or its outcome is unknown; it was not re-executed.'
+        )
+
     if not approved_calls:
         if metadata.get('params', {}).get('tool_approval_mode', 'full') == 'ask' and any(
             item.get('type') == 'function_call'
@@ -3290,7 +3303,26 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
 
     event_emitter, event_caller = await get_event_emitter_and_caller(metadata)
     changed = False
-    for item in approved_calls:
+    for approved_item in approved_calls:
+        call_id = approved_item.get('call_id')
+        claimed_message = await Chats.claim_approved_tool_call(chat_id, message_id, call_id)
+        if claimed_message is None:
+            raise RuntimeError('Approved tool call claim was not acquired; the tool was not executed.')
+        output = claimed_message.get('output')
+        item = (
+            next(
+                (
+                    candidate
+                    for candidate in output
+                    if candidate.get('type') == 'function_call' and candidate.get('call_id') == call_id
+                ),
+                None,
+            )
+            if isinstance(output, list)
+            else None
+        )
+        if item is None or item.get('status') != 'in_progress':
+            raise RuntimeError('Approved tool call claim could not be confirmed; the tool was not executed.')
         if item.get('name') == 'ask_user':
             item['status'] = 'pending'
             item.pop('approved', None)

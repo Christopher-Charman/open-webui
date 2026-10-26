@@ -1138,6 +1138,77 @@ class ChatTable:
         message = chat.chat.get('history', {}).get('messages', {}).get(message_id, {})
         return message.get(metadata_key)
 
+    async def claim_approved_tool_call(self, id: str, message_id: str, call_id: str) -> dict | None:
+        """Claim an approved saved tool call under the Chat row lock."""
+        message_id = self._clean_null_bytes(message_id)
+        call_id = self._clean_null_bytes(call_id)
+        try:
+            async with get_async_db_context() as session:
+                if session.bind.dialect.name == 'sqlite':
+                    # Take SQLite's writer lock before reading the claim state.
+                    await session.execute(update(Chat).where(Chat.id == id).values(id=Chat.id))
+                chat_item = await session.get(
+                    Chat,
+                    id,
+                    populate_existing=True,
+                    with_for_update=session.bind.dialect.name == 'postgresql',
+                )
+                if chat_item is None:
+                    return None
+                self._sanitize_chat_row(chat_item)
+                chat = chat_item.chat or {}
+                self._repair_chat_current_id(chat)
+                history = chat.get('history', {})
+                saved_message = history.get('messages', {}).get(message_id)
+                output = saved_message.get('output') if isinstance(saved_message, dict) else None
+                if not isinstance(output, list):
+                    return None
+                result_ids = {
+                    item.get('call_id')
+                    for item in output
+                    if isinstance(item, dict)
+                    and item.get('type') == 'function_call_output'
+                    and item.get('call_id')
+                }
+                call = next(
+                    (
+                        item
+                        for item in output
+                        if isinstance(item, dict)
+                        and item.get('type') == 'function_call'
+                        and item.get('call_id') == call_id
+                    ),
+                    None,
+                )
+                if (
+                    call is None
+                    or call.get('status') != 'queued'
+                    or call.get('approved') is not True
+                    or call_id in result_ids
+                ):
+                    return None
+                call['status'] = 'in_progress'
+                chat_item.chat = chat
+                chat_item.title = chat.get('title', 'New Chat')
+                chat_item.current_message_id = self.get_current_message_id(chat)
+                flag_modified(chat_item, 'chat')
+                await session.commit()
+                user_id = chat_item.user_id
+                claimed_message = dict(saved_message)
+            try:
+                await ChatMessages.upsert_message(
+                    message_id=message_id,
+                    chat_id=id,
+                    user_id=user_id,
+                    data=claimed_message,
+                )
+            except Exception as e:
+                log.warning(f'Failed to mirror claimed tool call to chat_message table: {e}')
+            return claimed_message
+        except Exception:
+            log.exception('Failed to claim approved tool call %s for chat %s', call_id, id)
+            return None
+
     async def upsert_message_to_chat_by_id_and_message_id(
         self, id: str, message_id: str, message: dict, *, touch: bool = True
     ) -> ChatModel | None:
