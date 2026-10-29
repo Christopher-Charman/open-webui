@@ -14,7 +14,9 @@ MCP_ACCEPT="$WEBAPP/bin/secure-mcp-keepalive-accept"
 RECEIPT="$STATE/host-bootstrap-receipt.txt"
 DETAIL="$STATE/host-bootstrap-detail.log"
 
-[ "$(id -u)" = "2257347" ] || { echo "CONTROL_PLANE_BOOTSTRAP=REFUSED unexpected_uid=$(id -u)" >&2; exit 2; }
+RUN_UID="$(id -u)"
+ACCOUNT_OWNER_UID="$(stat -c %u "$ACCOUNT")"
+[ "$RUN_UID" -ne 0 ] && [ "$RUN_UID" = "$ACCOUNT_OWNER_UID" ] || { echo "CONTROL_PLANE_BOOTSTRAP=REFUSED runtime_account_owner_mismatch" >&2; exit 2; }
 [ -d "$WEBAPP" ] || { echo "CONTROL_PLANE_BOOTSTRAP=REFUSED webapp_missing" >&2; exit 2; }
 
 mkdir -p "$STATE"
