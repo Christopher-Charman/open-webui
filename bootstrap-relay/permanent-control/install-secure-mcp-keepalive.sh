@@ -14,7 +14,9 @@ BIN_HINT="$STATE/tunnel-client-bin"
 PIN="5568fb491606b354498ef7877da1b005c783ed7c"
 BASE="https://raw.githubusercontent.com/Christopher-Charman/open-webui/$PIN/bootstrap-relay/permanent-control"
 
-[ "$(id -u)" = "2257347" ] || { echo "REFUSED unexpected uid=$(id -u)" >&2; exit 2; }
+RUN_UID="$(id -u)"
+ACCOUNT_OWNER_UID="$(stat -c %u "$ACCOUNT")"
+[ "$RUN_UID" -ne 0 ] && [ "$RUN_UID" = "$ACCOUNT_OWNER_UID" ] || { echo "REFUSED runtime account owner mismatch" >&2; exit 2; }
 [ -d "$WEBAPP" ] || { echo "REFUSED webapp missing" >&2; exit 2; }
 [ -x "$WEBAPP/bin/local-mcp" ] || { echo "REFUSED local MCP missing" >&2; exit 2; }
 [ -d "$PROFILE_DIR" ] || { echo "REFUSED tunnel-client profile dir missing" >&2; exit 2; }
