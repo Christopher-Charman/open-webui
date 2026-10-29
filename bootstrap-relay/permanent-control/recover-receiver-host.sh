@@ -15,7 +15,9 @@ fail() {
   exit 1
 }
 
-[ "$(id -u)" = "2257347" ] || fail runtime_identity
+RUN_UID="$(id -u)"
+ACCOUNT_OWNER_UID="$(stat -c %u "$ACCOUNT")"
+[ "$RUN_UID" -ne 0 ] && [ "$RUN_UID" = "$ACCOUNT_OWNER_UID" ] || fail runtime_identity
 [ -d "$WEBAPP" ] || fail webapp_missing
 [ -d "$STATE" ] || fail receiver_state_missing
 [ -x "$SERVICE" ] || fail receiver_service_missing

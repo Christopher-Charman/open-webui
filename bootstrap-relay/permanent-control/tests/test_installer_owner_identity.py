@@ -43,5 +43,35 @@ class InstallerOwnerIdentityTests(unittest.TestCase):
         self.assertIn("REFUSED runtime account owner mismatch", result.stderr)
 
 
+    def test_related_public_entrypoints_have_no_fixed_account_identity(self):
+        for filename in ("bootstrap-control-plane.sh",
+                         "install-secure-mcp-keepalive.sh",
+                         "recover-receiver-host.sh"):
+            with self.subTest(script=filename):
+                text = INSTALL.with_name(filename).read_text(encoding="utf-8")
+                syntax = subprocess.run(["/bin/sh", "-n"], input=text, text=True,
+                                        capture_output=True, check=False)
+                self.assertEqual(syntax.returncode, 0, syntax.stderr)
+                self.assertIn('ACCOUNT_OWNER_UID="$(stat -c %u "$ACCOUNT")"', text)
+                self.assertNotIn('"$(id -u)" = "', text)
+
+    def test_related_entrypoints_reject_foreign_account(self):
+        home = str(pathlib.Path.home())
+        if os.geteuid() == 0:
+            self.skipTest("owner installers do not run as root")
+        for filename in ("bootstrap-control-plane.sh",
+                         "install-secure-mcp-keepalive.sh",
+                         "recover-receiver-host.sh"):
+            with self.subTest(script=filename):
+                text = INSTALL.with_name(filename).read_text(encoding="utf-8")
+                marker = '[ -d "$WEBAPP" ]'
+                self.assertEqual(text.count(marker), 1)
+                prefix = text.split(marker, 1)[0]
+                for account, expected in ((home, True), ("/", False)):
+                    env = {**os.environ, "HOME": home, "PPC_ACCOUNT": account}
+                    result = subprocess.run(["/bin/sh"], input=prefix, text=True,
+                                            capture_output=True, env=env, check=False)
+                    self.assertEqual(result.returncode == 0, expected)
+
 if __name__ == "__main__":
     unittest.main()
