@@ -12,6 +12,7 @@ os.environ.setdefault("DATA_DIR", str(Path(__file__).resolve().parents[1] / "dat
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from open_webui.models.chats import Chat, Chats
+from open_webui.utils import middleware
 
 
 CHAT_ID = "chat-test"
@@ -179,6 +180,80 @@ class ApprovedToolCallRecoveryTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNone(second)
             self.assertEqual(successful_session.commit.await_count, 1)
             self.assertEqual(self.sessions[-1].commit.await_count, 0)
+
+
+    async def test_stale_recovery_emits_updated_output_before_blocking_resume(self):
+        stale_call = {
+            "type": "function_call", "call_id": CALL_ID, "status": "in_progress",
+            "execution_claim": {"id": "claim-1", "claimed_at": 1},
+        }
+        recovered_call = {"type": "function_call", "call_id": CALL_ID, "status": "outcome_unknown"}
+        output_record = {
+            "type": "function_call_output", "call_id": CALL_ID, "status": "outcome_unknown",
+            "output": [{"type": "input_text", "text": "Reconcile before retry."}],
+        }
+        initial_message = {"output": [stale_call]}
+        recovered_message = {"output": [recovered_call, output_record]}
+        event_emitter = AsyncMock()
+        metadata = {"chat_id": CHAT_ID, "assistant_message_id": MESSAGE_ID, "message_id": MESSAGE_ID}
+
+        with (
+            patch.object(middleware, "is_saved_chat_id", return_value=True),
+            patch.object(Chats, "get_message_by_id_and_message_id", new_callable=AsyncMock,
+                         return_value=initial_message),
+            patch.object(Chats, "recover_stale_approved_tool_call", new_callable=AsyncMock,
+                         return_value=recovered_message) as recover,
+            patch.object(middleware, "get_event_emitter_and_caller", new_callable=AsyncMock,
+                         return_value=(event_emitter, None)),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "unknown outcome"):
+                await middleware.drain_approved_tool_calls(None, {}, None, {}, metadata)
+
+        recover.assert_awaited_once()
+        event_emitter.assert_awaited_once_with({
+            "type": "chat:completion", "data": {"done": False, "output": recovered_message["output"]}
+        })
+
+    async def test_execution_exception_emits_unknown_output_before_reraising(self):
+        queued_call = {
+            "type": "function_call", "call_id": CALL_ID, "status": "queued",
+            "approved": True, "name": "test_tool", "arguments": "{}",
+        }
+        claimed_call = {
+            "type": "function_call", "call_id": CALL_ID, "status": "in_progress",
+            "execution_claim": {"id": "claim-1", "claimed_at": 1},
+            "name": "test_tool", "arguments": "{}",
+        }
+        initial_message = {"output": [queued_call]}
+        claimed_message = {"output": [claimed_call]}
+        unknown_output = [
+            {"type": "function_call", "call_id": CALL_ID, "status": "outcome_unknown"},
+            {"type": "function_call_output", "call_id": CALL_ID, "status": "outcome_unknown",
+             "output": [{"type": "input_text", "text": "Reconcile before retry."}]},
+        ]
+        failed_message = {"output": unknown_output}
+        event_emitter = AsyncMock()
+        metadata = {"chat_id": CHAT_ID, "assistant_message_id": MESSAGE_ID, "message_id": MESSAGE_ID}
+
+        with (
+            patch.object(middleware, "is_saved_chat_id", return_value=True),
+            patch.object(Chats, "get_message_by_id_and_message_id", new_callable=AsyncMock,
+                         return_value=initial_message),
+            patch.object(Chats, "claim_approved_tool_call", new_callable=AsyncMock,
+                         return_value=claimed_message),
+            patch.object(Chats, "finish_approved_tool_call", new_callable=AsyncMock,
+                         return_value=failed_message),
+            patch.object(middleware, "get_event_emitter_and_caller", new_callable=AsyncMock,
+                         return_value=(event_emitter, None)),
+            patch.object(middleware, "execute_tool_call_for_output", new_callable=AsyncMock,
+                         side_effect=ValueError("worker interrupted")),
+        ):
+            with self.assertRaisesRegex(ValueError, "worker interrupted"):
+                await middleware.drain_approved_tool_calls(None, {}, None, {}, metadata)
+
+        event_emitter.assert_awaited_once_with({
+            "type": "chat:completion", "data": {"done": False, "output": unknown_output}
+        })
 
 
 if __name__ == "__main__":

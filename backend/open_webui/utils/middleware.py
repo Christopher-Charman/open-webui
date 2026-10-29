@@ -3246,6 +3246,21 @@ async def execute_tool_call_for_output(request, form_data, user, metadata, event
     }
 
 
+async def emit_approved_tool_output(event_emitter, output: list) -> None:
+    if not event_emitter:
+        return
+
+    try:
+        await event_emitter(
+            {
+                'type': 'chat:completion',
+                'data': {'done': False, 'output': output},
+            }
+        )
+    except Exception:
+        log.exception('Failed to emit approved tool-call output state')
+
+
 async def drain_approved_tool_calls(request, form_data, user, model, metadata) -> bool:
     chat_id = metadata.get('chat_id')
     assistant_message_id = metadata.get('assistant_message_id')
@@ -3259,6 +3274,7 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
     if not isinstance(output, list):
         return False
 
+    recovered_stale_claim = False
     stale_before = int(time.time()) - 900
     for call in list(output):
         if call.get('type') != 'function_call' or call.get('status') != 'in_progress':
@@ -3283,6 +3299,7 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
         if recovered_message is not None:
             message = recovered_message
             output = recovered_message.get('output', output)
+            recovered_stale_claim = True
 
     result_call_ids = {
         item.get('call_id') for item in output if item.get('type') == 'function_call_output' and item.get('call_id')
@@ -3304,6 +3321,9 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
         and item.get('status') in {'in_progress', 'outcome_unknown'}
     ]
     if uncertain_calls:
+        if recovered_stale_claim:
+            event_emitter, _ = await get_event_emitter_and_caller(metadata)
+            await emit_approved_tool_output(event_emitter, output)
         raise RuntimeError(
             'An approved tool call is still in progress or has an unknown outcome; reconcile it before continuing. '
             'It was not re-executed.'
@@ -3394,6 +3414,9 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
             )
             if failed_message is None:
                 raise RuntimeError('Tool call outcome could not be reconciled after an execution error.')
+            failed_output = failed_message.get('output')
+            if isinstance(failed_output, list):
+                await emit_approved_tool_output(event_emitter, failed_output)
             raise
 
         arguments = tool_call.get('function', {}).get('arguments', '{}')
