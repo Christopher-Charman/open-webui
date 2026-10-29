@@ -53,7 +53,7 @@ class InstallerOwnerIdentityTests(unittest.TestCase):
                                         capture_output=True, check=False)
                 self.assertEqual(syntax.returncode, 0, syntax.stderr)
                 self.assertIn('ACCOUNT_OWNER_UID="$(stat -c %u "$ACCOUNT")"', text)
-                self.assertNotRegex(text, r'\\[ "\\$\\(id -u\\)" = "[0-9]+" \\]')
+                self.assertNotIn('"$(id -u)" = "', text)
 
     def test_related_entrypoints_reject_foreign_account(self):
         home = str(pathlib.Path.home())
