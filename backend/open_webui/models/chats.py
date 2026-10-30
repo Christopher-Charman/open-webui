@@ -1188,6 +1188,7 @@ class ChatTable:
                 ):
                     return None
                 call['status'] = 'in_progress'
+                call['execution_claim'] = {'id': uuid.uuid4().hex, 'claimed_at': int(time.time())}
                 chat_item.chat = chat
                 chat_item.title = chat.get('title', 'New Chat')
                 chat_item.current_message_id = self.get_current_message_id(chat)
@@ -1208,6 +1209,102 @@ class ChatTable:
         except Exception:
             log.exception('Failed to claim approved tool call %s for chat %s', call_id, id)
             return None
+
+    async def _transition_approved_tool_call(
+        self,
+        id: str,
+        message_id: str,
+        call_id: str,
+        claim_id: str,
+        status: str,
+        *,
+        arguments: Any | None = None,
+        output_record: dict | None = None,
+        stale_before: int | None = None,
+    ) -> dict | None:
+        """Persist a call transition only while its exact claim remains current."""
+        if status not in {'pending', 'completed', 'failed', 'outcome_unknown'}:
+            return None
+        message_id = self._clean_null_bytes(message_id)
+        call_id = self._clean_null_bytes(call_id)
+        arguments = self._clean_null_bytes(arguments) if arguments is not None else None
+        output_record = self._clean_null_bytes(output_record) if output_record is not None else None
+        try:
+            async with get_async_db_context() as session:
+                if session.bind.dialect.name == 'sqlite':
+                    await session.execute(update(Chat).where(Chat.id == id).values(id=Chat.id))
+                chat_item = await session.get(
+                    Chat, id, populate_existing=True,
+                    with_for_update=session.bind.dialect.name == 'postgresql',
+                )
+                if chat_item is None:
+                    return None
+                self._sanitize_chat_row(chat_item)
+                chat = chat_item.chat or {}
+                self._repair_chat_current_id(chat)
+                history = chat.get('history', {})
+                saved_message = history.get('messages', {}).get(message_id)
+                output = saved_message.get('output') if isinstance(saved_message, dict) else None
+                if not isinstance(output, list):
+                    return None
+                call = next((item for item in output if isinstance(item, dict)
+                    and item.get('type') == 'function_call' and item.get('call_id') == call_id), None)
+                result_ids = {item.get('call_id') for item in output if isinstance(item, dict)
+                    and item.get('type') == 'function_call_output' and item.get('call_id')}
+                claim = call.get('execution_claim') if isinstance(call, dict) else None
+                if (call is None or call.get('status') != 'in_progress' or not isinstance(claim, dict)
+                    or claim.get('id') != claim_id or call_id in result_ids):
+                    return None
+                if stale_before is not None:
+                    claimed_at = claim.get('claimed_at')
+                    if not isinstance(claimed_at, int) or claimed_at > stale_before:
+                        return None
+                if output_record is not None:
+                    if output_record.get('call_id') != call_id:
+                        return None
+                    output.append(output_record)
+                call['status'] = status
+                if arguments is not None:
+                    call['arguments'] = arguments
+                call.pop('execution_claim', None)
+                if status == 'pending':
+                    call.pop('approved', None)
+                chat['history'] = history
+                chat_item.chat = chat
+                chat_item.title = chat.get('title', 'New Chat')
+                chat_item.current_message_id = self.get_current_message_id(chat)
+                flag_modified(chat_item, 'chat')
+                await session.commit()
+                user_id = chat_item.user_id
+                updated_message = dict(saved_message)
+            try:
+                await ChatMessages.upsert_message(
+                    message_id=message_id, chat_id=id, user_id=user_id, data=updated_message,
+                )
+            except Exception as e:
+                log.warning(f'Failed to mirror tool-call transition to chat_message table: {e}')
+            return updated_message
+        except Exception:
+            log.exception('Failed to transition approved tool call %s for chat %s', call_id, id)
+            return None
+
+    async def finish_approved_tool_call(
+        self, id: str, message_id: str, call_id: str, claim_id: str, status: str, *,
+        arguments: Any | None = None, output_record: dict | None = None,
+    ) -> dict | None:
+        return await self._transition_approved_tool_call(
+            id, message_id, call_id, claim_id, status, arguments=arguments, output_record=output_record,
+        )
+
+    async def recover_stale_approved_tool_call(
+        self, id: str, message_id: str, call_id: str, claim_id: str,
+        stale_before: int, output_record: dict,
+    ) -> dict | None:
+        """Fence an expired claim as outcome-unknown; never make it executable again."""
+        return await self._transition_approved_tool_call(
+            id, message_id, call_id, claim_id, 'outcome_unknown',
+            output_record=output_record, stale_before=stale_before,
+        )
 
     async def upsert_message_to_chat_by_id_and_message_id(
         self, id: str, message_id: str, message: dict, *, touch: bool = True

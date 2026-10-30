@@ -3246,6 +3246,21 @@ async def execute_tool_call_for_output(request, form_data, user, metadata, event
     }
 
 
+async def emit_approved_tool_output(event_emitter, output: list) -> None:
+    if not event_emitter:
+        return
+
+    try:
+        await event_emitter(
+            {
+                'type': 'chat:completion',
+                'data': {'done': False, 'output': output},
+            }
+        )
+    except Exception:
+        log.exception('Failed to emit approved tool-call output state')
+
+
 async def drain_approved_tool_calls(request, form_data, user, model, metadata) -> bool:
     chat_id = metadata.get('chat_id')
     assistant_message_id = metadata.get('assistant_message_id')
@@ -3258,6 +3273,33 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
     output = message.get('output') if message else None
     if not isinstance(output, list):
         return False
+
+    recovered_stale_claim = False
+    stale_before = int(time.time()) - 900
+    for call in list(output):
+        if call.get('type') != 'function_call' or call.get('status') != 'in_progress':
+            continue
+        claim = call.get('execution_claim')
+        claimed_at = claim.get('claimed_at') if isinstance(claim, dict) else None
+        claim_id = claim.get('id') if isinstance(claim, dict) else None
+        if not isinstance(claim_id, str) or not isinstance(claimed_at, int) or claimed_at > stale_before:
+            continue
+        call_id = call.get('call_id')
+        unknown_text = (
+            'The execution claim expired before its result was durably recorded. The external effect may have '
+            'occurred; reconcile the target before issuing a replacement call. Automatic replay is disabled.'
+        )
+        recovered_message = await Chats.recover_stale_approved_tool_call(
+            chat_id, message_id, call_id, claim_id, stale_before,
+            {
+                'type': 'function_call_output', 'id': output_id('fco'), 'call_id': call_id,
+                'output': [{'type': 'input_text', 'text': unknown_text}], 'status': 'outcome_unknown',
+            },
+        )
+        if recovered_message is not None:
+            message = recovered_message
+            output = recovered_message.get('output', output)
+            recovered_stale_claim = True
 
     result_call_ids = {
         item.get('call_id') for item in output if item.get('type') == 'function_call_output' and item.get('call_id')
@@ -3276,12 +3318,15 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
         for item in output
         if item.get('type') == 'function_call'
         and item.get('call_id')
-        and item.get('status') == 'in_progress'
-        and item.get('call_id') not in result_call_ids
+        and item.get('status') in {'in_progress', 'outcome_unknown'}
     ]
     if uncertain_calls:
+        if recovered_stale_claim:
+            event_emitter, _ = await get_event_emitter_and_caller(metadata)
+            await emit_approved_tool_output(event_emitter, output)
         raise RuntimeError(
-            'An approved tool call is already in progress or its outcome is unknown; it was not re-executed.'
+            'An approved tool call is still in progress or has an unknown outcome; reconcile it before continuing. '
+            'It was not re-executed.'
         )
 
     if not approved_calls:
@@ -3323,9 +3368,17 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
         )
         if item is None or item.get('status') != 'in_progress':
             raise RuntimeError('Approved tool call claim could not be confirmed; the tool was not executed.')
+        claim = item.get('execution_claim')
+        claim_id = claim.get('id') if isinstance(claim, dict) else None
+        if not isinstance(claim_id, str):
+            raise RuntimeError('Approved tool call claim has no fencing identity; the tool was not executed.')
         if item.get('name') == 'ask_user':
-            item['status'] = 'pending'
-            item.pop('approved', None)
+            saved_message = await Chats.finish_approved_tool_call(
+                chat_id, message_id, call_id, claim_id, 'pending', arguments=item.get('arguments'),
+            )
+            if saved_message is None:
+                raise RuntimeError('ask_user claim could not be released; the tool was not executed.')
+            output = saved_message.get('output', output)
             changed = True
             continue
 
@@ -3337,28 +3390,38 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
                 'arguments': item.get('arguments', '{}'),
             },
         }
-        item['status'] = 'in_progress'
-        saved_message = await Chats.upsert_message_to_chat_by_id_and_message_id(
-            chat_id,
-            message_id,
-            {'done': False, 'output': output},
-            touch=False,
-        )
-        if saved_message is None:
-            raise RuntimeError('Approved tool call could not be persisted; the tool was not executed.')
+        try:
+            result = await execute_tool_call_for_output(
+                request, form_data, user, metadata, event_caller, event_emitter, tool_call,
+            )
+        except Exception:
+            log.exception('Approved tool call %s raised after claim; persisting unknown outcome', call_id)
+            failed_message = await Chats.finish_approved_tool_call(
+                chat_id, message_id, call_id, claim_id, 'outcome_unknown',
+                arguments=tool_call.get('function', {}).get('arguments', '{}'),
+                output_record={
+                    'type': 'function_call_output', 'id': output_id('fco'), 'call_id': call_id,
+                    'output': [{
+                        'type': 'input_text',
+                        'text': (
+                            'Tool execution raised after the claim was acquired. The external effect may have '
+                            'occurred; reconcile the target before issuing a replacement call. Automatic replay '
+                            'is disabled.'
+                        ),
+                    }],
+                    'status': 'outcome_unknown',
+                },
+            )
+            if failed_message is None:
+                raise RuntimeError('Tool call outcome could not be reconciled after an execution error.')
+            failed_output = failed_message.get('output')
+            if isinstance(failed_output, list):
+                await emit_approved_tool_output(event_emitter, failed_output)
+            raise
 
-        result = await execute_tool_call_for_output(
-            request,
-            form_data,
-            user,
-            metadata,
-            event_caller,
-            event_emitter,
-            tool_call,
-        )
-        item['arguments'] = tool_call.get('function', {}).get('arguments', '{}')
+        arguments = tool_call.get('function', {}).get('arguments', '{}')
         output_parts = [{'type': 'input_text', 'text': result.get('content', '')}]
-        item['status'] = 'failed' if _is_tool_result_error(result.get('content', '')) else 'completed'
+        call_status = 'failed' if _is_tool_result_error(result.get('content', '')) else 'completed'
         display_files = []
         for file_item in result.get('files', []):
             if file_item.get('type') == 'image' and file_item.get('url', '').startswith('data:'):
@@ -3366,25 +3429,18 @@ async def drain_approved_tool_calls(request, form_data, user, model, metadata) -
             else:
                 display_files.append(file_item)
 
-        output.append(
-            {
-                'type': 'function_call_output',
-                'id': output_id('fco'),
-                'call_id': result.get('tool_call_id', ''),
-                'output': output_parts,
-                'status': item['status'],
+        saved_message = await Chats.finish_approved_tool_call(
+            chat_id, message_id, call_id, claim_id, call_status, arguments=arguments,
+            output_record={
+                'type': 'function_call_output', 'id': output_id('fco'), 'call_id': call_id,
+                'output': output_parts, 'status': call_status,
                 **({'files': display_files} if display_files else {}),
                 **({'embeds': result.get('embeds')} if result.get('embeds') else {}),
-            }
-        )
-        saved_message = await Chats.upsert_message_to_chat_by_id_and_message_id(
-            chat_id,
-            message_id,
-            {'done': False, 'output': output},
-            touch=False,
+            },
         )
         if saved_message is None:
-            raise RuntimeError('Tool call result could not be persisted after execution; the outcome may be unknown.')
+            raise RuntimeError('Tool call result lost its claim fence after execution; its outcome may be unknown.')
+        output = saved_message.get('output', output)
         changed = True
 
     if changed:

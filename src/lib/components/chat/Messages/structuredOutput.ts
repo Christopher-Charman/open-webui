@@ -196,6 +196,7 @@ function buildToolCallToken(item: OutputItem, toolOutputByCallId: Record<string,
 	const resultItem = toolOutputByCallId[callId];
 	const status = String(item.status ?? '');
 	const isPending = status === 'pending';
+	const isOutcomeUnknown = status === 'outcome_unknown';
 	const isDone = !!resultItem || status === 'failed' || status === 'incomplete';
 	const isExecuting = !isDone && status === 'completed';
 	let name = item.name ?? '';
@@ -216,6 +217,8 @@ function buildToolCallToken(item: OutputItem, toolOutputByCallId: Record<string,
 	return {
 		summary: isPending
 			? 'Tool Approval Needed'
+			: isOutcomeUnknown
+				? 'Outcome Unknown — Reconcile Before Retry'
 			: isDone
 				? 'Tool Executed'
 				: isExecuting
