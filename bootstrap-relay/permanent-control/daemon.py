@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import os
+import pwd
 import re
 import signal
 import socket
@@ -812,7 +813,7 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
                 result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
                 receipt = {
                     'task_id': task_id,
-                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': os.environ.get('USER', ''),
+                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': pwd.getpwuid(os.getuid()).pw_name,
                                           'uid': os.getuid(), 'hostname': socket.gethostname()},
                     'runtime_receipt': {'namespace': str(ACCOUNT), 'webapp': str(WEBAPP),
                                         'local_mcp': str(WEBAPP / 'bin' / 'local-mcp')},
@@ -855,7 +856,7 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
                 result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
                 receipt = {
                     'task_id': task_id,
-                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': os.environ.get('USER', ''),
+                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': pwd.getpwuid(os.getuid()).pw_name,
                                           'uid': os.getuid(), 'hostname': socket.gethostname()},
                     'runtime_receipt': {'namespace': str(ACCOUNT), 'webapp': str(WEBAPP),
                                         'local_mcp': str(WEBAPP / 'bin' / 'local-mcp')},
