@@ -16,26 +16,27 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsSL --retry 4 \
-            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
-            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/main/bootstrap-relay/permanent-control/queue.json?t=$(date +%s%N)" \
-            -o /tmp/queue.json
-          python3 - <<'PY' >/tmp/task-id
+            "https://raw.githubusercontent.com/Christopher-Charman/open-webui/$GITHUB_SHA/bootstrap-relay/permanent-control/queue.json" \
+            -o "$RUNNER_TEMP/queue.json"
+          python3 - <<'PY' >"$RUNNER_TEMP/task-id"
           import json
-          q=json.load(open('/tmp/queue.json'))
+          import os
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'queue.json')) as stream:
+            q=json.load(stream)
           print(q['tasks'][-1]['task_id'])
           PY
       - name: Poll encrypted receipt
         run: |
           set -euo pipefail
-          id="$(cat /tmp/task-id)"
+          id="$(cat "$RUNNER_TEMP/task-id")"
           for i in $(seq 1 40); do
             flat="https://www.powerpc-darwin.org/static/powerpc-control-result-$id.json"
             compat="https://www.powerpc-darwin.org/static/ppc-control-result-$id.json"
             for candidate in "$flat" "$compat"; do
-              if curl -fsS --connect-timeout 8 --max-time 15 "$candidate" -o /tmp/receipt.json; then
+              if curl -fsS --connect-timeout 8 --max-time 15 "$candidate" -o "$RUNNER_TEMP/receipt.json"; then
                 echo "RECEIPT_URL=$candidate"
                 echo "RECEIPT_BEGIN"
-                cat /tmp/receipt.json
+                cat "$RUNNER_TEMP/receipt.json"
                 echo
                 echo "RECEIPT_END"
                 exit 0
@@ -43,10 +44,10 @@ jobs:
             done
             for base in               "https://www.powerpc-darwin.org/.well-known/powerpc-control-v1/results"               "https://www.powerpc-darwin.org/static/powerpc-control-v1/results"
             do
-              if curl -fsS --connect-timeout 8 --max-time 15 "$base/$id.json" -o /tmp/receipt.json; then
+              if curl -fsS --connect-timeout 8 --max-time 15 "$base/$id.json" -o "$RUNNER_TEMP/receipt.json"; then
                 echo "RECEIPT_URL=$base/$id.json"
                 echo "RECEIPT_BEGIN"
-                cat /tmp/receipt.json
+                cat "$RUNNER_TEMP/receipt.json"
                 echo
                 echo "RECEIPT_END"
                 exit 0
