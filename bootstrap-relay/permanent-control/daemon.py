@@ -812,7 +812,7 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
                 result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
                 receipt = {
                     'task_id': task_id,
-                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': 'csh3280350',
+                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': os.environ.get('USER', ''),
                                           'uid': os.getuid(), 'hostname': socket.gethostname()},
                     'runtime_receipt': {'namespace': str(ACCOUNT), 'webapp': str(WEBAPP),
                                         'local_mcp': str(WEBAPP / 'bin' / 'local-mcp')},
@@ -855,7 +855,7 @@ def _process_task(task: dict[str, Any], xpriv, spriv, conn: sqlite3.Connection,
                 result_obj = _call_local_mcp(tool, payload.get('arguments', {}))
                 receipt = {
                     'task_id': task_id,
-                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': 'csh3280350',
+                    'executor_identity': {'runtime_id': RUNTIME_ID, 'user': os.environ.get('USER', ''),
                                           'uid': os.getuid(), 'hostname': socket.gethostname()},
                     'runtime_receipt': {'namespace': str(ACCOUNT), 'webapp': str(WEBAPP),
                                         'local_mcp': str(WEBAPP / 'bin' / 'local-mcp')},
