@@ -126,6 +126,15 @@ class LocalBrokerTransportTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(calls[0].args[0], ast.Name)
         self.assertEqual(calls[0].args[0].id, "request_url")
 
+    async def test_missing_explicit_owner_route_falls_back_to_tcp(self):
+        # Provider routes have no implicit host-specific socket. The owner
+        # launcher must opt in explicitly, preserving portability and safety.
+        self.pool.BROKER_SOCKET = None
+        url = "http://127.0.0.1:18081/v1/chat/completions"
+        self.assertIsNone(self.pool.local_broker_unix_socket(url))
+        session = await self.pool.get_session(url)
+        self.assertNotIsInstance(session.connector, aiohttp.UnixConnector)
+
     async def test_connection_pool_reuse_and_fallback(self):
         url = "http://127.0.0.1:18081/v1/models"
         local = await self.pool.get_session(url)

@@ -44,7 +44,8 @@ log = logging.getLogger(__name__)
 
 _session: Optional[aiohttp.ClientSession] = None
 _unix_session: Optional[aiohttp.ClientSession] = None
-BROKER_SOCKET = Path(os.environ.get('OPENWEBUI_LOCAL_BROKER_SOCKET') or '/home/storage/781/4477781/user/webapp/openai-token-broker/broker.ipc.sock')
+_configured_broker_socket = os.environ.get("OPENWEBUI_LOCAL_BROKER_SOCKET")
+BROKER_SOCKET = Path(_configured_broker_socket) if _configured_broker_socket else None
 
 
 def local_broker_unix_socket(url: str | None) -> str | None:
@@ -57,7 +58,7 @@ def local_broker_unix_socket(url: str | None) -> str | None:
                 or parsed.password is not None
                 or not parsed.path.startswith('/v1/')):
             return None
-        if not BROKER_SOCKET.is_absolute():
+        if BROKER_SOCKET is None or not BROKER_SOCKET.is_absolute():
             return None
         st = BROKER_SOCKET.lstat()
         if (not stat.S_ISSOCK(st.st_mode) or st.st_uid != os.getuid()
