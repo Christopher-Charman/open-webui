@@ -24,6 +24,10 @@ via ``close_session()``.
 """
 
 import logging
+import os
+import stat
+from pathlib import Path
+from urllib.parse import urlsplit
 from typing import Optional
 
 import aiohttp
@@ -39,6 +43,45 @@ from open_webui.utils.misc import stream_chunks_handler
 log = logging.getLogger(__name__)
 
 _session: Optional[aiohttp.ClientSession] = None
+_unix_session: Optional[aiohttp.ClientSession] = None
+BROKER_SOCKET = Path(os.environ.get('OPENWEBUI_LOCAL_BROKER_SOCKET') or '/home/storage/781/4477781/user/webapp/openai-token-broker/broker.ipc.sock')
+
+
+def local_broker_unix_socket(url: str | None) -> str | None:
+    if not isinstance(url, str):
+        return None
+    try:
+        parsed = urlsplit(url)
+        if (parsed.scheme != 'http' or parsed.hostname != '127.0.0.1'
+                or parsed.port != 18081 or parsed.username is not None
+                or parsed.password is not None
+                or not parsed.path.startswith('/v1/')):
+            return None
+        if not BROKER_SOCKET.is_absolute():
+            return None
+        st = BROKER_SOCKET.lstat()
+        if (not stat.S_ISSOCK(st.st_mode) or st.st_uid != os.getuid()
+                or stat.S_IMODE(st.st_mode) != 0o600):
+            return None
+        return str(BROKER_SOCKET)
+    except (ValueError, OSError):
+        return None
+
+
+async def get_local_broker_session(url: str | None) -> aiohttp.ClientSession | None:
+    global _unix_session
+    sock = local_broker_unix_socket(url)
+    if sock is None:
+        return None
+    if _unix_session is None or _unix_session.closed:
+        _unix_session = aiohttp.ClientSession(
+            connector=aiohttp.UnixConnector(path=sock, limit=32),
+            timeout=get_client_timeout(),
+            trust_env=False,
+        )
+        log.info('Created shared authenticated same-host broker Unix session')
+    return _unix_session
+
 
 _CLIENT_TIMEOUT = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
 _CLIENT_STREAM_TIMEOUT = aiohttp.ClientTimeout(
@@ -51,8 +94,12 @@ def get_client_timeout(stream: bool = False) -> aiohttp.ClientTimeout:
     return _CLIENT_STREAM_TIMEOUT if stream else _CLIENT_TIMEOUT
 
 
-async def get_session() -> aiohttp.ClientSession:
-    """Return the shared aiohttp ClientSession, creating it lazily."""
+async def get_session(url: str | None = None) -> aiohttp.ClientSession:
+    """Return a pooled client, using owned UDS only for the exact broker route."""
+    if url:
+        local = await get_local_broker_session(url)
+        if local is not None:
+            return local
     global _session
     if _session is None or _session.closed:
         connector_kwargs = {
@@ -85,11 +132,15 @@ async def get_session() -> aiohttp.ClientSession:
 
 async def close_session():
     """Close the shared session.  Called during application shutdown."""
-    global _session
+    global _session, _unix_session
     if _session and not _session.closed:
         await _session.close()
         log.info('Closed shared aiohttp session pool')
-        _session = None
+    _session = None
+    if _unix_session and not _unix_session.closed:
+        await _unix_session.close()
+        log.info('Closed owned broker Unix session pool')
+    _unix_session = None
 
 
 async def cleanup_response(
