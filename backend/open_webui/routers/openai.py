@@ -55,6 +55,7 @@ from open_webui.utils.session_pool import (
     cleanup_response,
     get_client_timeout,
     get_session,
+    local_broker_unix_socket,
     stream_wrapper,
 )
 from pydantic import BaseModel, ConfigDict
@@ -94,7 +95,13 @@ async def send_get_request(
     config=None,
 ):
     try:
-        async with aiohttp.ClientSession(timeout=_MODEL_LIST_TIMEOUT, trust_env=True) as session:
+        uds = local_broker_unix_socket(url)
+        connector = aiohttp.UnixConnector(path=uds) if uds else None
+        async with aiohttp.ClientSession(
+            connector=connector,
+            timeout=_MODEL_LIST_TIMEOUT,
+            trust_env=(uds is None),
+        ) as session:
             if request and config:
                 headers, cookies = await get_headers_and_cookies(request, url, key, config, user=user)
             else:
@@ -414,7 +421,7 @@ async def send_model_management_request(
     response = None
     streaming = False
     try:
-        session = await get_session()
+        session = await get_session(f'{root_url}{path}')
         response = await session.request(
             method,
             f'{root_url}{path}',
@@ -501,7 +508,7 @@ async def count_anthropic_tokens(request: Request, form_data: dict, user: UserMo
     response = None
 
     try:
-        session = await get_session()
+        session = await get_session(request_url)
         response = await session.request(
             method='POST',
             url=request_url,
@@ -1635,7 +1642,7 @@ async def generate_chat_completion(
     response = None
 
     try:
-        session = await get_session()
+        session = await get_session(request_url)
 
         r = await session.request(
             method='POST',
@@ -1788,7 +1795,7 @@ async def embeddings(request: Request, form_data: dict, user):
     requested_model = form_data.get('model')
 
     try:
-        session = await get_session()
+        session = await get_session(embeddings_url)
         r = await session.request(
             method='POST',
             url=embeddings_url,
@@ -1915,7 +1922,7 @@ async def responses(
         else:
             request_url = f'{url}/responses'
 
-        session = await get_session()
+        session = await get_session(request_url)
         r = await session.request(
             method='POST',
             url=request_url,
@@ -2037,7 +2044,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
         else:
             request_url = f'{url}/{path}'
 
-        session = await get_session()
+        session = await get_session(request_url)
         r = await session.request(
             method=request.method,
             url=request_url,
